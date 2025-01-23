@@ -27,11 +27,11 @@ uint32_t availablity_status[TABLE_TEMP_LEN];
 
 uint32_t resolve_unbuffered_idx_2d(uint32_t x, uint32_t y, uint32_t dim)
 {
-    return (x * (dim + 1) + y);
+    return (y * (dim + 1) + x);
 }
 uint32_t resolve_buffered_idx_2d(uint32_t x, uint32_t y, uint32_t dim)
 {
-    return (x * (dim * 2 + 2) + y * 2);
+    return (y * (dim + 2) + x);
 }
 uint32_t resolve_buffered_idx_1d(uint32_t x, uint32_t dim)
 {
@@ -146,12 +146,12 @@ void initialize(uint32_t dim)
     // {
     //     table_base[i] = 'a' + (char)(rand() % 26);
     // }
-    memset(table_base, 0, TABLE_BASE_LEN);
+    memset(table_base, ' ', TABLE_BASE_LEN);
 
-    table_base[dim * (dim + 1)] = '\0';
+    table_base[dim * (dim * 2 + 1)] = '\0';
     for(int i = 0; i < dim; i++)
     {
-        table_base[resolve_unbuffered_idx_2d(i, dim, dim)] = '\n';
+        table_base[resolve_unbuffered_idx_2d(i, dim * 2, dim * 2)] = '\n';
     }
 
     for(uint32_t x = 0; x < dim; x++)
@@ -176,15 +176,15 @@ bool try_insert_string(const char* str, uint32_t dim)
     Vec2u begin_loc = rand_position(dim);
     uint32_t begin_dir = rand_direction();
     // printf("rand pos: (%u, %u), rand dir: %u\n", begin_loc.x, begin_loc.y, begin_dir);
-    for(uint32_t _d = 0; _d < 4; _d++)
+    for(uint32_t _x = 0; _x < dim; _x++)
     {
-        const uint32_t d = (_d + begin_dir) % 4;
-        for(uint32_t _x = 0; _x < dim; _x++)
+        const uint32_t x = (_x + begin_loc.x) % dim;
+        for(uint32_t _y = 0; _y < dim; _y++)
         {
-            const uint32_t x = (_x + begin_loc.x) % dim;
-            for(uint32_t _y = 0; _y < dim; _y++)
+            const uint32_t y = (_y + begin_loc.y) % dim;
+            for(uint32_t _d = 0; _d < 4; _d++)
             {
-                const uint32_t y = (_y + begin_loc.y) % dim;
+                const uint32_t d = (_d + begin_dir) % 4;
                 const uint32_t* avail = availablity_status + resolve_unbuffered_idx_2d(x, y, dim);
                 const uint32_t avail_len = get_avail_len(*avail, d);
                 // printf("trying to insert at position: (%u, %u) -- dir: %u -- avail: %u\n", x, y, d, avail_len);
@@ -193,14 +193,14 @@ bool try_insert_string(const char* str, uint32_t dim)
                     uint32_t n;
                     for(n = 0; n < len; n++)   // check all characters to find collisions
                     {
-                        const uint32_t idx = get_buffered_nth_letter_idx(x, y, n, d, dim);
-                        if(table_base[idx] != 0 && table_base[idx] != str[n]) break;
+                        const uint32_t idx = get_buffered_nth_letter_idx(x * 2, y, n, d, dim * 2);
+                        if(table_base[idx] != ' ' && table_base[idx] != str[n]) break;
                     }
                     if(n == len)
                     {
                         for(n = 0; n < len; n++)
                         {
-                            const uint32_t idx = get_buffered_nth_letter_idx(x, y, n, d, dim);
+                            const uint32_t idx = get_buffered_nth_letter_idx(x * 2, y, n, d, dim * 2);
                             table_base[idx] = str[n];
                         }
                         return true;
@@ -217,8 +217,8 @@ void fill_random(uint32_t dim)
 {
     for(uint32_t i = 0; i < (dim * dim); i++)
     {
-        const uint32_t idx = resolve_buffered_idx_1d(i, dim);
-        if(!table_base[idx]) table_base[idx] = 'a' + (char)(rand() % 26);
+        const uint32_t idx = resolve_buffered_idx_1d(i * 2, dim * 2);
+        if(table_base[idx] == ' ') table_base[idx] = 'a' + (char)(rand() % 26);
     }
 }
 

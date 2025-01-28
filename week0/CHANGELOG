@@ -1,0 +1,12 @@
+1/21/25 : Added main function and argument handling
+1/21/25 : Added word storage, size bound macros, and random character generation
+1/21/25 : Added helpers to access characters along a word's "pose"
+1/21/25 : Added functions to print the word search
+1/21/25 : Added word insertion skeleton
+-------
+1/22/25 : Added utilities for keeping track of the maximum length possible for each position and direction
+1/22/25 : Added preliminary word insertion
+-------
+1/23/25 : Changed storage dimensions to make character access easier
+1/23/25 : Made printing look fancier
+1/23/25 : Added word list printing

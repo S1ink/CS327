@@ -1,0 +1,7 @@
+This wordsearch generator takes an integer argument {0 < n < 21} followed by an unbounded list of words that should be inserted into the generated grid.
+Values of n greater than 20 will be capped at 20, and values of n less than 0 will result in the size being calculated from the maximum length of any input string.
+In the event that all available positions and all available directions for a given string are tested, and no compatible space is found, the program will print an error and return.
+
+To build, execute `make` while in the directory with the makefile.
+The built program will be in the same directory and named `wordsearch`.
+For example, you can run `./wordsearch 14 apple banana grape orange`.

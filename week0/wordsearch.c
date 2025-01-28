@@ -61,6 +61,17 @@ Vec2u rand_position(uint32_t dim)
 
 
 
+size_t get_longest_word(int32_t n, char** words)
+{
+    size_t max = 0;
+    for(n--; n >= 0; n--)
+    {
+        const size_t l = strlen(words[n]);
+        if(l > max) max = l;
+    }
+    return max;
+}
+
 void initialize(uint32_t dim)
 {
     srand(time(NULL));
@@ -183,7 +194,7 @@ int main(int argc, char** argv)
 
     int32_t table_dim = atoi(argv[1]);
     if(table_dim > MATRIX_MAX_DIM) table_dim = 20;
-    if(table_dim < 0) table_dim = 10;
+    if(table_dim < 0) table_dim = (int32_t)get_longest_word(argc - 2, argv + 2);
 
     initialize(table_dim);
     for(int s = 2; s < argc; s++)

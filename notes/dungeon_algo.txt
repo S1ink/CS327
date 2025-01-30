@@ -1,0 +1,20 @@
+EASIEST:
+* standard terminal is 80 x 24 characters
+* --> reserve 3 rows for status messages
+* --> left with 80 x 21 characters
+* border characters are "immutable" -- must be rock
+
+1. Select random (x, y) within dungeon range, select smaller (x, y) in room range -- these become room bounding boxes
+    * Rooms MAY NOT overlap
+2. Put rooms in array (position + size)
+3. Pick positions in one dungeon and another dungeon and connect them with tunnels
+    * Tunnels can "go through" rooms
+    * Better: keep track of which rooms have been connected to minimize tunnels
+
+SHAEFER VERSION:
+1. "Start with the rock" -- seed with hardnesses (put in a queue)
+2. spread out hardnesses
+3. gaussian convolution to blur
+4. add rooms
+5. Use djikstras to path find (based on hardness)
+6. add a loop

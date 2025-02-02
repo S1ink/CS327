@@ -1,0 +1,50 @@
+#pragma once
+
+#include <stdint.h>
+
+#include "util/list.h"
+#include "util/vec_geom.h"
+
+#include "dungeon_config.h"
+
+
+enum CellType
+{
+    ROCK = 0,
+    ROOM,
+    CORRIDOR
+};
+enum StairType
+{
+    NO_STAIR = 0,
+    STAIR_UP,
+    STAIR_DOWN
+};
+
+typedef struct DungeonCell
+{
+    uint8_t type : 4;
+    uint8_t is_stair : 2;
+    uint8_t hardness : 8;
+}
+DungeonCell;
+
+typedef struct DungeonRoom
+{
+    Vec2u top_left, size;
+}
+DungeonRoom;
+
+GENERATE_LIST_STRUCT(DungeonRoom, Room, room)
+
+
+typedef struct Dungeon
+{
+    DungeonCell cells[DUNGEON_Y_DIM][DUNGEON_X_DIM];
+    RoomList rooms_list;
+
+    char printable[DUNGEON_Y_DIM][DUNGEON_X_DIM];
+}
+Dungeon;
+
+int generate_dungeon(Dungeon* d, uint32_t seed);

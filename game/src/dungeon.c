@@ -6,11 +6,17 @@
 #include <string.h>
 #include <stdint.h>
 #include <time.h>
+#include <math.h>
 
 #ifndef DEBUG_PRINT_HARDNESS
 #define DEBUG_PRINT_HARDNESS 1
 #endif
 
+
+uint32_t random_in_range(uint32_t min, uint32_t max)
+{
+    return min + (uint32_t)(rand() / (RAND_MAX / (max - min)));
+}
 
 void vec2u_random(Vec2u* v, Vec2u range)
 {
@@ -40,6 +46,7 @@ void random_in_range(DungeonRoom* r, Vec2u min, Vec2u max)
     vec2u_sub(&pos_range, &range, &size);
 
     vec2u_random(&pos, pos_range);
+    vec2u_add(&pos, &min, &pos);
 
     vec2u_copy(&(r->tl), &pos);
     vec2u_add(&(r->br), &pos, &size);
@@ -47,12 +54,62 @@ void random_in_range(DungeonRoom* r, Vec2u min, Vec2u max)
 
 void generate_rooms(Dungeon* d)
 {
+    
+}
+
+void generate_rooms2(Dungeon* d)
+{
     // random roll for first room tl, size
     // calculate bounds for remaining 5 rooms -- random rolls within bounds for each
     // random roll for max number of additional rooms -- try to add if possible up to this amount
 
+#define DUNGEON_MAX_NUM_ROOMS_TREE_SIZE (DUNGEON_MAX_NUM_ROOMS * 2 - 1)
+
+    Vec2u bboxes[DUNGEON_MAX_NUM_ROOMS_TREE_SIZE][2];
+    vec2u_zero(bboxes[0] + 0);
+    vec2u_assign(bboxes[0] + 1, DUNGEON_X_DIM - 1, DUNGEON_Y_DIM - 1);
+
+    for(size_t i = 1; i < DUNGEON_MAX_NUM_ROOMS_TREE_SIZE; i++)
+    {
+        const size_t level = (size_t)floorf(log2f((float)i + 1));
+
+        if(i & 0x1) // odd-numbered indices need to calculate the division
+        {
+            const size_t parent = (i - 1) / 2;
+            const int32_t rd = rand();
+
+            if(level & 0x1) // divide x-axis
+            {
+                uint32_t min_x = bboxes[i][0].x;
+                uint32_t max_x = bboxes[i][1].x;
+
+
+            }
+            else            // divide y-axis
+            {
+                uint32_t min_x = bboxes[i][1].y;
+                uint32_t max_x = bboxes[i][0].y;
+
+
+            }
+        }
+        else
+        {
+            const size_t sibling = i - 1;
+
+            if(level & 0x1)
+            {
+
+            }
+            else
+            {
+
+            }
+        }
+    }
+
     DungeonRoom r1;
-    random_in_range(&r1, , )
+    // random_in_range(&r1, , )
 }
 
 int fill_printable(Dungeon* d)

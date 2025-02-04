@@ -31,9 +31,12 @@ DungeonCell;
 
 typedef struct DungeonRoom
 {
-    Vec2u top_left, size;
+    Vec2u tl;
+    Vec2u br;
 }
 DungeonRoom;
+
+int collide_or_tangent(DungeonRoom* a, DungeonRoom* b);
 
 GENERATE_LIST_STRUCT(DungeonRoom, Room, room)
 

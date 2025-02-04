@@ -12,6 +12,49 @@
 #endif
 
 
+void vec2u_random(Vec2u* v, Vec2u range)
+{
+    v->x = (uint32_t)(rand() / (RAND_MAX / range.x));
+    v->y = (uint32_t)(rand() / (RAND_MAX / range.y));
+}
+
+int collide_or_tangent(DungeonRoom* a, DungeonRoom* b)
+{
+    return (
+        (a->br.x - b->tl.x >= -1) && (a->tl.x - b->br.x <= 1) &&
+        (a->br.y - b->tl.y <= 1) && (a->tl.y - b->br.y >= -1) );
+}
+
+void random_in_range(DungeonRoom* r, Vec2u min, Vec2u max)
+{
+    Vec2u range, config_range, size, pos_range, pos;
+
+    vec2u_assign( &config_range,
+        (DUNGEON_ROOM_MAX_X - DUNGEON_ROOM_MIN_X),
+        (DUNGEON_ROOM_MAX_Y - DUNGEON_ROOM_MIN_Y) );
+
+    vec2u_sub(&range, &max, &min);
+    vec2u_cwise_min(&range, &range, &config_range);
+
+    vec2u_random(&size, range);
+    vec2u_sub(&pos_range, &range, &size);
+
+    vec2u_random(&pos, pos_range);
+
+    vec2u_copy(&(r->tl), &pos);
+    vec2u_add(&(r->br), &pos, &size);
+}
+
+void generate_rooms(Dungeon* d)
+{
+    // random roll for first room tl, size
+    // calculate bounds for remaining 5 rooms -- random rolls within bounds for each
+    // random roll for max number of additional rooms -- try to add if possible up to this amount
+
+    DungeonRoom r1;
+    random_in_range(&r1, , )
+}
+
 int fill_printable(Dungeon* d)
 {
     for(size_t y = 0; y < DUNGEON_Y_DIM; y++)
@@ -76,6 +119,8 @@ int generate_dungeon(Dungeon* d, uint32_t seed)
             d->cells[y][x].hardness = (uint8_t)(p * 127.f + 127.f);
         }
     }
+
+    generate_rooms(d);
 
     fill_printable(d);
 

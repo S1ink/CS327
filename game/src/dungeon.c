@@ -28,8 +28,8 @@ void vec2u_random(Vec2u* v, Vec2u range)
 int collide_or_tangent(DungeonRoom* a, DungeonRoom* b)
 {
     return (
-        (a->br.x - b->tl.x >= -1) && (a->tl.x - b->br.x <= 1) &&
-        (a->br.y - b->tl.y >= -1) && (a->tl.y - b->br.y <= 1) );
+        (a->br.x - b->tl.x >= -2) && (a->tl.x - b->br.x <= 2) &&
+        (a->br.y - b->tl.y >= -2) && (a->tl.y - b->br.y <= 2) );
 }
 
 void random_room_in_range(DungeonRoom* r, Vec2u min, Vec2u max)
@@ -74,13 +74,19 @@ int generate_rooms(Dungeon* d)
 
         if(i > 0)
         {
-            for(size_t j = 0; j < i - 1; j++)
+            size_t j;
+            for(j = 0; j < i - 1; j++)
             {
                 if(collide_or_tangent(d->rooms_list.data + i, d->rooms_list.data + j))
                 {
+                    printf("collision\n");
                     failed++;
-                    continue;
+                    break;
                 }
+            }
+            if(j < i - 1)
+            {
+                continue;
             }
         }
         i++;

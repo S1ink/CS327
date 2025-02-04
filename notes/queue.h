@@ -1,21 +1,20 @@
 #pragma once
 
-struct queue_node
+typedef struct queue_node
 {
     struct queue_node* next;
     int data;
-};
+}
+QueueNode;
 
-struct queue
+typedef struct queue
 {
     struct queue_node
         *front,
         *back;
     int length;
-};
-
-typedef struct queue_node QueueNode;
-typedef struct queue Queue;
+}
+Queue;
 
 int queue_init(Queue* q);
 int queue_destroy(Queue* q);

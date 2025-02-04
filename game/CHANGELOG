@@ -1,5 +1,8 @@
-2/2/25 11:30 PM -- add entrypoint (main)
+2/2/25 11:30 AM -- add entrypoint (main)
 2/2/25 1:00 PM  -- add perlin noise generator and test ascii output
 2/2/25 2:00 PM  -- add dungeon and dungeon utility structs
 2/2/25 3:00 PM  -- add vector and list utilities
 2/2/25 5:20 PM  -- add dungeon hardness generation and printing
+
+2/3/25 5:30 PM  -- add more vector utilities and begin random room generation
+2/3/25 11:59 PM -- preliminary room generation - bounding checks are broken

@@ -5,6 +5,9 @@
 #include <math.h>
 #include <string.h>
 
+/*
+ * https://cs.nyu.edu/~perlin/noise/
+*/
 
 static uint8_t
     p[] = { 151,160,137,91,90,15,

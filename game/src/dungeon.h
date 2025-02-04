@@ -51,3 +51,4 @@ typedef struct Dungeon
 Dungeon;
 
 int generate_dungeon(Dungeon* d, uint32_t seed);
+int destruct_dungeon(Dungeon* d);

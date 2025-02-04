@@ -1,0 +1,36 @@
+#include "vec_geom.h"
+
+
+#define BUILD_FOR_TYPES \
+    BUILD_FOR_TYPE(int32_t, i) \
+    BUILD_FOR_TYPE(uint32_t, u) \
+    BUILD_FOR_TYPE(int64_t, l) \
+    BUILD_FOR_TYPE(uint64_t, ul) \
+    BUILD_FOR_TYPE(float, f) \
+    BUILD_FOR_TYPE(double, d)
+
+#define BUILD_FOR_TYPE(x, y) DEFINE_VEC2_UTILS(x, y)
+BUILD_FOR_TYPES
+#undef BUILD_FOR_TYPE
+
+#define BUILD_FOR_TYPE(x, y) DEFINE_VEC3_UTILS(x, y)
+BUILD_FOR_TYPES
+#undef BUILD_FOR_TYPE
+
+#define BUILD_FOR_TYPE(x, y) DEFINE_VEC2_ADD_SUB(x, y)
+BUILD_FOR_TYPES
+#undef BUILD_FOR_TYPE
+
+#define BUILD_FOR_TYPE(x, y) DEFINE_VEC3_ADD_SUB(x, y)
+BUILD_FOR_TYPES
+#undef BUILD_FOR_TYPE
+
+#define BUILD_FOR_TYPE(x, y) DEFINE_VEC2_CWISE_MIN_MAX(x, y)
+BUILD_FOR_TYPES
+#undef BUILD_FOR_TYPE
+
+#define BUILD_FOR_TYPE(x, y) DEFINE_VEC3_CWISE_MIN_MAX(x, y)
+BUILD_FOR_TYPES
+#undef BUILD_FOR_TYPE
+
+#undef BUILD_FOR_TYPES

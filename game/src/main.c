@@ -16,5 +16,7 @@ int main(int argc, char** argv)
         printf("%.80s\n", d.printable[y]);
     }
 
+    destruct_dungeon(&d);
+
     return 0;
 }

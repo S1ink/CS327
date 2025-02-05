@@ -6,3 +6,9 @@
 
 2/3/25 5:30 PM  -- add more vector utilities and begin random room generation
 2/3/25 11:59 PM -- preliminary room generation - bounding checks are broken
+
+2/4/25 3:00 PM  -- improve room generation algorithm, bounding checks still broken
+2/4/25 9:30 PM  -- fix room collision checks, work on room generation, write rooms to print buffer
+2/4/25 11:00 PM -- initial corridor generation
+
+2/5/25 12:30 AM -- stair placement

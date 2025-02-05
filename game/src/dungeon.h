@@ -41,7 +41,7 @@ typedef struct DungeonRoom
      *    ......
      *    .....BR
      * 
-     *    ^ A 6x3 cell room! */
+     *    ^ A 6x3-cell room! */
 }
 DungeonRoom;
 

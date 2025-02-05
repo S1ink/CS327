@@ -12,3 +12,6 @@
 2/4/25 11:00 PM -- initial corridor generation
 
 2/5/25 12:30 AM -- stair placement
+2/5/25 2:00 PM  -- finish room random resizing
+2/5/25 4:00 PM  -- remove unused code, cleanup
+2/5/25 4:30 PM  -- update makefile

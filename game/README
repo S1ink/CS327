@@ -1,0 +1,12 @@
+The program in its current state generates a randomly seeded dungeon (based on the current time)
+according to the assignment specification, and outputs it to the terminal. Internally,
+structures for the dungeon, it's rooms, and cell information are contained in `src/dungeon.h`.
+Dungeon parameters are in `src/dungeon_config.h`, and the actual generation algorithm is
+implemented in `src/dungeon.c`.
+
+The generation algorithm first calculates a hardness value for each cell in the dungeon, which is
+based on perlin noise. Next, a random number of minimum-size rooms are inserted, and subsequently
+"grown" a random amount to create a variation in room sizes. Lastly, random corridor start and end
+points are chosen and connected.
+
+The program can be compiled by running `make`, and run by executing `./game`.

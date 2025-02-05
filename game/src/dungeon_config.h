@@ -14,10 +14,10 @@
 #define DUNGEON_ROOM_MIN_Y 3
 #endif
 #ifndef DUNGEON_ROOM_MAX_X
-#define DUNGEON_ROOM_MAX_X 10
+#define DUNGEON_ROOM_MAX_X 17
 #endif
 #ifndef DUNGEON_ROOM_MAX_Y
-#define DUNGEON_ROOM_MAX_Y 10
+#define DUNGEON_ROOM_MAX_Y 11
 #endif
 
 #ifndef DUNGEON_MIN_NUM_ROOMS

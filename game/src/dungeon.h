@@ -1,8 +1,8 @@
 #pragma once
 
+#include <stdlib.h>
 #include <stdint.h>
 
-#include "util/list.h"
 #include "util/vec_geom.h"
 
 #include "dungeon_config.h"
@@ -46,14 +46,17 @@ typedef struct DungeonRoom
 DungeonRoom;
 
 int collide_or_tangent(const DungeonRoom* a, const DungeonRoom* b);
-
-GENERATE_LIST_STRUCT(DungeonRoom, Room, room)
+int in_x_window(const DungeonRoom* a, const DungeonRoom* b);
+int in_y_window(const DungeonRoom* a, const DungeonRoom* b);
+void room_size(const DungeonRoom* r, Vec2u* s);
+void print_room(const DungeonRoom* r);
 
 
 typedef struct Dungeon
 {
     DungeonCell cells[DUNGEON_Y_DIM][DUNGEON_X_DIM];
-    RoomList rooms_list;
+    DungeonRoom rooms[DUNGEON_MAX_NUM_ROOMS];
+    size_t num_rooms;
 
     char printable[DUNGEON_Y_DIM][DUNGEON_X_DIM];
 }
@@ -61,3 +64,4 @@ Dungeon;
 
 int generate_dungeon(Dungeon* d, uint32_t seed);
 int destruct_dungeon(Dungeon* d);
+int print_dungeon(Dungeon* d, int border);

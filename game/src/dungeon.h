@@ -33,6 +33,15 @@ typedef struct DungeonRoom
 {
     Vec2u tl;
     Vec2u br;
+
+    /* `tl` denotes the TOP LEFT cell that is contained in the room, and
+     * `br` denotes the BOTTOM RIGHT cell that is contained in the room -- ex.
+     * 
+     *   TL.....
+     *    ......
+     *    .....BR
+     * 
+     *    ^ A 6x3 cell room! */
 }
 DungeonRoom;
 

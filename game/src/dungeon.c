@@ -10,7 +10,7 @@
 #include <math.h>
 
 #ifndef DEBUG_PRINT_HARDNESS
-#define DEBUG_PRINT_HARDNESS 0
+#define DEBUG_PRINT_HARDNESS 1
 #endif
 
 
@@ -24,17 +24,50 @@ void vec2u_random(Vec2u* v, Vec2u range)
     v->x = (uint32_t)(rand() / (RAND_MAX / range.x));
     v->y = (uint32_t)(rand() / (RAND_MAX / range.y));
 }
+void vec2u_random_in_range(Vec2u* v, Vec2u min, Vec2u max)
+{
+    v->x = min.x + (uint32_t)(rand() / (RAND_MAX / (max.x - min.x)));
+    v->y = min.y + (uint32_t)(rand() / (RAND_MAX / (max.y - min.y)));
+}
 
-int collide_or_tangent(DungeonRoom* a, DungeonRoom* b)
+int collide_or_tangent(const DungeonRoom* a, const DungeonRoom* b)
 {
     return (
-        (a->br.x - b->tl.x >= -2) && (a->tl.x - b->br.x <= 2) &&
-        (a->br.y - b->tl.y >= -2) && (a->tl.y - b->br.y <= 2) );
+        ((a->br.x + 1 >= b->tl.x) && (a->tl.x <= b->br.x + 1)) &&
+        ((a->br.y + 1 >= b->tl.y) && (a->tl.y <= b->br.y + 1)) );
+}
+
+void collide_or_tangent_test()
+{
+    printf("-----------------------------\n");
+    DungeonRoom a, b, c, d;
+    vec2u_assign(&a.tl, 5, 5);
+    vec2u_assign(&a.br, 9, 8);
+    vec2u_assign(&b.tl, 2, 2);
+    vec2u_assign(&b.br, 3, 3);
+    vec2u_assign(&c.tl, 9, 6);
+    vec2u_assign(&c.br, 12, 9);
+    vec2u_assign(&d.tl, 2, 7);
+    vec2u_assign(&d.br, 4, 10);
+    int
+        ab = collide_or_tangent(&a, &b),
+        ac = collide_or_tangent(&a, &c),
+        ad = collide_or_tangent(&a, &d),
+        bc = collide_or_tangent(&b, &c),
+        bd = collide_or_tangent(&b, &d),
+        cd = collide_or_tangent(&c, &d);
+    printf("AB : %d\nAC : %d\nAD : %d\nBC : %d\nBD : %d\nCD : %d\n", ab, ac, ad, bc, bd, cd);
+    printf("-----------------------------\n");
+}
+
+void print_room(const DungeonRoom* room)
+{
+    printf("\t(%d, %d) -- (%d, %d)\n", room->tl.x, room->tl.y, room->br.x, room->br.y);
 }
 
 void random_room_in_range(DungeonRoom* r, Vec2u min, Vec2u max)
 {
-    Vec2u range, config_range, range_min, size, pos_range, pos;
+    Vec2u range, config_range, range_min, size, pos_max, pos;
 
     vec2u_assign( &config_range,
         (DUNGEON_ROOM_MAX_X - DUNGEON_ROOM_MIN_X),
@@ -43,15 +76,14 @@ void random_room_in_range(DungeonRoom* r, Vec2u min, Vec2u max)
         (DUNGEON_ROOM_MIN_X),
         (DUNGEON_ROOM_MIN_Y) );
 
-    vec2u_sub(&range, &max, &min);
-    vec2u_cwise_min(&range, &range, &config_range);
+    vec2u_sub(&range, &max, &min);  // raw variation
+    vec2u_cwise_min(&range, &range, &config_range); // minimum usable bbox for either dim
 
-    vec2u_random(&size, range);
-    vec2u_add(&size, &range_min, &size);
-    vec2u_sub(&pos_range, &max, &size);
+    vec2u_random(&size, range);             // random size variation component
+    vec2u_add(&size, &range_min, &size);    // actual random size
+    vec2u_sub(&pos_max, &max, &size);       // max corner minus size
 
-    vec2u_random(&pos, pos_range);
-    vec2u_add(&pos, &min, &pos);
+    vec2u_random_in_range(&pos, min, pos_max);    // random starting location
 
     vec2u_copy(&(r->tl), &pos);
     vec2u_add(&(r->br), &pos, &size);
@@ -79,7 +111,9 @@ int generate_rooms(Dungeon* d)
             {
                 if(collide_or_tangent(d->rooms_list.data + i, d->rooms_list.data + j))
                 {
-                    printf("collision\n");
+                    // printf("collision\n");
+                    // print_room(d->rooms_list.data + i);
+                    // print_room(d->rooms_list.data + j);
                     failed++;
                     break;
                 }
@@ -102,7 +136,7 @@ int generate_rooms(Dungeon* d)
     for(size_t r = 0; r < i; r++)
     {
         const DungeonRoom* room = d->rooms_list.data + r;
-        printf("(%u, %u), (%u, %u)\n", room->tl.x, room->tl.y, room->br.x, room->br.y);
+        print_room(room);
         for(size_t y = room->tl.y; y < room->br.y; y++)
         {
             for(size_t x = room->tl.x; x < room->br.x; x++)
@@ -154,6 +188,71 @@ int generate_rooms(Dungeon* d)
 //     DungeonRoom r1;
 //     // random_in_range(&r1, , )
 // }
+
+int generate_rooms3(Dungeon* d)
+{
+    const size_t target = (size_t)random_in_range(DUNGEON_MIN_NUM_ROOMS, DUNGEON_MAX_NUM_ROOMS);
+    d->rooms_list.size = target;
+    d->rooms_list.data = (DungeonRoom*)malloc(target * sizeof(*d->rooms_list.data));
+    DungeonRoom* room_data = d->rooms_list.data;
+
+    Vec2u d_min, d_max;
+    vec2u_assign(&d_min, 1, 1);
+    vec2u_assign(&d_max,
+        DUNGEON_X_DIM - DUNGEON_ROOM_MIN_X - 1,
+        DUNGEON_Y_DIM - DUNGEON_ROOM_MIN_Y - 1 );
+
+    size_t ri;
+    for(ri = 0; ri < DUNGEON_MIN_NUM_ROOMS; )  // generate at least the minimum number of rooms
+    {
+        vec2u_random_in_range(&room_data[ri].tl, d_min, d_max);
+        room_data[ri].br.x = room_data[ri].tl.x + DUNGEON_ROOM_MIN_X;
+        room_data[ri].br.y = room_data[ri].tl.y + DUNGEON_ROOM_MIN_Y;
+
+        if(ri == 0)
+        {
+            ri++;
+            continue;
+        }
+
+        int failed = 0;
+        for(size_t j = 0; j < ri - 1; j++)
+        {
+            if(collide_or_tangent(room_data + ri, room_data + j))
+            {
+                printf("collision\n");
+                print_room(room_data + ri);
+                print_room(room_data + j);
+                failed = 1;
+                break;
+            }
+        }
+        if(!failed) ri++;
+    }
+    printf("Took %lu iterations to generate core rooms.\n", ri);
+    // for(size_t i = DUNGEON_MIN_NUM_ROOMS; i < target; i++)
+    // {
+    //     vec2u_random_in_range(&room_data[i].tl, d_min, d_max);
+    //     room_data[i].br.x = room_data[i].tl.x + DUNGEON_ROOM_MIN_X;
+    //     room_data[i].br.y = room_data[i].tl.y + DUNGEON_ROOM_MIN_Y;
+    // }
+
+    for(size_t r = 0; r < ri; r++)
+    {
+        const DungeonRoom* room = room_data + r;
+        print_room(room);
+        for(size_t y = room->tl.y; y < room->br.y; y++)
+        {
+            for(size_t x = room->tl.x; x < room->br.x; x++)
+            {
+                d->cells[y][x].type = ROOM;
+                // printf("(%lu, %lu)", x, y);
+            }
+        }
+    }
+
+    return 0;
+}
 
 int fill_printable(Dungeon* d)
 {
@@ -220,9 +319,11 @@ int generate_dungeon(Dungeon* d, uint32_t seed)
         }
     }
 
-    generate_rooms(d);
+    generate_rooms3(d);
 
     fill_printable(d);
+
+    collide_or_tangent_test();
 
     return 0;
 }

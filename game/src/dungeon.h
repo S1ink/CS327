@@ -36,7 +36,7 @@ typedef struct DungeonRoom
 }
 DungeonRoom;
 
-int collide_or_tangent(DungeonRoom* a, DungeonRoom* b);
+int collide_or_tangent(const DungeonRoom* a, const DungeonRoom* b);
 
 GENERATE_LIST_STRUCT(DungeonRoom, Room, room)
 

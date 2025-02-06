@@ -10,5 +10,11 @@ queue.o: queue.c queue.h
 queue_main.o: queue_test.c queue.h
 	gcc -g queue_test.c -c
 
+fio: fio.c
+	gcc fio.c -o fio
+
+strings: strings.c
+	gcc strings.c -o strings
+
 clean:
 	rm -rf *.o *~ queue_test

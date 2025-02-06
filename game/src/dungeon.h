@@ -2,6 +2,7 @@
 
 #include <stdlib.h>
 #include <stdint.h>
+#include <stdio.h>
 
 #include "util/vec_geom.h"
 
@@ -64,4 +65,7 @@ Dungeon;
 
 int generate_dungeon(Dungeon* d, uint32_t seed);
 int destruct_dungeon(Dungeon* d);
+
 int print_dungeon(Dungeon* d, int border);
+int serialize_dungeon(const Dungeon* d, FILE* out);
+int deserialize_dungeon(Dungeon* d, FILE* in);

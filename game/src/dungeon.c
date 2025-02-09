@@ -8,6 +8,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
+#include <endian.h>
 #include <time.h>
 #include <math.h>
 
@@ -443,4 +444,73 @@ int print_dungeon(Dungeon* d, int border)
     }
 
     return 0;
+}
+
+int serialize_dungeon(const Dungeon* d, FILE* out)
+{
+    fwrite("RLG327-S2025", 12, 1, out);
+
+    const uint32_t zero = 0;
+    fwrite(&zero, sizeof(zero), 1, out);
+    
+    uint32_t size = 0;
+    size = htobe32(&size);
+    fwrite(&size, sizeof(size), 1, out);
+
+    uint8_t pc_loc[2];
+    pc_loc[0] = pc_loc[1] = 0;
+    fwrite(pc_loc, 1, 2, out);
+
+    uint8_t dungeon_bytes[DUNGEON_Y_DIM][DUNGEON_X_DIM];
+    for(size_t y = 0; y < DUNGEON_Y_DIM; y++)
+    {
+        for(size_t x = 0; x < DUNGEON_X_DIM; x++)
+        {
+            DungeonCell c = d->cells[y][x];
+            switch(c.type)
+            {
+                case ROCK: dungeon_bytes[y][x] = c.hardness; break;
+                case ROOM:
+                case CORRIDOR: dungeon_bytes[y][x] = 0; break;
+            }
+        }
+    }
+    fwrite(dungeon_bytes, 1, (DUNGEON_X_DIM * DUNGEON_Y_DIM), out);
+
+    uint16_t num_rooms = (uint16_t)d->num_rooms;
+    num_rooms = htobe16(num_rooms);
+    fwrite(&num_rooms, 2, 1, out);
+
+    for(size_t n = 0; n < d->num_rooms; n++)
+    {
+        DungeonRoom* r = d->rooms + n;
+
+        uint8_t x, y, sx, sy;
+        x = (uint8_t)r->tl.x;
+        y = (uint8_t)r->tl.y;
+        sx = (uint8_t)(r->br.x - r->tl.x + 1);
+        sy = (uint8_t)(r->br.y - r->tl.y + 1);
+
+        fwrite(&x, 1, 1, out);
+        fwrite(&y, 1, 1, out);
+        fwrite(&sx, 1, 1, out);
+        fwrite(&sy, 1, 1, out);
+    }
+
+    uint16_t num_up = 1;
+    num_up = htobe16(num_up);
+    fwrite(&num_up, 2, 1, out);
+
+    for(size_t n = 0; n < 1; n++)
+    {
+        
+    }
+
+    uint16_t num_down = 1;
+    num_down = htobe16(num_down);
+    fwrite(&num_down, 2, 1, out);
+}
+int deserialize_dungeon(Dungeon* d, FILE* in)
+{
+
 }

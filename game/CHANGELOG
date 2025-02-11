@@ -1,17 +1,26 @@
-2/2/25 11:30 AM -- add entrypoint (main)
-2/2/25 1:00 PM  -- add perlin noise generator and test ascii output
-2/2/25 2:00 PM  -- add dungeon and dungeon utility structs
-2/2/25 3:00 PM  -- add vector and list utilities
-2/2/25 5:20 PM  -- add dungeon hardness generation and printing
+2/2/25  11:30 AM -- add entrypoint (main)
+2/2/25  1:00  PM -- add perlin noise generator and test ascii output
+2/2/25  2:00  PM -- add dungeon and dungeon utility structs
+2/2/25  3:00  PM -- add vector and list utilities
+2/2/25  5:20  PM -- add dungeon hardness generation and printing
 
-2/3/25 5:30 PM  -- add more vector utilities and begin random room generation
-2/3/25 11:59 PM -- preliminary room generation - bounding checks are broken
+2/3/25  5:30  PM -- add more vector utilities and begin random room generation
+2/3/25  11:59 PM -- preliminary room generation - bounding checks are broken
 
-2/4/25 3:00 PM  -- improve room generation algorithm, bounding checks still broken
-2/4/25 9:30 PM  -- fix room collision checks, work on room generation, write rooms to print buffer
-2/4/25 11:00 PM -- initial corridor generation
+2/4/25  3:00  PM -- improve room generation algorithm, bounding checks still broken
+2/4/25  9:30  PM -- fix room collision checks, work on room generation, write rooms to print buffer
+2/4/25  11:00 PM -- initial corridor generation
 
-2/5/25 12:30 AM -- stair placement
-2/5/25 2:00 PM  -- finish room random resizing
-2/5/25 4:00 PM  -- remove unused code, cleanup
-2/5/25 4:30 PM  -- update makefile
+2/5/25  12:30 AM -- stair placement
+2/5/25  2:00  PM -- finish room random resizing
+2/5/25  4:00  PM -- remove unused code, cleanup
+2/5/25  4:30  PM -- update makefile
+
+2/8/25  9:00  PM -- begin writing serialization procedure
+2/10/25 8:00  PM -- update dungeon struct to handle dynamic rooms and stairs
+2/10/25 8:30  PM -- finish serialization procedure
+2/10/25 9:30  PM -- finish deserialization procedure
+2/10/25 9:45  PM -- debug room size realloc bug and add dungeon zeroing helper
+2/10/25 10:00 PM -- test file i/o and begin args handling
+2/10/25 10:30 PM -- finish args handling, add automatic directory creation
+2/10/25 10:45 PM -- add player character visual, verify using all premade dungeons

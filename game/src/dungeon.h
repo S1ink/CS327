@@ -56,16 +56,19 @@ void print_room(const DungeonRoom* r);
 typedef struct Dungeon
 {
     DungeonCell cells[DUNGEON_Y_DIM][DUNGEON_X_DIM];
-    DungeonRoom rooms[DUNGEON_MAX_NUM_ROOMS];
-    size_t num_rooms;
+    DungeonRoom* rooms;
+    uint16_t num_rooms;
+    uint16_t num_up_stair;
+    uint16_t num_down_stair;
 
     char printable[DUNGEON_Y_DIM][DUNGEON_X_DIM];
 }
 Dungeon;
 
 int generate_dungeon(Dungeon* d, uint32_t seed);
+int zero_dungeon(Dungeon* d);
 int destruct_dungeon(Dungeon* d);
 
 int print_dungeon(Dungeon* d, int border);
-int serialize_dungeon(const Dungeon* d, FILE* out);
-int deserialize_dungeon(Dungeon* d, FILE* in);
+int serialize_dungeon(const Dungeon* d, FILE* out, const uint8_t* pc_loc);
+int deserialize_dungeon(Dungeon* d, FILE* in, uint8_t* pc_loc);

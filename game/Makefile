@@ -1,4 +1,4 @@
-CFLAGS := -Wall -Werror -g -O2 -Isrc
+CFLAGS := -Wall -Werror -g -Og -Isrc
 LDFLAGS := -lm
 
 wordsearch: build_dir main.c.o dungeon.c.o perlin.c.o vec_geom.c.o

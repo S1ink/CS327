@@ -72,6 +72,8 @@ int handle_dungeon_init(Dungeon* d, int argc, char** argv)
         fclose(f);
     }
 
+    if(save_path) free(save_path);
+
     return 0;
 }
 

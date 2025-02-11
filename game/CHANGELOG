@@ -25,3 +25,4 @@
 2/10/25 10:30 PM -- finish args handling, add automatic directory creation
 2/10/25 10:45 PM -- add player character visual, verify using all premade dungeons
 2/10/25 10:55 PM -- fix leaks found by valgrind
+2/10/25 11:10 PM -- handle missing files when loading, update readme

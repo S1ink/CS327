@@ -11,9 +11,14 @@
 #define PRINT_BOARDER 1
 #endif
 
+#ifndef DUNGEON_FILE_NAME
+#define DUNGEON_FILE_NAME "/dungeon"
+#endif
+
 
 int handle_dungeon_init(Dungeon* d, int argc, char** argv)
 {
+    int ret = 0;
     int load = 0;
     int save = 0;
     char* save_path = 0;
@@ -22,7 +27,7 @@ int handle_dungeon_init(Dungeon* d, int argc, char** argv)
     {
         const char* home = getenv("HOME");
         const char* rel_save_dir = "/.rlg327";
-        const char* rel_save_file = "/dungeon";
+        const char* rel_save_file = DUNGEON_FILE_NAME;
 
         size_t home_strlen = strlen(home);
         size_t rel_save_dir_strlen = strlen(rel_save_dir);
@@ -53,9 +58,17 @@ int handle_dungeon_init(Dungeon* d, int argc, char** argv)
 
         uint8_t pc[2];
         FILE* f = fopen(save_path, "rb");
-        deserialize_dungeon(d, f, pc);
-        d->printable[pc[1]][pc[0]] = '@';
-        fclose(f);
+        if(f)
+        {
+            deserialize_dungeon(d, f, pc);
+            d->printable[pc[1]][pc[0]] = '@';
+            fclose(f);
+        }
+        else
+        {
+            printf("ERROR: Failed to load dungeon from '%s' (file does not exist)\n", save_path);
+            ret = -1;
+        }
     }
     else
     {
@@ -68,13 +81,21 @@ int handle_dungeon_init(Dungeon* d, int argc, char** argv)
         PRINT_DEBUG("SAVING DUNGEON TO '%s'\n", save_path)
 
         FILE* f = fopen(save_path, "wb");
-        serialize_dungeon(d, f, NULL);
-        fclose(f);
+        if(f)
+        {
+            serialize_dungeon(d, f, NULL);
+            fclose(f);
+        }
+        else
+        {
+            printf("ERROR: Failed to save dungeon to '%s'\n", save_path);
+            ret = -1;
+        }
     }
 
     if(save_path) free(save_path);
 
-    return 0;
+    return ret;
 }
 
 int main(int argc, char** argv)
@@ -82,8 +103,8 @@ int main(int argc, char** argv)
     Dungeon d;
     zero_dungeon(&d);
 
-    handle_dungeon_init(&d, argc, argv);
-    print_dungeon(&d, PRINT_BOARDER);
+    if(!handle_dungeon_init(&d, argc, argv))
+        print_dungeon(&d, PRINT_BOARDER);
 
     destruct_dungeon(&d);
 

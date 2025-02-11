@@ -18,6 +18,17 @@ int strcmp_2(const char* s1, const char* s2)
 
     return s1[i] - s2[i];
 }
+int strcmp_idiomatic(const char* s1, const char* s2)    // "the better version"
+{
+    while(*s1 && *s1 == *s2)
+    {
+        s1++;
+        s2++;
+    }
+
+    return *s1 - *s2;
+}
+
 int strlen_2(const char* s)
 {
     int32_t i;
@@ -43,9 +54,11 @@ int main(int argc, char** argv)
 {
     char a[] = "Hello";
     char b[] = "Goodbye";
-    const char* c = "Hello";
+    char* c = "Hello";
 
+    printf("%d\t%d\n", strcmp_idiomatic(a, b), strcmp_idiomatic(a, c));
     b[0] = 'H';
+    printf("%d\t%d\n", strcmp_idiomatic(a, b), strcmp_idiomatic(a, c));
 
     strcpy_2(b, a);
     printf("%s\n", b);

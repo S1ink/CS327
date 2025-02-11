@@ -16,5 +16,8 @@ fio: fio.c
 strings: strings.c
 	gcc strings.c -o strings
 
+chars: char.c
+	gcc char.c -Wall -Werror -o char
+
 clean:
-	rm -rf *.o *~ queue_test
+	rm -rf *.o *~ queue_test strings char

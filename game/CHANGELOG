@@ -26,3 +26,4 @@
 2/10/25 10:45 PM -- add player character visual, verify using all premade dungeons
 2/10/25 10:55 PM -- fix leaks found by valgrind
 2/10/25 11:10 PM -- handle missing files when loading, update readme
+2/11/25 9:30  PM -- make PC location persistant when loading/saving simultaneously

@@ -52,11 +52,11 @@ int handle_dungeon_init(Dungeon* d, int argc, char** argv)
         }
     }
 
+    uint8_t pc[] = { 0, 0 };
     if(load)
     {
         PRINT_DEBUG("LOADING DUNGEON FROM '%s'\n", save_path);
 
-        uint8_t pc[2];
         FILE* f = fopen(save_path, "rb");
         if(f)
         {
@@ -83,7 +83,7 @@ int handle_dungeon_init(Dungeon* d, int argc, char** argv)
         FILE* f = fopen(save_path, "wb");
         if(f)
         {
-            serialize_dungeon(d, f, NULL);
+            serialize_dungeon(d, f, pc);
             fclose(f);
         }
         else

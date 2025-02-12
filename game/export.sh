@@ -3,7 +3,7 @@
 make clean
 rm -f richter_sam.assignment-1.02.tar.gz
 cp -R ../game/ ./richter_sam.assignment-1.02
-rm -f ./richter_sam.assignment-1.02/export.sh
+rm -f ./richter_sam.assignment-1.02/export.sh ./richter_sam.assignment-1.02/crash_count.txt
 pushd ./richter_sam.assignment-1.02/src/util
 rm -f ./array.h ./grid.h ./list.h ./queue.h ./stack.h
 popd

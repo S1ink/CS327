@@ -13,7 +13,7 @@
 #include <math.h>
 
 #ifndef DEBUG_PRINT_HARDNESS
-#define DEBUG_PRINT_HARDNESS 0
+#define DEBUG_PRINT_HARDNESS 1
 #endif
 
 
@@ -473,7 +473,43 @@ int print_dungeon(Dungeon* d, int border)
 
     for(uint32_t y = 0; y < DUNGEON_Y_DIM; y++)
     {
-        printf(row_fmt, DUNGEON_X_DIM, d->printable[y]);
+        char row[20 * DUNGEON_X_DIM + 7 + 1];   // "\033[48;2;<3>;127;127m<1>" for each cell + reset code + null termination
+        uint32_t i = 0;
+        for(uint32_t x = 0; x < DUNGEON_X_DIM; x++)
+        {
+            DungeonCell C = d->cells[y][x];
+            char c = ' ';
+            uint8_t h = C.hardness;
+
+            switch(C.type)
+            {
+                case ROCK: c = ' '; break;
+                case ROOM: c = '.'; h = 0; break;
+                case CORRIDOR: c = '#'; h = 0; break;
+            }
+            switch(C.is_stair)
+            {
+                case STAIR_UP: c = '<'; break;
+                case STAIR_DOWN: c = '>'; break;
+                case NO_STAIR:
+                default: break;
+            }
+
+            #if DEBUG_PRINT_HARDNESS
+                i += sprintf(row + i, "\033[48;2;127;%d;127m%c", h, c);
+            #else
+                row[i] = c;
+                i++;
+            #endif
+        }
+        #if DEBUG_PRINT_HARDNESS
+            strcpy(row + i, "\033[0m");
+            i += 4;
+        #else
+            row[i] = '\0';
+            // i += 1;
+        #endif
+        printf(row_fmt, i, row);
     }
 
     if(border)

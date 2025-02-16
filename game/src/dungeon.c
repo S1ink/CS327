@@ -461,7 +461,7 @@ int destruct_dungeon(Dungeon* d)
 
 /* SERIALIZATION/DESERIALIZATION */
 
-int print_dungeon(Dungeon* d, int border)
+int print_dungeon(Dungeon* d, uint8_t* pc_loc, int border)
 {
     char* row_fmt = "%.*s\n";
 
@@ -473,7 +473,14 @@ int print_dungeon(Dungeon* d, int border)
 
     for(uint32_t y = 0; y < DUNGEON_Y_DIM; y++)
     {
+        // TDODOODOOD
+
+
+    #if DEBUG_PRINT_HARDNESS
         char row[20 * DUNGEON_X_DIM + 7 + 1];   // "\033[48;2;<3>;127;127m<1>" for each cell + reset code + null termination
+    #else
+        char row[DUNGEON_X_DIM];
+    #endif
         uint32_t i = 0;
         for(uint32_t x = 0; x < DUNGEON_X_DIM; x++)
         {
@@ -496,14 +503,14 @@ int print_dungeon(Dungeon* d, int border)
             }
 
             #if DEBUG_PRINT_HARDNESS
-                i += sprintf(row + i, "\033[48;2;127;%d;127m%c", h, c);
+                i += sprintf(row + i, "\033[48;2;127;%d;127m%c", h, c);     // does not export null termination
             #else
                 row[i] = c;
                 i++;
             #endif
         }
         #if DEBUG_PRINT_HARDNESS
-            strcpy(row + i, "\033[0m");
+            strcpy(row + i, "\033[0m");     // null termination is copied as wel
             i += 4;
         #else
             row[i] = '\0';

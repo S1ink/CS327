@@ -61,7 +61,7 @@ typedef struct Dungeon
     uint16_t num_up_stair;
     uint16_t num_down_stair;
 
-    char printable[DUNGEON_Y_DIM][DUNGEON_X_DIM];
+    // char printable[DUNGEON_Y_DIM][DUNGEON_X_DIM];
 }
 Dungeon;
 
@@ -69,6 +69,8 @@ int generate_dungeon(Dungeon* d, uint32_t seed);
 int zero_dungeon(Dungeon* d);
 int destruct_dungeon(Dungeon* d);
 
-int print_dungeon(Dungeon* d, int border);
+int random_dungeon_floor_pos(uint8_t* pos);
+
+int print_dungeon(Dungeon* d, uint8_t* pc_loc, int border);
 int serialize_dungeon(const Dungeon* d, FILE* out, const uint8_t* pc_loc);
 int deserialize_dungeon(Dungeon* d, FILE* in, uint8_t* pc_loc);

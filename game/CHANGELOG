@@ -3,14 +3,11 @@
 2/2/25  2:00  PM -- add dungeon and dungeon utility structs
 2/2/25  3:00  PM -- add vector and list utilities
 2/2/25  5:20  PM -- add dungeon hardness generation and printing
-
 2/3/25  5:30  PM -- add more vector utilities and begin random room generation
 2/3/25  11:59 PM -- preliminary room generation - bounding checks are broken
-
 2/4/25  3:00  PM -- improve room generation algorithm, bounding checks still broken
 2/4/25  9:30  PM -- fix room collision checks, work on room generation, write rooms to print buffer
 2/4/25  11:00 PM -- initial corridor generation
-
 2/5/25  12:30 AM -- stair placement
 2/5/25  2:00  PM -- finish room random resizing
 2/5/25  4:00  PM -- remove unused code, cleanup
@@ -27,3 +24,7 @@
 2/10/25 10:55 PM -- fix leaks found by valgrind
 2/10/25 11:10 PM -- handle missing files when loading, update readme
 2/11/25 9:30  PM -- make PC location persistant when loading/saving simultaneously
+
+2/??/25 ??:?? ?? -- add colorful output
+2/16/25 4:00  PM -- add fib heap from 1.01 solution
+2/16/25 4:20  PM -- reformat fib heap

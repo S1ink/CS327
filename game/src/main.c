@@ -61,7 +61,7 @@ int handle_dungeon_init(Dungeon* d, int argc, char** argv)
         if(f)
         {
             deserialize_dungeon(d, f, pc);
-            d->printable[pc[1]][pc[0]] = '@';
+            // d->printable[pc[1]][pc[0]] = '@';
             fclose(f);
         }
         else

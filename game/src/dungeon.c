@@ -1,4 +1,5 @@
 #include "dungeon.h"
+#include "pathing.h"
 
 #include "util/perlin.h"
 #include "util/debug.h"
@@ -15,13 +16,12 @@
 #include <math.h>
 
 #ifndef DEBUG_PRINT_HARDNESS
-#define DEBUG_PRINT_HARDNESS 0
+#define DEBUG_PRINT_HARDNESS 1
 #endif
 
 
 /* UTILITIES */
 
-GENERATE_VEC2_TYPE(uint8_t, u8)
 GENERATE_MIN_MAX_UTIL(uint32_t, u32)
 
 static inline uint32_t random_in_range(uint32_t min, uint32_t max)
@@ -54,111 +54,6 @@ static inline char get_cell_char(CellTerrain c)
         default: break;
     }
     return ' ';
-}
-
-
-/* DIJKSTRA */
-
-typedef struct CellPathNode
-{
-    HeapNode* hn;
-    Vec2u8 pos;
-    Vec2u8 from;
-    int32_t cost;
-}
-CellPathNode;
-
-static int32_t cell_path_cmp(const void* k, const void* w)
-{
-    return ((CellPathNode*)k)->cost - ((CellPathNode*)w)->cost;
-}
-
-static int dijkstra_corridor_path(Dungeon* d, Vec2u from, Vec2u to)
-{
-    static CellPathNode path_nodes[DUNGEON_Y_DIM][DUNGEON_X_DIM], *p;
-    static uint32_t init = 0;
-    Heap h;
-    uint32_t x, y;
-
-    Vec2u8 from8, to8, iter8;
-    vec2u8_assign(&from8, (uint8_t)from.x, (uint8_t)from.y);
-    vec2u8_assign(&to8, (uint8_t)to.x, (uint8_t)to.y);
-
-// STATIC INITIALIZATION
-    if(!init)
-    {
-        for(y = 0; y < DUNGEON_Y_DIM; y++)
-        {
-            for(x = 0; x < DUNGEON_X_DIM; x++)
-            {
-                path_nodes[y][x].pos.x = x;
-                path_nodes[y][x].pos.y = y;
-            }
-        }
-        init = 1;
-    }
-// RESET ALL WEIGHTS TO MAX
-    for(y = 0; y < DUNGEON_Y_DIM; y++)
-    {
-        for(x = 0; x < DUNGEON_X_DIM; x++)
-        {
-            path_nodes[y][x].cost = INT_MAX;
-        }
-    }
-// INIT SRC NODE
-    path_nodes[from.y][from.x].cost = 0;
-// CREATE HEAP
-    heap_init(&h, cell_path_cmp, NULL);
-// CREATE HEAP NODES
-    for(y = 0; y < DUNGEON_Y_DIM; y++)
-    {
-        for(x = 0; x < DUNGEON_X_DIM; x++)
-        {
-            if(d->hardness[y][x] != 0xFF)
-            {
-                path_nodes[y][x].hn = heap_insert(&h, path_nodes[y] + x);
-            }
-            else
-            {
-                path_nodes[y][x].hn = NULL;
-            }
-        }
-    }
-// ALGO
-    while((p = heap_remove_min(&h)))
-    {
-        p->hn = NULL;   // node was deleted from the heap
-
-        if(vec2u8_equal(&p->pos, &to8))
-        {
-        // EXPORT PATH
-            for(vec2u8_copy(&iter8, &to8); !vec2u8_equal(&iter8, &from8); vec2u8_copy(&iter8, &p->from))
-            {
-                d->terrain[iter8.y][iter8.x].type = CORRIDOR;
-                p = &path_nodes[iter8.y][iter8.x];
-            }
-            heap_delete(&h);
-            return 0;
-        }
-
-        const int32_t p_cost = p->cost + (int32_t)d->hardness[p->pos.y][p->pos.x];
-
-        // CHECK CARDINAL DIRECTIONS
-    #define CHECK_NEIGHBOR(x, y) \
-        if( (path_nodes[(y)][(x)].hn) && (path_nodes[(y)][(x)].cost > p_cost) ) \
-        { \
-            path_nodes[(y)][(x)].cost = p_cost; \
-            vec2u8_copy(&path_nodes[(y)][(x)].from, &p->pos); \
-            heap_decrease_key_no_replace(&h, path_nodes[(y)][(x)].hn); \
-        }
-
-        CHECK_NEIGHBOR(p->pos.x, p->pos.y - 1)
-        CHECK_NEIGHBOR(p->pos.x - 1, p->pos.y)
-        CHECK_NEIGHBOR(p->pos.x + 1, p->pos.y)
-        CHECK_NEIGHBOR(p->pos.x, p->pos.y + 1)
-    }
-
-    return -1;
 }
 
 
@@ -233,7 +128,7 @@ int create_random_connection(Dungeon* d, size_t a, size_t b)
     vec2u_random_in_range(&pos_r1, room_data[a].tl, room_data[a].br);
     vec2u_random_in_range(&pos_r2, room_data[b].tl, room_data[b].br);
 
-    dijkstra_corridor_path(d, pos_r1, pos_r2);
+    dungeon_dijkstra_corridor_path(d, pos_r1, pos_r2);
 
     return 0;
 }
@@ -551,14 +446,14 @@ int print_dungeon(Dungeon* d, uint8_t* pc_loc, int border)
 
         uint32_t i = 0;
     #if DEBUG_PRINT_HARDNESS
-        char row[20 * DUNGEON_X_DIM + 7 + 1];   // "\033[48;2;<3>;127;127m<1>" for each cell + reset code + null termination
+        char row[20 * DUNGEON_X_DIM + 5];   // "\033[48;2;<3>;127;127m<1>" for each cell + reset code + null termination
         for(uint32_t x = 0; x < DUNGEON_X_DIM; x++)
         {
             uint8_t h = d->hardness[y][x];
             if(d->terrain[y][x].type) h = 0;
             i += sprintf(row + i, "\033[48;2;127;%d;127m%c", h, row_chars[x]);     // does not export null termination
         }
-        strcpy(row + i, "\033[0m");     // null termination is copied as wel
+        strcpy(row + i, "\033[0m");     // null termination is copied as well
         i += 4;
     #else
         char* row = row_chars;
@@ -571,6 +466,73 @@ int print_dungeon(Dungeon* d, uint8_t* pc_loc, int border)
     {
         printf("+%.*s+\n", DUNGEON_X_DIM, "-----------------------------------------------------------------------------------------------------------------------------------------------------------------------");
     }
+
+    return 0;
+}
+static int print_trav_weights(PathFindingBuffer* buff, int border)
+{
+    char* row_fmt = "%.*s\n";
+
+    if(border)
+    {
+        row_fmt = "|%.*s|\n";
+        printf("+%.*s+\n", DUNGEON_X_DIM, "-----------------------------------------------------------------------------------------------------------------------------------------------------------------------");
+    }
+
+    for(uint32_t y = 0; y < DUNGEON_Y_DIM; y++)
+    {
+        char row_chars[DUNGEON_X_DIM];
+        for(uint32_t x = 0; x < DUNGEON_X_DIM; x++)
+        {
+            const int32_t w = buff->nodes[y][x].cost;
+            row_chars[x] = w == INT_MAX ? ' ' : (w % 10) + '0';
+        }
+
+        uint32_t i = 0;
+    #if DEBUG_PRINT_HARDNESS
+        char row[20 * DUNGEON_X_DIM + 5];   // "\033[48;2;<3>;127;127m<1>" for each cell + reset code + null termination
+        for(uint32_t x = 0; x < DUNGEON_X_DIM; x++)
+        {
+            if(row_chars[x] == ' ') // dont print a color
+            {
+                i += sprintf(row + i, "\033[0m ");
+            }
+            else
+            {
+                i += sprintf(row + i, "\033[48;2;127;%d;127m%c", (buff->nodes[y][x].cost * 3 % 255), ' ');     // does not export null termination
+            }
+        }
+        strcpy(row + i, "\033[0m");     // null termination is copied as well
+        i += 4;
+    #else
+        char* row = row_chars;
+        i = DUNGEON_X_DIM;
+    #endif
+        printf(row_fmt, i, row);
+    }
+
+    if(border)
+    {
+        printf("+%.*s+\n", DUNGEON_X_DIM, "-----------------------------------------------------------------------------------------------------------------------------------------------------------------------");
+    }
+
+    return 0;
+}
+int print_dungeon_a3(Dungeon* d, uint8_t* pc_loc, int border)
+{
+    if(!pc_loc) return -1;
+
+    Vec2u pos;
+    vec2u_assign(&pos, pc_loc[0], pc_loc[1]);
+
+    PathFindingBuffer pbuff;
+    init_pathing_buffer(&pbuff);
+
+    dungeon_dijkstra_traverse_floor(d, pos, &pbuff);
+    print_trav_weights(&pbuff, border);
+
+    dungeon_dijkstra_traverse_terrain(d, pos, &pbuff);
+    print_trav_weights(&pbuff, border);
 
     return 0;
 }

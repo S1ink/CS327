@@ -112,7 +112,10 @@ int main(int argc, char** argv)
     zero_dungeon(&d);
 
     if(!handle_dungeon_init(&d, pc, argc, argv))
+    {
         print_dungeon(&d, pc, PRINT_BOARDER);
+        print_dungeon_a3(&d, pc, PRINT_BOARDER);
+    }
 
     destruct_dungeon(&d);
 

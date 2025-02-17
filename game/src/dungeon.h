@@ -72,5 +72,6 @@ int destruct_dungeon(Dungeon* d);
 int random_dungeon_floor_pos(Dungeon* d, uint8_t* pos);
 
 int print_dungeon(Dungeon* d, uint8_t* pc_loc, int border);
+int print_dungeon_a3(Dungeon* d, uint8_t* pc_loc, int border);
 int serialize_dungeon(const Dungeon* d, FILE* out, const uint8_t* pc_loc);
 int deserialize_dungeon(Dungeon* d, FILE* in, uint8_t* pc_loc);

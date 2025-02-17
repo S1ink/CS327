@@ -1,8 +1,8 @@
 CFLAGS := -Wall -Werror -g -Og -Isrc
 LDFLAGS := -lm
 
-wordsearch: build_dir main.c.o dungeon.c.o perlin.c.o heap.c.o
-	gcc build/main.c.o build/dungeon.c.o build/perlin.c.o build/heap.c.o $(LDFLAGS) -o game
+wordsearch: build_dir main.c.o dungeon.c.o perlin.c.o heap.c.o pathing.c.o
+	gcc build/main.c.o build/dungeon.c.o build/perlin.c.o build/heap.c.o build/pathing.c.o $(LDFLAGS) -o game
 
 build_dir:
 	mkdir -p build
@@ -18,6 +18,9 @@ perlin.c.o: src/util/perlin.c
 
 heap.c.o: src/util/heap.c
 	gcc $(CFLAGS) src/util/heap.c -c -o build/heap.c.o
+
+pathing.c.o: src/pathing.c
+	gcc $(CFLAGS) src/pathing.c -c -o build/pathing.c.o
 
 # vec_geom.c.o: src/util/vec_geom.c
 # 	gcc $(CFLAGS) src/util/vec_geom.c -c -o build/vec_geom.c.o

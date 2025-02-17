@@ -3,37 +3,162 @@
 #include "util/perlin.h"
 #include "util/debug.h"
 #include "util/math.h"
+#include "util/heap.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
 #include <endian.h>
+#include <limits.h>
 #include <time.h>
 #include <math.h>
 
 #ifndef DEBUG_PRINT_HARDNESS
-#define DEBUG_PRINT_HARDNESS 1
+#define DEBUG_PRINT_HARDNESS 0
 #endif
 
 
 /* UTILITIES */
 
+GENERATE_VEC2_TYPE(uint8_t, u8)
 GENERATE_MIN_MAX_UTIL(uint32_t, u32)
 
-uint32_t random_in_range(uint32_t min, uint32_t max)
+static inline uint32_t random_in_range(uint32_t min, uint32_t max)
 {
-    return min + (uint32_t)(rand() / (RAND_MAX / (max - min + 1)));
+    return min + (uint32_t)(rand() % (max - min + 1));
 }
-void vec2u_random(Vec2u* v, Vec2u range)
+static inline void vec2u_random(Vec2u* v, Vec2u range)
 {
-    v->x = (uint32_t)(rand() / (RAND_MAX / range.x));
-    v->y = (uint32_t)(rand() / (RAND_MAX / range.y));
+    v->x = (uint32_t)(rand() % range.x);
+    v->y = (uint32_t)(rand() % range.y);
 }
-void vec2u_random_in_range(Vec2u* v, Vec2u min, Vec2u max)
+static inline void vec2u_random_in_range(Vec2u* v, Vec2u min, Vec2u max)
 {
-    v->x = min.x + (uint32_t)(rand() / (RAND_MAX / (max.x - min.x + 1)));
-    v->y = min.y + (uint32_t)(rand() / (RAND_MAX / (max.y - min.y + 1)));
+    v->x = min.x + (uint32_t)(rand() % (max.x - min.x + 1));
+    v->y = min.y + (uint32_t)(rand() % (max.y - min.y + 1));
+}
+
+static inline char get_cell_char(CellTerrain c)
+{
+    switch(c.is_stair)
+    {
+        case STAIR_UP: return '<';
+        case STAIR_DOWN: return '>';
+        default: break;
+    }
+    switch(c.type)
+    {
+        case CORRIDOR: return '#';
+        case ROOM: return '.';
+        default: break;
+    }
+    return ' ';
+}
+
+
+/* DIJKSTRA */
+
+typedef struct CellPathNode
+{
+    HeapNode* hn;
+    Vec2u8 pos;
+    Vec2u8 from;
+    int32_t cost;
+}
+CellPathNode;
+
+static int32_t cell_path_cmp(const void* k, const void* w)
+{
+    return ((CellPathNode*)k)->cost - ((CellPathNode*)w)->cost;
+}
+
+static int dijkstra_corridor_path(Dungeon* d, Vec2u from, Vec2u to)
+{
+    static CellPathNode path_nodes[DUNGEON_Y_DIM][DUNGEON_X_DIM], *p;
+    static uint32_t init = 0;
+    Heap h;
+    uint32_t x, y;
+
+    Vec2u8 from8, to8, iter8;
+    vec2u8_assign(&from8, (uint8_t)from.x, (uint8_t)from.y);
+    vec2u8_assign(&to8, (uint8_t)to.x, (uint8_t)to.y);
+
+// STATIC INITIALIZATION
+    if(!init)
+    {
+        for(y = 0; y < DUNGEON_Y_DIM; y++)
+        {
+            for(x = 0; x < DUNGEON_X_DIM; x++)
+            {
+                path_nodes[y][x].pos.x = x;
+                path_nodes[y][x].pos.y = y;
+            }
+        }
+        init = 1;
+    }
+// RESET ALL WEIGHTS TO MAX
+    for(y = 0; y < DUNGEON_Y_DIM; y++)
+    {
+        for(x = 0; x < DUNGEON_X_DIM; x++)
+        {
+            path_nodes[y][x].cost = INT_MAX;
+        }
+    }
+// INIT SRC NODE
+    path_nodes[from.y][from.x].cost = 0;
+// CREATE HEAP
+    heap_init(&h, cell_path_cmp, NULL);
+// CREATE HEAP NODES
+    for(y = 0; y < DUNGEON_Y_DIM; y++)
+    {
+        for(x = 0; x < DUNGEON_X_DIM; x++)
+        {
+            if(d->hardness[y][x] != 0xFF)
+            {
+                path_nodes[y][x].hn = heap_insert(&h, path_nodes[y] + x);
+            }
+            else
+            {
+                path_nodes[y][x].hn = NULL;
+            }
+        }
+    }
+// ALGO
+    while((p = heap_remove_min(&h)))
+    {
+        p->hn = NULL;   // node was deleted from the heap
+
+        if(vec2u8_equal(&p->pos, &to8))
+        {
+        // EXPORT PATH
+            for(vec2u8_copy(&iter8, &to8); !vec2u8_equal(&iter8, &from8); vec2u8_copy(&iter8, &p->from))
+            {
+                d->terrain[iter8.y][iter8.x].type = CORRIDOR;
+                p = &path_nodes[iter8.y][iter8.x];
+            }
+            heap_delete(&h);
+            return 0;
+        }
+
+        const int32_t p_cost = p->cost + (int32_t)d->hardness[p->pos.y][p->pos.x];
+
+        // CHECK CARDINAL DIRECTIONS
+    #define CHECK_NEIGHBOR(x, y) \
+        if( (path_nodes[(y)][(x)].hn) && (path_nodes[(y)][(x)].cost > p_cost) ) \
+        { \
+            path_nodes[(y)][(x)].cost = p_cost; \
+            vec2u8_copy(&path_nodes[(y)][(x)].from, &p->pos); \
+            heap_decrease_key_no_replace(&h, path_nodes[(y)][(x)].hn); \
+        }
+
+        CHECK_NEIGHBOR(p->pos.x, p->pos.y - 1)
+        CHECK_NEIGHBOR(p->pos.x - 1, p->pos.y)
+        CHECK_NEIGHBOR(p->pos.x + 1, p->pos.y)
+        CHECK_NEIGHBOR(p->pos.x, p->pos.y + 1)
+    }
+
+    return -1;
 }
 
 
@@ -89,12 +214,12 @@ int zero_cells(Dungeon* d)
 {
     for(size_t i = 0; i < DUNGEON_Y_DIM; i++)
     {
-        memset(d->cells[i], 0x0, sizeof(d->cells[i]));
-        d->cells[i][0].hardness = d->cells[i][DUNGEON_X_DIM - 1].hardness = 0xFF;
+        memset(d->terrain[i], 0x0, sizeof(d->terrain[i]));
+        d->hardness[i][0] = d->hardness[i][DUNGEON_X_DIM - 1] = 0xFF;
     }
     for(size_t i = 1; i < DUNGEON_X_DIM - 1; i++)
     {
-        d->cells[0][i].hardness = d->cells[DUNGEON_Y_DIM - 1][i].hardness = 0xFF;
+        d->hardness[0][i] = d->hardness[DUNGEON_Y_DIM - 1][i] = 0xFF;
     }
 
     return 0;
@@ -108,50 +233,7 @@ int create_random_connection(Dungeon* d, size_t a, size_t b)
     vec2u_random_in_range(&pos_r1, room_data[a].tl, room_data[a].br);
     vec2u_random_in_range(&pos_r2, room_data[b].tl, room_data[b].br);
 
-    uint32_t beg_x, end_x, beg_y, end_y, x_trav_y, y_trav_x;
-    beg_x = u32_min(pos_r1.x, pos_r2.x);
-    end_x = u32_max(pos_r1.x, pos_r2.x);
-    beg_y = u32_min(pos_r1.y, pos_r2.y);
-    end_y = u32_max(pos_r1.y, pos_r2.y);
-
-    int32_t m;
-    m = ((int32_t)pos_r2.x - (int32_t)pos_r1.x) * ((int32_t)pos_r2.y - (int32_t)pos_r1.y);
-
-    if(rand() & 0x1)
-    {
-        if(m > 0)
-        {
-            x_trav_y = end_y;
-            y_trav_x = beg_x;
-        }
-        else
-        {
-            x_trav_y = beg_y;
-            y_trav_x = beg_x;
-        }
-    }
-    else
-    {
-        if(m > 0)
-        {
-            x_trav_y = beg_y;
-            y_trav_x = end_x;
-        }
-        else
-        {
-            x_trav_y = end_y;
-            y_trav_x = end_x;
-        }
-    }
-
-    for(uint32_t x = beg_x; x <= end_x; x++)
-    {
-        d->cells[x_trav_y][x].type = CORRIDOR;
-    }
-    for(uint32_t y = beg_y; y <= end_y; y++)
-    {
-        d->cells[y][y_trav_x].type = CORRIDOR;
-    }
+    dijkstra_corridor_path(d, pos_r1, pos_r2);
 
     return 0;
 }
@@ -178,7 +260,7 @@ int fill_room_cells(Dungeon* d)
         {
             for(size_t x = room->tl.x; x <= room->br.x; x++)
             {
-                d->cells[y][x].type = ROOM;
+                d->terrain[y][x].type = ROOM;
             }
         }
     }
@@ -345,7 +427,7 @@ int place_stairs(Dungeon* d)
     for(;;)
     {
         vec2u_random_in_range(&p, d_min, d_max);
-        DungeonCell* c = d->cells[p.y] + p.x;
+        CellTerrain* c = d->terrain[p.y] + p.x;
         if(c->type > 0)
         {
             c->is_stair = STAIR_UP;
@@ -355,7 +437,7 @@ int place_stairs(Dungeon* d)
     for(;;)
     {
         vec2u_random_in_range(&p, d_min, d_max);
-        DungeonCell* c = d->cells[p.y] + p.x;
+        CellTerrain* c = d->terrain[p.y] + p.x;
         if(c->type > 0 && c->is_stair == 0)
         {
             c->is_stair = STAIR_DOWN;
@@ -365,45 +447,6 @@ int place_stairs(Dungeon* d)
 
     d->num_up_stair = 1;
     d->num_down_stair = 1;
-
-    return 0;
-}
-
-
-int fill_printable(Dungeon* d)
-{
-    for(size_t y = 0; y < DUNGEON_Y_DIM; y++)
-    {
-        for(size_t x = 0; x < DUNGEON_X_DIM; x++)
-        {
-            DungeonCell C = d->cells[y][x];
-            char* c = d->printable[y] + x;
-
-            switch(C.is_stair)
-            {
-                case STAIR_UP: *c = '<'; continue;
-                case STAIR_DOWN: *c = '>'; continue;
-                case NO_STAIR:
-                default: break;
-            }
-            switch(C.type)
-            {
-            #if DEBUG_PRINT_HARDNESS
-                case ROCK:
-                {
-                    static const char* BRIGHTNESS = ".-:=*?#$%%&@";
-                    *c = BRIGHTNESS[C.hardness / (255 / 12 + 1)];
-                    break;
-                }
-                case ROOM: *c = ' '; break;
-            #else
-                case ROCK: *c = ' '; break;
-                case ROOM: *c = '.'; break;
-            #endif
-                case CORRIDOR: *c = '#'; break;
-            }
-        }
-    }
 
     return 0;
 }
@@ -426,14 +469,12 @@ int generate_dungeon(Dungeon* d, uint32_t seed)
         for(size_t x = 1; x < DUNGEON_X_DIM - 1; x++)
         {
             const float p = perlin2f((float)x * DUNGEON_PERLIN_SCALE_X + rx, (float)y * DUNGEON_PERLIN_SCALE_Y + ry);
-            d->cells[y][x].hardness = (uint8_t)(p * 127.f + 127.f);
+            d->hardness[y][x] = (uint8_t)(p * 127.f + 127.f);
         }
     }
 
     generate_rooms(d);
     place_stairs(d);
-
-    fill_printable(d);
 
     return 0;
 }
@@ -459,6 +500,30 @@ int destruct_dungeon(Dungeon* d)
 
 
 
+int random_dungeon_floor_pos(Dungeon* d, uint8_t* pos)
+{
+    Vec2u p, d_min, d_max;
+    vec2u_assign(&d_min, 1, 1);
+    vec2u_assign(&d_max, (DUNGEON_X_DIM - 2), (DUNGEON_Y_DIM - 2) );
+
+    for(;;)
+    {
+        vec2u_random_in_range(&p, d_min, d_max);
+        CellTerrain* c = d->terrain[p.y] + p.x;
+        if(c->type > 0)
+        {
+            break;
+        }
+    }
+
+    pos[0] = p.x;
+    pos[1] = p.y;
+
+    return 0;
+}
+
+
+
 /* SERIALIZATION/DESERIALIZATION */
 
 int print_dungeon(Dungeon* d, uint8_t* pc_loc, int border)
@@ -473,49 +538,32 @@ int print_dungeon(Dungeon* d, uint8_t* pc_loc, int border)
 
     for(uint32_t y = 0; y < DUNGEON_Y_DIM; y++)
     {
-        // TDODOODOOD
-
-
-    #if DEBUG_PRINT_HARDNESS
-        char row[20 * DUNGEON_X_DIM + 7 + 1];   // "\033[48;2;<3>;127;127m<1>" for each cell + reset code + null termination
-    #else
-        char row[DUNGEON_X_DIM];
-    #endif
-        uint32_t i = 0;
+        char row_chars[DUNGEON_X_DIM];
         for(uint32_t x = 0; x < DUNGEON_X_DIM; x++)
         {
-            DungeonCell C = d->cells[y][x];
-            char c = ' ';
-            uint8_t h = C.hardness;
-
-            switch(C.type)
-            {
-                case ROCK: c = ' '; break;
-                case ROOM: c = '.'; h = 0; break;
-                case CORRIDOR: c = '#'; h = 0; break;
-            }
-            switch(C.is_stair)
-            {
-                case STAIR_UP: c = '<'; break;
-                case STAIR_DOWN: c = '>'; break;
-                case NO_STAIR:
-                default: break;
-            }
-
-            #if DEBUG_PRINT_HARDNESS
-                i += sprintf(row + i, "\033[48;2;127;%d;127m%c", h, c);     // does not export null termination
-            #else
-                row[i] = c;
-                i++;
-            #endif
+            row_chars[x] = get_cell_char(d->terrain[y][x]);
         }
-        #if DEBUG_PRINT_HARDNESS
-            strcpy(row + i, "\033[0m");     // null termination is copied as wel
-            i += 4;
-        #else
-            row[i] = '\0';
-            // i += 1;
-        #endif
+
+        if(pc_loc && pc_loc[1] == y)
+        {
+            row_chars[pc_loc[0]] = '@';
+        }
+
+        uint32_t i = 0;
+    #if DEBUG_PRINT_HARDNESS
+        char row[20 * DUNGEON_X_DIM + 7 + 1];   // "\033[48;2;<3>;127;127m<1>" for each cell + reset code + null termination
+        for(uint32_t x = 0; x < DUNGEON_X_DIM; x++)
+        {
+            uint8_t h = d->hardness[y][x];
+            if(d->terrain[y][x].type) h = 0;
+            i += sprintf(row + i, "\033[48;2;127;%d;127m%c", h, row_chars[x]);     // does not export null termination
+        }
+        strcpy(row + i, "\033[0m");     // null termination is copied as wel
+        i += 4;
+    #else
+        char* row = row_chars;
+        i = DUNGEON_X_DIM;
+    #endif
         printf(row_fmt, i, row);
     }
 
@@ -561,10 +609,10 @@ int serialize_dungeon(const Dungeon* d, FILE* out, const uint8_t* pc)
     {
         for(size_t x = 0; x < DUNGEON_X_DIM; x++)
         {
-            const DungeonCell c = d->cells[y][x];
+            const CellTerrain c = d->terrain[y][x];
             switch(c.type)
             {
-                case ROCK: dungeon_bytes[y][x] = c.hardness; break;
+                case ROCK: dungeon_bytes[y][x] = d->hardness[y][x]; break;
                 case ROOM:
                 case CORRIDOR: dungeon_bytes[y][x] = 0; break;
             }
@@ -659,10 +707,12 @@ int deserialize_dungeon(Dungeon* d, FILE* in, uint8_t* pc)
     {
         for(size_t x = 0; x < DUNGEON_X_DIM; x++)
         {
-            DungeonCell* c = d->cells[y] + x;
+            CellTerrain* c = d->terrain[y] + x;
 
-            c->hardness = dungeon_bytes[y][x];
-            if(!c->hardness) c->type = CORRIDOR;
+            if( !(d->hardness[y][x] = dungeon_bytes[y][x]) )
+            {
+                c->type = CORRIDOR;
+            }
         }
     }
 
@@ -706,7 +756,7 @@ int deserialize_dungeon(Dungeon* d, FILE* in, uint8_t* pc)
     for(uint16_t s = 0; s < d->num_up_stair; s++)
     {
         status = fread(scratch, sizeof(*scratch), 2, in);
-        d->cells[scratch[1]][scratch[0]].is_stair = STAIR_UP;
+        d->terrain[scratch[1]][scratch[0]].is_stair = STAIR_UP;
     }
 
 // read number of downward stairs
@@ -718,10 +768,8 @@ int deserialize_dungeon(Dungeon* d, FILE* in, uint8_t* pc)
     for(uint16_t s = 0; s < d->num_down_stair; s++)
     {
         status = fread(scratch, sizeof(*scratch), 2, in);
-        d->cells[scratch[1]][scratch[0]].is_stair = STAIR_DOWN;
+        d->terrain[scratch[1]][scratch[0]].is_stair = STAIR_DOWN;
     }
-
-    fill_printable(d);
 
     (void)status;
     return 0;

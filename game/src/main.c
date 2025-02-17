@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <time.h>
 #include <sys/stat.h>
+#include <sys/time.h>
 
 #ifndef PRINT_BOARDER
 #define PRINT_BOARDER 1
@@ -16,7 +17,14 @@
 #endif
 
 
-int handle_dungeon_init(Dungeon* d, int argc, char** argv)
+uint32_t us_seed()
+{
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    return (tv.tv_usec ^ (tv.tv_sec << 20)) & 0xFFFFFFFFU;
+}
+
+int handle_dungeon_init(Dungeon* d, uint8_t* pc, int argc, char** argv)
 {
     int ret = 0;
     int load = 0;
@@ -52,7 +60,6 @@ int handle_dungeon_init(Dungeon* d, int argc, char** argv)
         }
     }
 
-    uint8_t pc[] = { 0, 0 };
     if(load)
     {
         PRINT_DEBUG("LOADING DUNGEON FROM '%s'\n", save_path);
@@ -61,7 +68,6 @@ int handle_dungeon_init(Dungeon* d, int argc, char** argv)
         if(f)
         {
             deserialize_dungeon(d, f, pc);
-            // d->printable[pc[1]][pc[0]] = '@';
             fclose(f);
         }
         else
@@ -74,7 +80,8 @@ int handle_dungeon_init(Dungeon* d, int argc, char** argv)
     {
         PRINT_DEBUG("GENERATING DUNGEON...\n")
 
-        generate_dungeon(d, time(NULL));
+        generate_dungeon(d, us_seed());
+        random_dungeon_floor_pos(d, pc);
     }
     if(save)
     {
@@ -101,10 +108,11 @@ int handle_dungeon_init(Dungeon* d, int argc, char** argv)
 int main(int argc, char** argv)
 {
     Dungeon d;
+    uint8_t pc[] = { 0, 0 };
     zero_dungeon(&d);
 
-    if(!handle_dungeon_init(&d, argc, argv))
-        print_dungeon(&d, PRINT_BOARDER);
+    if(!handle_dungeon_init(&d, pc, argc, argv))
+        print_dungeon(&d, pc, PRINT_BOARDER);
 
     destruct_dungeon(&d);
 

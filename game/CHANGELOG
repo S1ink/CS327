@@ -25,6 +25,10 @@
 2/10/25 11:10 PM -- handle missing files when loading, update readme
 2/11/25 9:30  PM -- make PC location persistant when loading/saving simultaneously
 
-2/??/25 ??:?? ?? -- add colorful output
+2/??/25 4:30  PM -- add colorful output
 2/16/25 4:00  PM -- add fib heap from 1.01 solution
 2/16/25 4:20  PM -- reformat fib heap
+2/16/25 8:00  PM -- updated player character support and dungeon struct
+2/16/25 8:30  PM -- inlined geometry vector utilities and added equality check
+2/16/25 10:00 PM -- add dijkstras for corridor pathing - weight initialization bugged
+2/16/25 10:30 PM -- fix corridor pathing, tune perline noise, add microsecond-based seeding

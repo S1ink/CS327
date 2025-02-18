@@ -1,4 +1,6 @@
 #include "dungeon.h"
+#include "dungeon_config.h"
+
 #include "util/debug.h"
 
 #include <string.h>
@@ -8,21 +10,7 @@
 #include <sys/stat.h>
 #include <sys/time.h>
 
-#ifndef PRINT_BOARDER
-#define PRINT_BOARDER 1
-#endif
 
-#ifndef DUNGEON_FILE_NAME
-#define DUNGEON_FILE_NAME "/dungeon"
-#endif
-
-
-uint32_t us_seed()
-{
-    struct timeval tv;
-    gettimeofday(&tv, NULL);
-    return (tv.tv_usec ^ (tv.tv_sec << 20)) & 0xFFFFFFFFU;
-}
 
 int handle_dungeon_init(Dungeon* d, uint8_t* pc, int argc, char** argv)
 {
@@ -111,10 +99,23 @@ int main(int argc, char** argv)
     uint8_t pc[] = { 0, 0 };
     zero_dungeon(&d);
 
+IF_DEBUG(uint64_t t1 = us_time();)
     if(!handle_dungeon_init(&d, pc, argc, argv))
     {
-        print_dungeon(&d, pc, PRINT_BOARDER);
-        print_dungeon_a3(&d, pc, PRINT_BOARDER);
+    IF_DEBUG(uint64_t t2 = us_time();)
+        print_dungeon(&d, pc, DUNGEON_PRINT_BORDER);
+    IF_DEBUG(uint64_t t3 = us_time();)
+        print_dungeon_a3(&d, pc, DUNGEON_PRINT_BORDER);
+    IF_DEBUG(uint64_t t4 = us_time();)
+
+    #if ENABLE_DEBUG_PRINTS
+        printf(
+            "RUNTIME: %f\n Init: %f\n Print: %f\n Weights: %f\n",
+            (double)(t4 - t1) * 1e-6,
+            (double)(t2 - t1) * 1e-6,
+            (double)(t3 - t2) * 1e-6,
+            (double)(t4 - t3) * 1e-6 );
+    #endif
     }
 
     destruct_dungeon(&d);

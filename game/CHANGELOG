@@ -32,3 +32,6 @@
 2/16/25 8:30  PM -- inlined geometry vector utilities and added equality check
 2/16/25 10:00 PM -- add dijkstras for corridor pathing - weight initialization bugged
 2/16/25 10:30 PM -- fix corridor pathing, tune perline noise, add microsecond-based seeding
+2/17/25 1:00  PM -- add generalized dijkstras + terrain, floor, and corridor algorithms
+2/17/25 1:30  PM -- print floor and terrain cost maps
+

@@ -1,4 +1,5 @@
 #include "dungeon.h"
+#include "dungeon_config.h"
 #include "pathing.h"
 
 #include "util/perlin.h"
@@ -14,10 +15,6 @@
 #include <limits.h>
 #include <time.h>
 #include <math.h>
-
-#ifndef DEBUG_PRINT_HARDNESS
-#define DEBUG_PRINT_HARDNESS 1
-#endif
 
 
 /* UTILITIES */
@@ -445,13 +442,13 @@ int print_dungeon(Dungeon* d, uint8_t* pc_loc, int border)
         }
 
         uint32_t i = 0;
-    #if DEBUG_PRINT_HARDNESS
+    #if DUNGEON_PRINT_HARDNESS
         char row[20 * DUNGEON_X_DIM + 5];   // "\033[48;2;<3>;127;127m<1>" for each cell + reset code + null termination
         for(uint32_t x = 0; x < DUNGEON_X_DIM; x++)
         {
-            uint8_t h = d->hardness[y][x];
-            if(d->terrain[y][x].type) h = 0;
-            i += sprintf(row + i, "\033[48;2;127;%d;127m%c", h, row_chars[x]);     // does not export null termination
+            uint8_t w = d->hardness[y][x];
+            if(d->terrain[y][x].type) w = 0;
+            i += sprintf(row + i, "\033[48;2;127;%d;127m%c", w, row_chars[x]);     // does not export null termination
         }
         strcpy(row + i, "\033[0m");     // null termination is copied as well
         i += 4;
@@ -476,7 +473,7 @@ static int print_trav_weights(PathFindingBuffer* buff, int border)
     if(border)
     {
         row_fmt = "|%.*s|\n";
-        printf("+%.*s+\n", DUNGEON_X_DIM, "-----------------------------------------------------------------------------------------------------------------------------------------------------------------------");
+        // printf("+%.*s+\n", DUNGEON_X_DIM, "-----------------------------------------------------------------------------------------------------------------------------------------------------------------------");
     }
 
     for(uint32_t y = 0; y < DUNGEON_Y_DIM; y++)
@@ -489,7 +486,7 @@ static int print_trav_weights(PathFindingBuffer* buff, int border)
         }
 
         uint32_t i = 0;
-    #if DEBUG_PRINT_HARDNESS
+    #if DUNGEON_PRINT_HARDNESS
         char row[20 * DUNGEON_X_DIM + 5];   // "\033[48;2;<3>;127;127m<1>" for each cell + reset code + null termination
         for(uint32_t x = 0; x < DUNGEON_X_DIM; x++)
         {
@@ -499,7 +496,8 @@ static int print_trav_weights(PathFindingBuffer* buff, int border)
             }
             else
             {
-                i += sprintf(row + i, "\033[48;2;127;%d;127m%c", (buff->nodes[y][x].cost * 3 % 255), ' ');     // does not export null termination
+                uint8_t w = (uint8_t)u32_min((buff->nodes[y][x].cost * 4), 0xFF);
+                i += sprintf(row + i, "\033[38;2;127;%d;%dm%c", w, 0xFF - w, row_chars[x]);     // does not export null termination
             }
         }
         strcpy(row + i, "\033[0m");     // null termination is copied as well
@@ -528,11 +526,25 @@ int print_dungeon_a3(Dungeon* d, uint8_t* pc_loc, int border)
     PathFindingBuffer pbuff;
     init_pathing_buffer(&pbuff);
 
+IF_DEBUG(const uint64_t t1 = us_time();)
     dungeon_dijkstra_traverse_floor(d, pos, &pbuff);
+IF_DEBUG(const uint64_t t2 = us_time();)
     print_trav_weights(&pbuff, border);
 
+IF_DEBUG(const uint64_t t3 = us_time();)
     dungeon_dijkstra_traverse_terrain(d, pos, &pbuff);
+IF_DEBUG(const uint64_t t4 = us_time();)
     print_trav_weights(&pbuff, border);
+IF_DEBUG(const uint64_t t5 = us_time();)
+
+#if ENABLE_DEBUG_PRINTS
+    printf(
+        "WEIGHTMAP GENERATION:\n Floor traversal: %f\n Floor trav print: %f\n Grid traversal: %f\n Grid trav print: %f\n",
+        (double)(t2 - t1) * 1e-6,
+        (double)(t3 - t2) * 1e-6,
+        (double)(t4 - t3) * 1e-6,
+        (double)(t5 - t4) * 1e-6 );
+#endif
 
     return 0;
 }

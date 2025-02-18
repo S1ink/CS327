@@ -19,5 +19,8 @@ strings: strings.c
 chars: char.c
 	gcc char.c -Wall -Werror -o char
 
+varray: varray.c
+	gcc varray.c -Wall -Werror -DVARRAY_MAIN -o varray
+
 clean:
 	rm -rf *.o *~ queue_test strings char

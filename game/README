@@ -1,5 +1,9 @@
+Initializes a dungeon, conducts path finding using only floors as well as the entire map, and prints the dungeon along with both weightmaps to the console.
+
 **BUILD**:
     Run `make`
+*Optionally, to enable colored output and debugging information*:
+    Run `make rebuild OPT=debug`
 
 **USAGE**:
     Run: `./game <--load> <--save>`

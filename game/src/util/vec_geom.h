@@ -10,45 +10,45 @@
 
 
 #define DEFINE_VEC2_UTILS(T, L) \
-    inline void vec2##L##_zero(Vec2##L* v) { v->x = 0; v->y = 0; } \
-    inline void vec2##L##_copy(Vec2##L* v, Vec2##L* a) { v->x = a->x; v->y = a->y; } \
-    inline void vec2##L##_assign(Vec2##L* v, T x, T y) { v->x = x; v->y = y; }
+    inline static void vec2##L##_zero(Vec2##L* v) { v->x = 0; v->y = 0; } \
+    inline static void vec2##L##_copy(Vec2##L* v, Vec2##L* a) { v->x = a->x; v->y = a->y; } \
+    inline static void vec2##L##_assign(Vec2##L* v, T x, T y) { v->x = x; v->y = y; }
 #define DEFINE_VEC3_UTILS(T, L) \
-    inline void vec3##L##_zero(Vec3##L* v) { v->x = 0; v->y = 0; v->z = 0; } \
-    inline void vec3##L##_copy(Vec3##L* v, Vec3##L* a) { v->x = a->x; v->y = a->y; v->z = a->z; } \
-    inline void vec3##L##_assign(Vec3##L* v, T x, T y, T z) { v->x = x; v->y = y; v->z = z; }
+    inline static void vec3##L##_zero(Vec3##L* v) { v->x = 0; v->y = 0; v->z = 0; } \
+    inline static void vec3##L##_copy(Vec3##L* v, Vec3##L* a) { v->x = a->x; v->y = a->y; v->z = a->z; } \
+    inline static void vec3##L##_assign(Vec3##L* v, T x, T y, T z) { v->x = x; v->y = y; v->z = z; }
 
 #define DEFINE_VEC2_EQUALITY(T, L) \
-    inline int vec2##L##_equal(Vec2##L* a, Vec2##L* b) { return (a->x == b->x && a->y == b->y); }
+    inline static int vec2##L##_equal(Vec2##L* a, Vec2##L* b) { return (a->x == b->x && a->y == b->y); }
 #define DEFINE_VEC3_EQUALITY(T, L) \
-    inline int vec3##L##_equal(Vec3##L* a, Vec3##L* b) { return (a->x == b->x && a->y == b->y && a->z == b->z); }
+    inline static int vec3##L##_equal(Vec3##L* a, Vec3##L* b) { return (a->x == b->x && a->y == b->y && a->z == b->z); }
 
 #define DEFINE_VEC2_ADD_SUB(T, L) \
-    inline void vec2##L##_add(Vec2##L* v, const Vec2##L* a, const Vec2##L* b) { v->x = a->x + b->x; v->y = a->y + b->y; } \
-    inline void vec2##L##_sub(Vec2##L* v, const Vec2##L* a, const Vec2##L* b) { v->x = a->x - b->x; v->y = a->y - b->y; }
+    inline static void vec2##L##_add(Vec2##L* v, const Vec2##L* a, const Vec2##L* b) { v->x = a->x + b->x; v->y = a->y + b->y; } \
+    inline static void vec2##L##_sub(Vec2##L* v, const Vec2##L* a, const Vec2##L* b) { v->x = a->x - b->x; v->y = a->y - b->y; }
 #define DEFINE_VEC3_ADD_SUB(T, L) \
-    inline void vec3##L##_add(Vec3##L* v, const Vec3##L* a, const Vec3##L* b) { v->x = a->x + b->x; v->y = a->y + b->y; v->z = a->z + b->z; } \
-    inline void vec3##L##_sub(Vec3##L* v, const Vec3##L* a, const Vec3##L* b) { v->x = a->x - b->x; v->y = a->y - b->y; v->z = a->z - b->z; }
+    inline static void vec3##L##_add(Vec3##L* v, const Vec3##L* a, const Vec3##L* b) { v->x = a->x + b->x; v->y = a->y + b->y; v->z = a->z + b->z; } \
+    inline static void vec3##L##_sub(Vec3##L* v, const Vec3##L* a, const Vec3##L* b) { v->x = a->x - b->x; v->y = a->y - b->y; v->z = a->z - b->z; }
 
 #define DEFINE_VEC2_CWISE_MIN_MAX(T, L) \
-    inline void vec2##L##_cwise_min(Vec2##L* v, const Vec2##L* a, const Vec2##L* b) \
+    inline static void vec2##L##_cwise_min(Vec2##L* v, const Vec2##L* a, const Vec2##L* b) \
     { \
         v->x = a->x < b->x ? a->x : b->x; \
         v->y = a->y < b->y ? a->y : b->y; \
     } \
-    inline void vec2##L##_cwise_max(Vec2##L* v, const Vec2##L* a, const Vec2##L* b) \
+    inline static void vec2##L##_cwise_max(Vec2##L* v, const Vec2##L* a, const Vec2##L* b) \
     { \
         v->x = a->x > b->x ? a->x : b->x; \
         v->y = a->y > b->y ? a->y : b->y; \
     }
 #define DEFINE_VEC3_CWISE_MIN_MAX(T, L) \
-    inline void vec3##L##_cwise_min(Vec3##L* v, const Vec3##L* a, const Vec3##L* b) \
+    inline static void vec3##L##_cwise_min(Vec3##L* v, const Vec3##L* a, const Vec3##L* b) \
     { \
         v->x = a->x < b->x ? a->x : b->x; \
         v->y = a->y < b->y ? a->y : b->y; \
         v->z = a->z < b->z ? a->z : b->z; \
     } \
-    inline void vec3##L##_cwise_max(Vec3##L* v, const Vec3##L* a, const Vec3##L* b) \
+    inline static void vec3##L##_cwise_max(Vec3##L* v, const Vec3##L* a, const Vec3##L* b) \
     { \
         v->x = a->x > b->x ? a->x : b->x; \
         v->y = a->y > b->y ? a->y : b->y; \

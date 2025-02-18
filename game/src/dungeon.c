@@ -482,7 +482,7 @@ static int print_trav_weights(PathFindingBuffer* buff, int border)
         for(uint32_t x = 0; x < DUNGEON_X_DIM; x++)
         {
             const int32_t w = buff->nodes[y][x].cost;
-            row_chars[x] = w == INT_MAX ? ' ' : (w % 10) + '0';
+            row_chars[x] = w == INT_MAX ? ' ' : w == 0 ? '@' : (w % 10) + '0';
         }
 
         uint32_t i = 0;

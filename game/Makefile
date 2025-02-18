@@ -1,30 +1,58 @@
-CFLAGS := -Wall -Werror -g -Og -Isrc
+rwildcard = $(foreach d,$(wildcard $(addsuffix *,$(1))),$(call rwildcard,$(d)/,$(2)) $(filter $(subst *,%,$(2)),$(d)))
+
+OPT ?= export
+
+ifeq ($(filter $(OPT),export debug release),)
+$(error invalid 'OPT' option - choose from {export/debug/release})
+endif
+
+CC := gcc
+CXX := g++
+
+CFLAGS := -Wall -Werror -funroll-loops -Isrc
+CXXFLAGS := -Wall -Werror -funroll-loops -Isrc
 LDFLAGS := -lm
 
-wordsearch: build_dir main.c.o dungeon.c.o perlin.c.o heap.c.o pathing.c.o
-	gcc build/main.c.o build/dungeon.c.o build/perlin.c.o build/heap.c.o build/pathing.c.o $(LDFLAGS) -o game
+SRC_DIR := src
+OBJ_DIR := build
 
-build_dir:
-	mkdir -p build
+ifeq ($(OPT),export)
+CFLAGS += -g -O2 -DDUNGEON_PRINT_BORDER=1 -DENABLE_DEBUG_PRINTS=0 -DDUNGEON_PRINT_HARDNESS=0
+CXXFLAGS += -g -O2 -DDUNGEON_PRINT_BORDER=1 -DENABLE_DEBUG_PRINTS=0 -DDUNGEON_PRINT_HARDNESS=0
+LDFLAGS += -g
+else ifeq ($(OPT),debug)
+CFLAGS += -g -Og -DENABLE_DEBUG_PRINTS=1 -DDUNGEON_PRINT_HARDNESS=1
+CXXFLAGS += -g -Og -DENABLE_DEBUG_PRINTS=1 -DDUNGEON_PRINT_HARDNESS=1
+LDFLAGS += -g
+else
+CFLAGS += -O3
+CXXFLAGS += -O3
+endif
 
-main.c.o: src/main.c
-	gcc $(CFLAGS) src/main.c -c -o build/main.c.o
+BIN := game
+SRCS := $(call rwildcard,$(SRC_DIR)/,*.cpp *.c)
+OBJS := $(SRCS:$(SRC_DIR)/%=$(OBJ_DIR)/%.o)
+HEADERS := $(call rwildcard,$(SRC_DIR)/,*.h *.hpp)
+OBJ_DIRS := $(sort $(dir $(OBJS)))
 
-dungeon.c.o: src/dungeon.c
-	gcc $(CFLAGS) src/dungeon.c -c -o build/dungeon.c.o
+.PHONY: all rebuild clean
 
-perlin.c.o: src/util/perlin.c
-	gcc $(CFLAGS) src/util/perlin.c -c -o build/perlin.c.o
+all: $(BIN)
 
-heap.c.o: src/util/heap.c
-	gcc $(CFLAGS) src/util/heap.c -c -o build/heap.c.o
+$(BIN): $(OBJS)
+	@echo Linking $@
+	@$(CC) $(LDFLAGS) -o $@ $^
 
-pathing.c.o: src/pathing.c
-	gcc $(CFLAGS) src/pathing.c -c -o build/pathing.c.o
+-include $(OBJS:.o=.d)
 
-# vec_geom.c.o: src/util/vec_geom.c
-# 	gcc $(CFLAGS) src/util/vec_geom.c -c -o build/vec_geom.c.o
+$(OBJ_DIR)/%.c.o : $(SRC_DIR)/%.c | $(OBJ_DIR) $(OBJ_DIRS)
+	@echo Compiling $(<F)
+	@$(CC) $(CFLAGS) -MMD -MF $(OBJ_DIR)/$*.d -c -o $@ $<
 
+$(OBJ_DIR) $(OBJ_DIRS):
+	mkdir -p $@
+
+rebuild: clean all
 
 clean:
-	rm -rf build game
+	rm -rf $(OBJ_DIR) $(BIN)

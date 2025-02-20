@@ -22,5 +22,8 @@ chars: char.c
 varray: varray.c
 	gcc varray.c -Wall -Werror -DVARRAY_MAIN -o varray
 
+macros: macros.c
+	gcc macros.c -Wall -Werror -o macros
+
 clean:
-	rm -rf *.o *~ queue_test strings char
+	rm -rf *.o *~ queue_test strings char varray macros

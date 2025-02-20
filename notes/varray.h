@@ -2,20 +2,10 @@
 
 #include <stdint.h>
 
-#ifndef VARRAY_DEFAULT_CAPACATY
-#define VARRAY_DEFAULT_CAPACATY 10
-#endif
+struct varray;      // fwd declaration
+typedef struct varray VArray;
 
-typedef struct
-{
-    char* data;
-    uint32_t cap;
-    uint32_t size;
-    uint32_t esz;
-}
-VArray;
-
-int varray_init(VArray* v, uint32_t esz);
+int varray_init(VArray** v, uint32_t esz);
 int varray_destroy(VArray* v);
 int varray_append(VArray* v, void* data);
 int varray_at(VArray* v, uint32_t idx, void* data);

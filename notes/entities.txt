@@ -1,0 +1,18 @@
+Place all characters in a priority queue, sorted by "next turn", with a secondary sort on seq. number.
+When the game starts, everybody has a next turn of 0.
+Afater a character momves, next turn is updated to current turn + speed (latency)
+
+Char    Speed       SN      NT (after 300t)
+@       100         0       0 -> 100 -> 200 -> 300
+A       100         1       0 -> 100 -> 200 -> 300
+B       50          2       0 -> 50 -> 100 -> 150 -> 200 -> 250 -> 300
+C       200         3       0 -> 200 -> 400
+D       90          4       0 -> 90 -> 180 -> 270
+E       110         5       0 -> 110 -> 220 -> 330
+F       100         6       0 -> 100 -> 200 -> 300
+
+Current game time is always the next turn of the character that was last removed from the heap!?
+That is, next turn *before* updating!
+
+Simulations of this sort are called discrete event simulators. There is no need to keep track of the game time. It's implicit in the NT.
+Time is skipped when nothing is happening?

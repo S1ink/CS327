@@ -7,10 +7,10 @@
 
 enum MonsterStats
 {
-    INTELLIGENCE =  0b0001,
-    TELEPATHY =     0b0010,
-    TUNNELING =     0b0100,
-    ERRATIC =       0b1000
+    INTELLIGENCE    = 0b0001,
+    TELEPATHY       = 0b0010,
+    TUNNELING       = 0b0100,
+    ERRATIC         = 0b1000
 };
 
 typedef struct

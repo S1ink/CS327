@@ -72,18 +72,27 @@ int destruct_dungeon_map(DungeonMap* d);
 
 int random_dungeon_map_floor_pos(DungeonMap* d, uint8_t* pos);
 
+int serialize_dungeon_map(const DungeonMap* d, const Vec2u8* pc_pos, FILE* out);
+int deserialize_dungeon_map(DungeonMap* d, Vec2u8* pc_pos, FILE* in);
+
 
 typedef struct
 {
     DungeonMap map;
+
     Entity* entities[DUNGEON_Y_DIM][DUNGEON_X_DIM];
+    uint8_t tunnel_costs[DUNGEON_Y_DIM][DUNGEON_X_DIM];
+    uint8_t terrain_costs[DUNGEON_Y_DIM][DUNGEON_X_DIM];
 
     Vec2u8 pc_position;
 }
 DungeonLevel;
 
+int zero_dungeon_level(DungeonLevel* d);
+int destruct_dungeon_level(DungeonLevel* d);
 
-int print_dungeon_level(DungeonMap* d, uint8_t* pc_loc, int border);
-int print_dungeon_level_a3(DungeonMap* d, uint8_t* pc_loc, int border);
-int serialize_dungeon_level(const DungeonMap* d, FILE* out, const uint8_t* pc_loc);
-int deserialize_dungeon_level(DungeonMap* d, FILE* in, uint8_t* pc_loc);
+int init_entities(DungeonLevel* d, size_t nmon);
+int update_costs(DungeonLevel* d);
+
+int print_dungeon_level(DungeonLevel* d, int border);
+int print_dungeon_level_a3(DungeonLevel* d, int border);

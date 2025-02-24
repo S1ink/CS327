@@ -11,56 +11,79 @@
 #include <sys/time.h>
 
 
+typedef struct
+{
+    uint8_t load : 1;
+    uint8_t save : 1;
+    uint8_t nmon;
+    char* save_path;
+}
+RuntimeState;
 
-int handle_dungeon_init(DungeonMap* d, uint8_t* pc, int argc, char** argv)
+int handle_level_init(DungeonLevel* d, RuntimeState* state, int argc, char** argv)
 {
     int ret = 0;
-    int load = 0;
-    int save = 0;
-    char* save_path = 0;
+    state->load = 0;
+    state->save = 0;
+    state->nmon = 0;
+    state->save_path = NULL;
 
-    if(argc > 1 && !strncmp(argv[1], "--", 2))
+    #define MAX_ARGN 4
+    int nmon_arg = 0;
+    for(int n = 1; n < argc && n < (MAX_ARGN + 1); n++)
+    {
+        const char* arg = argv[n];
+        if(!strncmp(arg, "--", 2))
+        {
+            state->load |= !strncmp(arg + 2, "load", 4);
+            state->save |= !strncmp(arg + 2, "save", 4);
+            if(!strncmp(arg + 2, "nummon", 6))
+            {
+                n++;
+                state->nmon = atoi(argv[n]);
+                nmon_arg = 1;
+            }
+        }
+    }
+    if(state->load || state->save)
     {
         const char* home = getenv("HOME");
         const char* rel_save_dir = "/.rlg327";
         const char* rel_save_file = DUNGEON_FILE_NAME;
 
-        size_t home_strlen = strlen(home);
-        size_t rel_save_dir_strlen = strlen(rel_save_dir);
-        size_t rel_save_file_strlen = strlen(rel_save_file);
+        const size_t home_strlen = strlen(home);
+        const size_t rel_save_dir_strlen = strlen(rel_save_dir);
+        const size_t rel_save_file_strlen = strlen(rel_save_file);
 
-        save_path = (char*)malloc(home_strlen + rel_save_dir_strlen + rel_save_file_strlen + 1);
+        state->save_path = (char*)malloc(home_strlen + rel_save_dir_strlen + rel_save_file_strlen + 1);
+        if(!state->save_path) ret = -1;
 
-        strcpy(save_path, home);
-        strcat(save_path, rel_save_dir);
-        mkdir(save_path, 0700);
-        strcat(save_path, rel_save_file);
-
-        // PRINT_DEBUG("SAVE PATH: %s\n", save_path);
-
-        if((load |= !strncmp(argv[1] + 2, "load", 4))) {}
-        else save |= !strncmp(argv[1] + 2, "save", 4);
-
-        if(argc > 2 && !strncmp(argv[2], "--", 2))
-        {
-            if(!strncmp(argv[2] + 2, "load", 4)) load |= 1;
-            else save |= !strncmp(argv[2] + 2, "save", 4);
-        }
+        strcpy(state->save_path, home);
+        strcat(state->save_path, rel_save_dir);
+        mkdir(state->save_path, 0700);
+        strcat(state->save_path, rel_save_file);
+    }
+    if(!nmon_arg)
+    {
+        state->nmon = (uint8_t)(rand() % DUNGEON_MAX_NUM_MONSTERS);
     }
 
-    if(load)
-    {
-        PRINT_DEBUG("LOADING DUNGEON FROM '%s'\n", save_path);
+    DungeonMap* map = &d->map;
+    Vec2u8* pc = &d->pc_position;
 
-        FILE* f = fopen(save_path, "rb");
+    if(state->load)
+    {
+        PRINT_DEBUG("LOADING DUNGEON FROM '%s'\n", state->save_path);
+
+        FILE* f = fopen(state->save_path, "rb");
         if(f)
         {
-            deserialize_dungeon_level(d, f, pc);
+            deserialize_dungeon_map(map, pc, f);
             fclose(f);
         }
         else
         {
-            printf("ERROR: Failed to load dungeon from '%s' (file does not exist)\n", save_path);
+            printf("ERROR: Failed to load dungeon from '%s' (file does not exist)\n", state->save_path);
             ret = -1;
         }
     }
@@ -68,44 +91,56 @@ int handle_dungeon_init(DungeonMap* d, uint8_t* pc, int argc, char** argv)
     {
         PRINT_DEBUG("GENERATING DUNGEON...\n")
 
-        generate_dungeon_map(d, us_seed());
-        random_dungeon_map_floor_pos(d, pc);
+        generate_dungeon_map(map, 0);
+        random_dungeon_map_floor_pos(map, pc->data);
     }
-    if(save)
-    {
-        PRINT_DEBUG("SAVING DUNGEON TO '%s'\n", save_path)
 
-        FILE* f = fopen(save_path, "wb");
+    init_entities(d, state->nmon);
+
+    return ret;
+}
+int handle_level_deinit(DungeonLevel* d, RuntimeState* state)
+{
+    int ret = 0;
+
+    if(state->save)
+    {
+        PRINT_DEBUG("SAVING DUNGEON TO '%s'\n", state->save_path)
+
+        FILE* f = fopen(state->save_path, "wb");
         if(f)
         {
-            serialize_dungeon_level(d, f, pc);
+            serialize_dungeon_map(&d->map, &d->pc_position, f);
             fclose(f);
         }
         else
         {
-            printf("ERROR: Failed to save dungeon to '%s'\n", save_path);
+            printf("ERROR: Failed to save dungeon to '%s'\n", state->save_path);
             ret = -1;
         }
     }
 
-    if(save_path) free(save_path);
+    free(state->save_path);
 
     return ret;
 }
 
 int main(int argc, char** argv)
 {
-    DungeonMap d;
-    uint8_t pc[] = { 0, 0 };
-    zero_dungeon_map(&d);
+    DungeonLevel d;
+    RuntimeState s;
+    zero_dungeon_level(&d);
+    srand(us_seed());
 
-IF_DEBUG(uint64_t t1 = us_time();)
-    if(!handle_dungeon_init(&d, pc, argc, argv))
+    IF_DEBUG(uint64_t t1 = us_time();)
+    if(!handle_level_init(&d, &s, argc, argv))
     {
+
+
     IF_DEBUG(uint64_t t2 = us_time();)
-        print_dungeon_level(&d, pc, DUNGEON_PRINT_BORDER);
+        print_dungeon_level(&d, DUNGEON_PRINT_BORDER);
     IF_DEBUG(uint64_t t3 = us_time();)
-        print_dungeon_level_a3(&d, pc, DUNGEON_PRINT_BORDER);
+    //     print_dungeon_level_a3(&d, DUNGEON_PRINT_BORDER);
     IF_DEBUG(uint64_t t4 = us_time();)
 
     #if ENABLE_DEBUG_PRINTS
@@ -117,8 +152,9 @@ IF_DEBUG(uint64_t t1 = us_time();)
             (double)(t4 - t3) * 1e-6 );
     #endif
     }
+    handle_level_deinit(&d, &s);
 
-    destruct_dungeon_map(&d);
+    destruct_dungeon_level(&d);
 
     return 0;
 }

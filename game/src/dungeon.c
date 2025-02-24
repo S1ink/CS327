@@ -36,8 +36,13 @@ static inline void vec2u_random_in_range(Vec2u* v, Vec2u min, Vec2u max)
     v->y = min.y + (uint32_t)(rand() % (max.y - min.y + 1));
 }
 
-static inline char get_cell_char(CellTerrain c)
+static inline char get_cell_char(CellTerrain c, Entity* e)
 {
+    if(e)
+    {
+        if(e->is_pc) return '@';
+        else return ("0123456789ABCDEF")[e->stats];
+    }
     switch(c.is_stair)
     {
         case STAIR_UP: return '<';
@@ -348,7 +353,7 @@ int place_stairs(DungeonMap* d)
 int generate_dungeon_map(DungeonMap* d, uint32_t seed)
 {
     if(seed > 0) srand(seed);
-    else srand(time(NULL));
+    // else srand(time(NULL));
 
     zero_cells(d);
 
@@ -418,138 +423,7 @@ int random_dungeon_map_floor_pos(DungeonMap* d, uint8_t* pos)
 
 /* SERIALIZATION/DESERIALIZATION */
 
-int print_dungeon_level(DungeonMap* d, uint8_t* pc_loc, int border)
-{
-    char* row_fmt = "%.*s\n";
-
-    if(border)
-    {
-        row_fmt = "|%.*s|\n";
-        printf("+%.*s+\n", DUNGEON_X_DIM, "-----------------------------------------------------------------------------------------------------------------------------------------------------------------------");
-    }
-
-    for(uint32_t y = 0; y < DUNGEON_Y_DIM; y++)
-    {
-        char row_chars[DUNGEON_X_DIM];
-        for(uint32_t x = 0; x < DUNGEON_X_DIM; x++)
-        {
-            row_chars[x] = get_cell_char(d->terrain[y][x]);
-        }
-
-        if(pc_loc && pc_loc[1] == y)
-        {
-            row_chars[pc_loc[0]] = '@';
-        }
-
-        uint32_t i = 0;
-    #if DUNGEON_PRINT_HARDNESS
-        char row[20 * DUNGEON_X_DIM + 5];   // "\033[48;2;<3>;127;127m<1>" for each cell + reset code + null termination
-        for(uint32_t x = 0; x < DUNGEON_X_DIM; x++)
-        {
-            uint8_t w = d->hardness[y][x];
-            if(d->terrain[y][x].type) w = 0;
-            i += sprintf(row + i, "\033[48;2;127;%d;127m%c", w, row_chars[x]);     // does not export null termination
-        }
-        strcpy(row + i, "\033[0m");     // null termination is copied as well
-        i += 4;
-    #else
-        char* row = row_chars;
-        i = DUNGEON_X_DIM;
-    #endif
-        printf(row_fmt, i, row);
-    }
-
-    if(border)
-    {
-        printf("+%.*s+\n", DUNGEON_X_DIM, "-----------------------------------------------------------------------------------------------------------------------------------------------------------------------");
-    }
-
-    return 0;
-}
-static int print_trav_weights(PathFindingBuffer* buff, int border)
-{
-    char* row_fmt = "%.*s\n";
-
-    if(border)
-    {
-        row_fmt = "|%.*s|\n";
-        // printf("+%.*s+\n", DUNGEON_X_DIM, "-----------------------------------------------------------------------------------------------------------------------------------------------------------------------");
-    }
-
-    for(uint32_t y = 0; y < DUNGEON_Y_DIM; y++)
-    {
-        char row_chars[DUNGEON_X_DIM];
-        for(uint32_t x = 0; x < DUNGEON_X_DIM; x++)
-        {
-            const int32_t w = buff->nodes[y][x].cost;
-            row_chars[x] = w == INT_MAX ? ' ' : w == 0 ? '@' : (w % 10) + '0';
-        }
-
-        uint32_t i = 0;
-    #if DUNGEON_PRINT_HARDNESS
-        char row[20 * DUNGEON_X_DIM + 5];   // "\033[48;2;<3>;127;127m<1>" for each cell + reset code + null termination
-        for(uint32_t x = 0; x < DUNGEON_X_DIM; x++)
-        {
-            if(row_chars[x] == ' ') // dont print a color
-            {
-                i += sprintf(row + i, "\033[0m ");
-            }
-            else
-            {
-                uint8_t w = (uint8_t)u32_min((buff->nodes[y][x].cost * 4), 0xFF);
-                i += sprintf(row + i, "\033[38;2;127;%d;%dm%c", w, 0xFF - w, row_chars[x]);     // does not export null termination
-            }
-        }
-        strcpy(row + i, "\033[0m");     // null termination is copied as well
-        i += 4;
-    #else
-        char* row = row_chars;
-        i = DUNGEON_X_DIM;
-    #endif
-        printf(row_fmt, i, row);
-    }
-
-    if(border)
-    {
-        printf("+%.*s+\n", DUNGEON_X_DIM, "-----------------------------------------------------------------------------------------------------------------------------------------------------------------------");
-    }
-
-    return 0;
-}
-int print_dungeon_level_a3(DungeonMap* d, uint8_t* pc_loc, int border)
-{
-    if(!pc_loc) return -1;
-
-    Vec2u pos;
-    vec2u_assign(&pos, pc_loc[0], pc_loc[1]);
-
-    PathFindingBuffer pbuff;
-    init_pathing_buffer(&pbuff);
-
-IF_DEBUG(const uint64_t t1 = us_time();)
-    dungeon_dijkstra_traverse_floor(d, pos, &pbuff);
-IF_DEBUG(const uint64_t t2 = us_time();)
-    print_trav_weights(&pbuff, border);
-
-IF_DEBUG(const uint64_t t3 = us_time();)
-    dungeon_dijkstra_traverse_terrain(d, pos, &pbuff);
-IF_DEBUG(const uint64_t t4 = us_time();)
-    print_trav_weights(&pbuff, border);
-IF_DEBUG(const uint64_t t5 = us_time();)
-
-#if ENABLE_DEBUG_PRINTS
-    printf(
-        "WEIGHTMAP GENERATION:\n Floor traversal: %f\n Floor trav print: %f\n Grid traversal: %f\n Grid trav print: %f\n",
-        (double)(t2 - t1) * 1e-6,
-        (double)(t3 - t2) * 1e-6,
-        (double)(t4 - t3) * 1e-6,
-        (double)(t5 - t4) * 1e-6 );
-#endif
-
-    return 0;
-}
-
-int serialize_dungeon_level(const DungeonMap* d, FILE* out, const uint8_t* pc)
+int serialize_dungeon_map(const DungeonMap* d, const Vec2u8* pc_pos, FILE* out)
 {
 // 1. Write file type marker
     fwrite("RLG327-S2025", 12, 1, out);
@@ -567,8 +441,8 @@ int serialize_dungeon_level(const DungeonMap* d, FILE* out, const uint8_t* pc)
 
 // 4. Write X and Y position of PC
     const uint8_t pc_loc[2] = { 0, 0 };
-    if(pc) (*(uint16_t*)pc_loc) = (*(const uint16_t*)pc);
-    PRINT_DEBUG("Writing PC location of (%d, %d)\n", pc_loc[0], pc_loc[1]);
+    if(pc_pos) (*(uint16_t*)pc_loc) = (*(const uint16_t*)pc_pos);
+    PRINT_DEBUG("Writing PC location of (%d, %d)\n", pc_pos->x, pc_pos->y);
     fwrite(pc_loc, sizeof(*pc_loc), (sizeof(pc_loc) / sizeof(*pc_loc)), out);
 
     uint8_t *up_stair, *down_stair;
@@ -663,7 +537,7 @@ int serialize_dungeon_level(const DungeonMap* d, FILE* out, const uint8_t* pc)
     return 0;
 }
 
-int deserialize_dungeon_level(DungeonMap* d, FILE* in, uint8_t* pc)
+int deserialize_dungeon_map(DungeonMap* d, Vec2u8* pc_pos, FILE* in)
 {
 // marker, version, and size all unneeded for parsing
     int status;
@@ -672,7 +546,7 @@ int deserialize_dungeon_level(DungeonMap* d, FILE* in, uint8_t* pc)
 
 // read PC location
     status = fread(scratch, 1, 2, in);
-    if(pc) (*(uint16_t*)pc) = (*(uint16_t*)scratch);
+    if(pc_pos) (*(uint16_t*)pc_pos) = (*(uint16_t*)scratch);
 
 // read grid
     uint8_t dungeon_bytes[DUNGEON_Y_DIM][DUNGEON_X_DIM];
@@ -746,5 +620,204 @@ int deserialize_dungeon_level(DungeonMap* d, FILE* in, uint8_t* pc)
     }
 
     (void)status;
+    return 0;
+}
+
+
+
+int zero_dungeon_level(DungeonLevel* d)
+{
+    int ret = zero_dungeon_map(&d->map);
+
+    for(size_t y = 0; y < DUNGEON_Y_DIM; y++)
+    {
+        for(size_t x = 0; x < DUNGEON_X_DIM; x++)
+        {
+            d->entities[y][x] = NULL;
+        }
+    }
+
+    return ret;
+}
+int destruct_dungeon_level(DungeonLevel* d)
+{
+    int ret = destruct_dungeon_map(&d->map);
+
+    for(size_t y = 0; y < DUNGEON_Y_DIM; y++)
+    {
+        for(size_t x = 0; x < DUNGEON_X_DIM; x++)
+        {
+            if(d->entities[y][x])
+            {
+                PRINT_DEBUG("Freeing monster at (%lu, %lu)\n", x, y)
+                free(d->entities[y][x]);
+            }
+        }
+    }
+
+    return ret;
+}
+
+int init_entities(DungeonLevel* d, size_t nmon)
+{
+    Entity** pc = d->entities[d->pc_position.y] + d->pc_position.x;
+    *pc = malloc(sizeof(Entity));
+    (*pc)->is_pc = 1;
+    (*pc)->speed = 100;
+
+    uint32_t x, y;
+    x = d->pc_position.x;
+    y = d->pc_position.y;
+    PRINT_DEBUG("Adding %lu monsters\n", nmon)
+    for(size_t m = 0; m < nmon; m++)
+    {
+        for(uint32_t trav = random_in_range(30, 150); trav > 0;)
+        {
+            x++;
+            y += (x / DUNGEON_X_DIM);
+            y %= DUNGEON_Y_DIM;
+            x %= DUNGEON_X_DIM;
+            trav -= (d->map.terrain[y][x].type && !d->entities[y][x]);
+        }
+
+        PRINT_DEBUG("Allocating monster at (%d, %d)\n", x, y)
+
+        Entity** mon = d->entities[y] + x;
+        *mon = malloc(sizeof(Entity));
+        (*mon)->is_pc = 0;
+        (*mon)->speed = (uint8_t)random_in_range(50, 250);
+        (*mon)->stats = (uint8_t)random_in_range(0, 15);
+    }
+
+    return 0;
+}
+int update_costs(DungeonLevel* d)
+{
+
+    return 0;
+}
+
+
+int print_dungeon_level(DungeonLevel* d, int border)
+{
+    char* row_fmt = "%.*s\n";
+
+    if(border)
+    {
+        row_fmt = "|%.*s|\n";
+        printf("+%.*s+\n", DUNGEON_X_DIM, "-----------------------------------------------------------------------------------------------------------------------------------------------------------------------");
+    }
+
+    for(uint32_t y = 0; y < DUNGEON_Y_DIM; y++)
+    {
+        char row_chars[DUNGEON_X_DIM];
+        for(uint32_t x = 0; x < DUNGEON_X_DIM; x++)
+        {
+            row_chars[x] = get_cell_char(d->map.terrain[y][x], d->entities[y][x]);
+        }
+
+        uint32_t i = 0;
+    #if DUNGEON_PRINT_HARDNESS
+        char row[20 * DUNGEON_X_DIM + 5];   // "\033[48;2;<3>;127;127m<1>" for each cell + reset code + null termination
+        for(uint32_t x = 0; x < DUNGEON_X_DIM; x++)
+        {
+            uint8_t w = d->map.hardness[y][x];
+            if(d->map.terrain[y][x].type) w = 0;
+            i += sprintf(row + i, "\033[48;2;127;%d;127m%c", w, row_chars[x]);     // does not export null termination
+        }
+        strcpy(row + i, "\033[0m");     // null termination is copied as well
+        i += 4;
+    #else
+        char* row = row_chars;
+        i = DUNGEON_X_DIM;
+    #endif
+        printf(row_fmt, i, row);
+    }
+
+    if(border)
+    {
+        printf("+%.*s+\n", DUNGEON_X_DIM, "-----------------------------------------------------------------------------------------------------------------------------------------------------------------------");
+    }
+
+    return 0;
+}
+static int print_trav_weights(PathFindingBuffer* buff, int border)
+{
+    char* row_fmt = "%.*s\n";
+
+    if(border)
+    {
+        row_fmt = "|%.*s|\n";
+        // printf("+%.*s+\n", DUNGEON_X_DIM, "-----------------------------------------------------------------------------------------------------------------------------------------------------------------------");
+    }
+
+    for(uint32_t y = 0; y < DUNGEON_Y_DIM; y++)
+    {
+        char row_chars[DUNGEON_X_DIM];
+        for(uint32_t x = 0; x < DUNGEON_X_DIM; x++)
+        {
+            const int32_t w = buff->nodes[y][x].cost;
+            row_chars[x] = w == INT_MAX ? ' ' : w == 0 ? '@' : (w % 10) + '0';
+        }
+
+        uint32_t i = 0;
+    #if DUNGEON_PRINT_HARDNESS
+        char row[20 * DUNGEON_X_DIM + 5];   // "\033[48;2;<3>;127;127m<1>" for each cell + reset code + null termination
+        for(uint32_t x = 0; x < DUNGEON_X_DIM; x++)
+        {
+            if(row_chars[x] == ' ') // dont print a color
+            {
+                i += sprintf(row + i, "\033[0m ");
+            }
+            else
+            {
+                uint8_t w = (uint8_t)u32_min((buff->nodes[y][x].cost * 4), 0xFF);
+                i += sprintf(row + i, "\033[38;2;127;%d;%dm%c", w, 0xFF - w, row_chars[x]);     // does not export null termination
+            }
+        }
+        strcpy(row + i, "\033[0m");     // null termination is copied as well
+        i += 4;
+    #else
+        char* row = row_chars;
+        i = DUNGEON_X_DIM;
+    #endif
+        printf(row_fmt, i, row);
+    }
+
+    if(border)
+    {
+        printf("+%.*s+\n", DUNGEON_X_DIM, "-----------------------------------------------------------------------------------------------------------------------------------------------------------------------");
+    }
+
+    return 0;
+}
+int print_dungeon_level_a3(DungeonLevel* d, int border)
+{
+    Vec2u pos;
+    vec2u_assign(&pos, d->pc_position.x, d->pc_position.y);
+
+    PathFindingBuffer pbuff;
+    init_pathing_buffer(&pbuff);
+
+IF_DEBUG(const uint64_t t1 = us_time();)
+    dungeon_dijkstra_traverse_floor(&d->map, pos, &pbuff);
+IF_DEBUG(const uint64_t t2 = us_time();)
+    print_trav_weights(&pbuff, border);
+
+IF_DEBUG(const uint64_t t3 = us_time();)
+    dungeon_dijkstra_traverse_terrain(&d->map, pos, &pbuff);
+IF_DEBUG(const uint64_t t4 = us_time();)
+    print_trav_weights(&pbuff, border);
+IF_DEBUG(const uint64_t t5 = us_time();)
+
+#if ENABLE_DEBUG_PRINTS
+    printf(
+        "WEIGHTMAP GENERATION:\n Floor traversal: %f\n Floor trav print: %f\n Grid traversal: %f\n Grid trav print: %f\n",
+        (double)(t2 - t1) * 1e-6,
+        (double)(t3 - t2) * 1e-6,
+        (double)(t4 - t3) * 1e-6,
+        (double)(t5 - t4) * 1e-6 );
+#endif
+
     return 0;
 }

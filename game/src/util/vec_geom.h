@@ -4,9 +4,9 @@
 
 
 #define GENERATE_VEC2_STRUCT(T, L) \
-    typedef struct Vec2##L { T x, y; } Vec2##L;
+    typedef union Vec2##L { struct{ T x, y; }; T data[2]; } Vec2##L;
 #define GENERATE_VEC3_STRUCT(T, L) \
-    typedef struct Vec3##L { T x, y, z; } Vec3##L;
+    typedef union Vec3##L { struct{ T x, y, z; }; T data[3]; } Vec3##L;
 
 
 #define DEFINE_VEC2_UTILS(T, L) \
@@ -57,6 +57,10 @@
 
 
 #define BUILD_FOR_VEC_GEOM_DEFAULT_TYPES \
+    BUILD_FOR_TYPE(int8_t, i8) \
+    BUILD_FOR_TYPE(uint8_t, u8) \
+    BUILD_FOR_TYPE(int16_t, i16) \
+    BUILD_FOR_TYPE(uint16_t, u16) \
     BUILD_FOR_TYPE(int32_t, i) \
     BUILD_FOR_TYPE(uint32_t, u) \
     BUILD_FOR_TYPE(int64_t, l) \

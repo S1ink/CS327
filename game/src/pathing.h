@@ -8,8 +8,6 @@
 #include <stdint.h>
 
 
-GENERATE_VEC2_TYPE(uint8_t, u8)
-
 typedef struct
 {
     HeapNode* hn;
@@ -29,21 +27,21 @@ int init_pathing_buffer(PathFindingBuffer* buff);
 
 int dungeon_dijkstra_single_path(
     PathFindingBuffer* buff,
-    Dungeon* d,
+    DungeonMap* d,
     Vec2u from,
     Vec2u to,
-    int(*should_use_cell)(const Dungeon*, uint32_t x, uint32_t y),
-    int32_t(*cell_weight)(const Dungeon*, uint32_t x, uint32_t y),
-    void(*on_path_cell)(Dungeon*, uint32_t x, uint32_t y),
+    int(*should_use_cell)(const DungeonMap*, uint32_t x, uint32_t y),
+    int32_t(*cell_weight)(const DungeonMap*, uint32_t x, uint32_t y),
+    void(*on_path_cell)(DungeonMap*, uint32_t x, uint32_t y),
     int use_diag );
 int dungeon_dijkstra_traverse_grid(
     PathFindingBuffer* buff,
-    Dungeon* d,
+    DungeonMap* d,
     Vec2u from,
-    int(*should_use_cell)(const Dungeon*, uint32_t x, uint32_t y),
-    int32_t(*cell_weight)(const Dungeon*, uint32_t x, uint32_t y),
+    int(*should_use_cell)(const DungeonMap*, uint32_t x, uint32_t y),
+    int32_t(*cell_weight)(const DungeonMap*, uint32_t x, uint32_t y),
     int use_diag );
 
-int dungeon_dijkstra_corridor_path(Dungeon* d, Vec2u from, Vec2u to);
-int dungeon_dijkstra_traverse_floor(Dungeon* d, Vec2u from, PathFindingBuffer* buff);
-int dungeon_dijkstra_traverse_terrain(Dungeon* d, Vec2u from, PathFindingBuffer* buff);
+int dungeon_dijkstra_corridor_path(DungeonMap* d, Vec2u from, Vec2u to);
+int dungeon_dijkstra_traverse_floor(DungeonMap* d, Vec2u from, PathFindingBuffer* buff);
+int dungeon_dijkstra_traverse_terrain(DungeonMap* d, Vec2u from, PathFindingBuffer* buff);

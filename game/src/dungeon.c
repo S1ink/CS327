@@ -54,7 +54,7 @@ static inline char get_cell_char(CellTerrain c)
 }
 
 
-/* DUNGEON ROOM UTILIES */
+/* DungeonMap ROOM UTILIES */
 
 int collide_or_tangent(const DungeonRoom* a, const DungeonRoom* b)
 {
@@ -102,7 +102,7 @@ void print_room(const DungeonRoom* room)
 
 /* GENERATION HELPERS */
 
-int zero_cells(Dungeon* d)
+int zero_cells(DungeonMap* d)
 {
     for(size_t i = 0; i < DUNGEON_Y_DIM; i++)
     {
@@ -117,7 +117,7 @@ int zero_cells(Dungeon* d)
     return 0;
 }
 
-int create_random_connection(Dungeon* d, size_t a, size_t b)
+int create_random_connection(DungeonMap* d, size_t a, size_t b)
 {
     const DungeonRoom* room_data = d->rooms;
 
@@ -130,7 +130,7 @@ int create_random_connection(Dungeon* d, size_t a, size_t b)
     return 0;
 }
 
-int connect_rooms(Dungeon* d)
+int connect_rooms(DungeonMap* d)
 {
     for(size_t i = 0; i < d->num_rooms; i++)
     {
@@ -140,7 +140,7 @@ int connect_rooms(Dungeon* d)
     return 0;
 }
 
-int fill_room_cells(Dungeon* d)
+int fill_room_cells(DungeonMap* d)
 {
     for(size_t r = 0; r < d->num_rooms; r++)
     {
@@ -163,7 +163,7 @@ int fill_room_cells(Dungeon* d)
 
 /* GENERATE ROOMS */
 
-int generate_rooms(Dungeon* d)
+int generate_rooms(DungeonMap* d)
 {
     const size_t target = (size_t)random_in_range(DUNGEON_MIN_NUM_ROOMS, DUNGEON_MAX_NUM_ROOMS);
     if(d->num_rooms && d->rooms)
@@ -310,7 +310,7 @@ int generate_rooms(Dungeon* d)
 }
 
 
-int place_stairs(Dungeon* d)
+int place_stairs(DungeonMap* d)
 {
     Vec2u p, d_min, d_max;
     vec2u_assign(&d_min, 1, 1);
@@ -345,7 +345,7 @@ int place_stairs(Dungeon* d)
 
 
 
-int generate_dungeon(Dungeon* d, uint32_t seed)
+int generate_dungeon_map(DungeonMap* d, uint32_t seed)
 {
     if(seed > 0) srand(seed);
     else srand(time(NULL));
@@ -371,7 +371,7 @@ int generate_dungeon(Dungeon* d, uint32_t seed)
     return 0;
 }
 
-int zero_dungeon(Dungeon* d)
+int zero_dungeon_map(DungeonMap* d)
 {
     d->num_rooms = 0;
     d->num_up_stair = 0;
@@ -383,7 +383,7 @@ int zero_dungeon(Dungeon* d)
     return 0;
 }
 
-int destruct_dungeon(Dungeon* d)
+int destruct_dungeon_map(DungeonMap* d)
 {
     free(d->rooms);
 
@@ -392,7 +392,7 @@ int destruct_dungeon(Dungeon* d)
 
 
 
-int random_dungeon_floor_pos(Dungeon* d, uint8_t* pos)
+int random_dungeon_map_floor_pos(DungeonMap* d, uint8_t* pos)
 {
     Vec2u p, d_min, d_max;
     vec2u_assign(&d_min, 1, 1);
@@ -418,7 +418,7 @@ int random_dungeon_floor_pos(Dungeon* d, uint8_t* pos)
 
 /* SERIALIZATION/DESERIALIZATION */
 
-int print_dungeon(Dungeon* d, uint8_t* pc_loc, int border)
+int print_dungeon_level(DungeonMap* d, uint8_t* pc_loc, int border)
 {
     char* row_fmt = "%.*s\n";
 
@@ -516,7 +516,7 @@ static int print_trav_weights(PathFindingBuffer* buff, int border)
 
     return 0;
 }
-int print_dungeon_a3(Dungeon* d, uint8_t* pc_loc, int border)
+int print_dungeon_level_a3(DungeonMap* d, uint8_t* pc_loc, int border)
 {
     if(!pc_loc) return -1;
 
@@ -549,7 +549,7 @@ IF_DEBUG(const uint64_t t5 = us_time();)
     return 0;
 }
 
-int serialize_dungeon(const Dungeon* d, FILE* out, const uint8_t* pc)
+int serialize_dungeon_level(const DungeonMap* d, FILE* out, const uint8_t* pc)
 {
 // 1. Write file type marker
     fwrite("RLG327-S2025", 12, 1, out);
@@ -576,7 +576,7 @@ int serialize_dungeon(const Dungeon* d, FILE* out, const uint8_t* pc)
     down_stair = malloc(sizeof(*down_stair) * d->num_down_stair * 2);
     if(!up_stair || !down_stair) return -1;
 
-// 5. Write dungeon bytes
+// 5. Write DungeonMap bytes
     uint8_t dungeon_bytes[DUNGEON_Y_DIM][DUNGEON_X_DIM];
     size_t u_idx = 0, d_idx = 0;
     for(size_t y = 0; y < DUNGEON_Y_DIM; y++)
@@ -620,7 +620,7 @@ int serialize_dungeon(const Dungeon* d, FILE* out, const uint8_t* pc)
     }
     fwrite(dungeon_bytes, sizeof(*dungeon_bytes[0]), (DUNGEON_X_DIM * DUNGEON_Y_DIM), out);
 
-// 6. Write number of rooms in dungeon
+// 6. Write number of rooms in DungeonMap
     PRINT_DEBUG("Writing num rooms: %x\n", d->num_rooms);
     uint16_t num_rooms = htobe16(d->num_rooms);
     fwrite(&num_rooms, sizeof(num_rooms), 1, out);
@@ -663,7 +663,7 @@ int serialize_dungeon(const Dungeon* d, FILE* out, const uint8_t* pc)
     return 0;
 }
 
-int deserialize_dungeon(Dungeon* d, FILE* in, uint8_t* pc)
+int deserialize_dungeon_level(DungeonMap* d, FILE* in, uint8_t* pc)
 {
 // marker, version, and size all unneeded for parsing
     int status;

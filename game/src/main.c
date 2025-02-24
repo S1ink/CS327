@@ -12,7 +12,7 @@
 
 
 
-int handle_dungeon_init(Dungeon* d, uint8_t* pc, int argc, char** argv)
+int handle_dungeon_init(DungeonMap* d, uint8_t* pc, int argc, char** argv)
 {
     int ret = 0;
     int load = 0;
@@ -55,7 +55,7 @@ int handle_dungeon_init(Dungeon* d, uint8_t* pc, int argc, char** argv)
         FILE* f = fopen(save_path, "rb");
         if(f)
         {
-            deserialize_dungeon(d, f, pc);
+            deserialize_dungeon_level(d, f, pc);
             fclose(f);
         }
         else
@@ -68,8 +68,8 @@ int handle_dungeon_init(Dungeon* d, uint8_t* pc, int argc, char** argv)
     {
         PRINT_DEBUG("GENERATING DUNGEON...\n")
 
-        generate_dungeon(d, us_seed());
-        random_dungeon_floor_pos(d, pc);
+        generate_dungeon_map(d, us_seed());
+        random_dungeon_map_floor_pos(d, pc);
     }
     if(save)
     {
@@ -78,7 +78,7 @@ int handle_dungeon_init(Dungeon* d, uint8_t* pc, int argc, char** argv)
         FILE* f = fopen(save_path, "wb");
         if(f)
         {
-            serialize_dungeon(d, f, pc);
+            serialize_dungeon_level(d, f, pc);
             fclose(f);
         }
         else
@@ -95,17 +95,17 @@ int handle_dungeon_init(Dungeon* d, uint8_t* pc, int argc, char** argv)
 
 int main(int argc, char** argv)
 {
-    Dungeon d;
+    DungeonMap d;
     uint8_t pc[] = { 0, 0 };
-    zero_dungeon(&d);
+    zero_dungeon_map(&d);
 
 IF_DEBUG(uint64_t t1 = us_time();)
     if(!handle_dungeon_init(&d, pc, argc, argv))
     {
     IF_DEBUG(uint64_t t2 = us_time();)
-        print_dungeon(&d, pc, DUNGEON_PRINT_BORDER);
+        print_dungeon_level(&d, pc, DUNGEON_PRINT_BORDER);
     IF_DEBUG(uint64_t t3 = us_time();)
-        print_dungeon_a3(&d, pc, DUNGEON_PRINT_BORDER);
+        print_dungeon_level_a3(&d, pc, DUNGEON_PRINT_BORDER);
     IF_DEBUG(uint64_t t4 = us_time();)
 
     #if ENABLE_DEBUG_PRINTS
@@ -118,7 +118,7 @@ IF_DEBUG(uint64_t t1 = us_time();)
     #endif
     }
 
-    destruct_dungeon(&d);
+    destruct_dungeon_map(&d);
 
     return 0;
 }

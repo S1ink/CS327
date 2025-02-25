@@ -149,12 +149,15 @@ int main(int argc, char** argv)
     if(!handle_level_init(&d, &s, argc, argv))
     {
         int status;
-        while(is_running && !(status = iterate_level(&d)))
+        int i = 0;
+        do
         {
+            i++;
+            usleep(250000);
             printf("\033[2J\033[1;1H");
             print_dungeon_level(&d, DUNGEON_PRINT_BORDER);
-            usleep(250000);
         }
+        while(is_running && !(status = iterate_level(&d)) && i < 10);
         // TODO: print win/lose screen
 
     // IF_DEBUG(uint64_t t2 = us_time();)

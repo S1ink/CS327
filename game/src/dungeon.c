@@ -794,18 +794,29 @@ int print_dungeon_level(DungeonLevel* d, int border)
 
 
 
+typedef struct
+{
+    Entity* e;
+    HeapNode* hp;
+}
+EntityData;
+
 int init_level(DungeonLevel* d, size_t nmon)
 {
     Entity** pc = d->entities[d->pc_position.y] + d->pc_position.x;
     *pc = malloc(sizeof(Entity));
     (*pc)->is_pc = 1;
     (*pc)->speed = 100;
+    (*pc)->stats = 0;
     (*pc)->priority = 0;
     (*pc)->turn = 0;
     vec2u8_copy(&(*pc)->pos, &d->pc_position);
 
-    heap_init(&d->entity_q, entity_game_comp, NULL);    // queue should not delete entities - we handle this
-    heap_insert(&d->entity_q, *pc);
+    EntityData* ed = malloc(sizeof(EntityData));
+    ed->e = *pc;
+
+    heap_init(&d->entity_q, entity_game_comp, free);    // queue should not delete entities - we handle this
+    ed->hp = heap_insert(&d->entity_q, ed);
 
     uint8_t x, y;
     x = d->pc_position.x;
@@ -833,7 +844,9 @@ int init_level(DungeonLevel* d, size_t nmon)
         (*mon)->turn = 0;
         vec2u8_assign(&(*mon)->pos, x, y);
 
-        heap_insert(&d->entity_q, *mon);
+        ed = malloc(sizeof(EntityData));
+        ed->e = *mon;
+        ed->hp = heap_insert(&d->entity_q, ed);
     }
     d->num_monsters = nmon;
 
@@ -877,11 +890,15 @@ int iterate_level(DungeonLevel* d)
 {
     int ret = 0;
 
-    Entity* e = heap_peek_min(&d->entity_q);
-    for(const size_t turn = e->turn; e->turn == turn; e = heap_peek_min(&d->entity_q))
+    EntityData* ed = heap_peek_min(&d->entity_q);
+    for(const size_t turn = ed->e->turn; ed->e->turn == turn; ed = heap_peek_min(&d->entity_q))
     {
-
-        
+        heap_remove_min(&d->entity_q);
+        Entity* e = ed->e;
+        e->turn += (e->speed / 10);
+        PRINT_DEBUG("Popped entity {%d, %d, %#x, %d} with turn %lu --> next turn: %lu\n", e->is_pc, e->priority, e->stats, e->speed, turn, e->turn);
+        // heap_decrease_key_no_replace(&d->entity_q, ed->hp);
+        ed->hp = heap_insert(&d->entity_q, ed);
     }
 
     return ret;

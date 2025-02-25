@@ -25,5 +25,8 @@ varray: varray.c
 macros: macros.c
 	gcc macros.c -Wall -Werror -o macros
 
+vaargs: vaargs.c
+	gcc vaargs.c -Wall -Werror -o vaargs
+
 clean:
 	rm -rf *.o *~ queue_test strings char varray macros

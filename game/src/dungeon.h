@@ -5,6 +5,7 @@
 #include <stdio.h>
 
 #include "util/vec_geom.h"
+#include "util/heap.h"
 
 #include "dungeon_config.h"
 #include "entity.h"
@@ -79,20 +80,23 @@ int deserialize_dungeon_map(DungeonMap* d, Vec2u8* pc_pos, FILE* in);
 typedef struct
 {
     DungeonMap map;
+    Heap entity_q;
 
     Entity* entities[DUNGEON_Y_DIM][DUNGEON_X_DIM];
-    uint8_t tunnel_costs[DUNGEON_Y_DIM][DUNGEON_X_DIM];
-    uint8_t terrain_costs[DUNGEON_Y_DIM][DUNGEON_X_DIM];
+    int32_t tunnel_costs[DUNGEON_Y_DIM][DUNGEON_X_DIM];
+    int32_t terrain_costs[DUNGEON_Y_DIM][DUNGEON_X_DIM];
 
     Vec2u8 pc_position;
+    uint8_t num_monsters;
 }
 DungeonLevel;
 
 int zero_dungeon_level(DungeonLevel* d);
 int destruct_dungeon_level(DungeonLevel* d);
 
-int init_entities(DungeonLevel* d, size_t nmon);
-int update_costs(DungeonLevel* d);
-
 int print_dungeon_level(DungeonLevel* d, int border);
-int print_dungeon_level_a3(DungeonLevel* d, int border);
+// int print_dungeon_level_a3(DungeonLevel* d, int border);
+
+int init_level(DungeonLevel* d, size_t nmon);
+int update_costs(DungeonLevel* d);
+int iterate_level(DungeonLevel* d);

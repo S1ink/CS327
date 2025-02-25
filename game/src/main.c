@@ -9,6 +9,8 @@
 #include <time.h>
 #include <sys/stat.h>
 #include <sys/time.h>
+#include <unistd.h>
+#include <signal.h>
 
 
 typedef struct
@@ -95,7 +97,7 @@ int handle_level_init(DungeonLevel* d, RuntimeState* state, int argc, char** arg
         random_dungeon_map_floor_pos(map, pc->data);
     }
 
-    init_entities(d, state->nmon);
+    init_level(d, state->nmon);
 
     return ret;
 }
@@ -125,32 +127,50 @@ int handle_level_deinit(DungeonLevel* d, RuntimeState* state)
     return ret;
 }
 
+
+
+static volatile int is_running = 1;
+static void handle_exit(int x)
+{
+    printf("\nCaught Ctrl-C. Exitting...\n");
+    is_running = 0;
+}
+
 int main(int argc, char** argv)
 {
+    signal(SIGINT, handle_exit);
+
     DungeonLevel d;
     RuntimeState s;
     zero_dungeon_level(&d);
     srand(us_seed());
 
-    IF_DEBUG(uint64_t t1 = us_time();)
+    // IF_DEBUG(uint64_t t1 = us_time();)
     if(!handle_level_init(&d, &s, argc, argv))
     {
+        int status;
+        while(is_running && !(status = iterate_level(&d)))
+        {
+            printf("\033[2J\033[1;1H");
+            print_dungeon_level(&d, DUNGEON_PRINT_BORDER);
+            usleep(250000);
+        }
+        // TODO: print win/lose screen
 
+    // IF_DEBUG(uint64_t t2 = us_time();)
+    //     print_dungeon_level(&d, DUNGEON_PRINT_BORDER);
+    // IF_DEBUG(uint64_t t3 = us_time();)
+    // //     print_dungeon_level_a3(&d, DUNGEON_PRINT_BORDER);
+    // IF_DEBUG(uint64_t t4 = us_time();)
 
-    IF_DEBUG(uint64_t t2 = us_time();)
-        print_dungeon_level(&d, DUNGEON_PRINT_BORDER);
-    IF_DEBUG(uint64_t t3 = us_time();)
-    //     print_dungeon_level_a3(&d, DUNGEON_PRINT_BORDER);
-    IF_DEBUG(uint64_t t4 = us_time();)
-
-    #if ENABLE_DEBUG_PRINTS
-        printf(
-            "RUNTIME: %f\n Init: %f\n Print: %f\n Weights: %f\n",
-            (double)(t4 - t1) * 1e-6,
-            (double)(t2 - t1) * 1e-6,
-            (double)(t3 - t2) * 1e-6,
-            (double)(t4 - t3) * 1e-6 );
-    #endif
+    // #if ENABLE_DEBUG_PRINTS
+    //     printf(
+    //         "RUNTIME: %f\n Init: %f\n Print: %f\n Weights: %f\n",
+    //         (double)(t4 - t1) * 1e-6,
+    //         (double)(t2 - t1) * 1e-6,
+    //         (double)(t3 - t2) * 1e-6,
+    //         (double)(t4 - t3) * 1e-6 );
+    // #endif
     }
     handle_level_deinit(&d, &s);
 

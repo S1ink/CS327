@@ -18,5 +18,9 @@ typedef struct
     uint8_t speed;
     uint8_t stats : 4;
     uint8_t is_pc : 1;
+    uint8_t priority;
+    size_t turn;
+
+    Vec2u8 pos;
 }
 Entity;

@@ -58,6 +58,14 @@ static inline char get_cell_char(CellTerrain c, Entity* e)
     return ' ';
 }
 
+static int32_t entity_game_comp(const void* k, const void* w)
+{
+    Entity *a, *b;
+    a = (Entity*)k;
+    b = (Entity*)w;
+    return (a->turn == b->turn) ? a->priority < b->priority : a->turn < b->turn;
+}
+
 
 /* DungeonMap ROOM UTILIES */
 
@@ -107,7 +115,7 @@ void print_room(const DungeonRoom* room)
 
 /* GENERATION HELPERS */
 
-int zero_cells(DungeonMap* d)
+static int zero_cells(DungeonMap* d)
 {
     for(size_t i = 0; i < DUNGEON_Y_DIM; i++)
     {
@@ -122,7 +130,7 @@ int zero_cells(DungeonMap* d)
     return 0;
 }
 
-int create_random_connection(DungeonMap* d, size_t a, size_t b)
+static int create_random_connection(DungeonMap* d, size_t a, size_t b)
 {
     const DungeonRoom* room_data = d->rooms;
 
@@ -135,7 +143,7 @@ int create_random_connection(DungeonMap* d, size_t a, size_t b)
     return 0;
 }
 
-int connect_rooms(DungeonMap* d)
+static int connect_rooms(DungeonMap* d)
 {
     for(size_t i = 0; i < d->num_rooms; i++)
     {
@@ -145,7 +153,7 @@ int connect_rooms(DungeonMap* d)
     return 0;
 }
 
-int fill_room_cells(DungeonMap* d)
+static int fill_room_cells(DungeonMap* d)
 {
     for(size_t r = 0; r < d->num_rooms; r++)
     {
@@ -629,13 +637,12 @@ int zero_dungeon_level(DungeonLevel* d)
 {
     int ret = zero_dungeon_map(&d->map);
 
-    for(size_t y = 0; y < DUNGEON_Y_DIM; y++)
-    {
-        for(size_t x = 0; x < DUNGEON_X_DIM; x++)
-        {
-            d->entities[y][x] = NULL;
-        }
-    }
+    memset(d->entities, 0x0, sizeof(Entity*) * DUNGEON_Y_DIM * DUNGEON_X_DIM);
+    memset(d->tunnel_costs, INT_MAX, sizeof(int32_t) * DUNGEON_Y_DIM * DUNGEON_X_DIM);
+    memset(d->terrain_costs, INT_MAX, sizeof(int32_t) * DUNGEON_Y_DIM * DUNGEON_X_DIM);
+
+    vec2u8_zero(&d->pc_position);
+    d->num_monsters = 0;
 
     return ret;
 }
@@ -643,58 +650,21 @@ int destruct_dungeon_level(DungeonLevel* d)
 {
     int ret = destruct_dungeon_map(&d->map);
 
-    for(size_t y = 0; y < DUNGEON_Y_DIM; y++)
+    heap_delete(&d->entity_q);
+
+    for(size_t y = 0; y < DUNGEON_Y_DIM; y++)   // TODO: use heap deleter
     {
         for(size_t x = 0; x < DUNGEON_X_DIM; x++)
         {
             if(d->entities[y][x])
             {
-                PRINT_DEBUG("Freeing monster at (%lu, %lu)\n", x, y)
+                PRINT_DEBUG("Freeing %s at (%lu, %lu)\n", d->entities[y][x]->is_pc ? "player" : "monster", x, y);
                 free(d->entities[y][x]);
             }
         }
     }
 
     return ret;
-}
-
-int init_entities(DungeonLevel* d, size_t nmon)
-{
-    Entity** pc = d->entities[d->pc_position.y] + d->pc_position.x;
-    *pc = malloc(sizeof(Entity));
-    (*pc)->is_pc = 1;
-    (*pc)->speed = 100;
-
-    uint32_t x, y;
-    x = d->pc_position.x;
-    y = d->pc_position.y;
-    PRINT_DEBUG("Adding %lu monsters\n", nmon)
-    for(size_t m = 0; m < nmon; m++)
-    {
-        for(uint32_t trav = random_in_range(30, 150); trav > 0;)
-        {
-            x++;
-            y += (x / DUNGEON_X_DIM);
-            y %= DUNGEON_Y_DIM;
-            x %= DUNGEON_X_DIM;
-            trav -= (d->map.terrain[y][x].type && !d->entities[y][x]);
-        }
-
-        PRINT_DEBUG("Allocating monster at (%d, %d)\n", x, y)
-
-        Entity** mon = d->entities[y] + x;
-        *mon = malloc(sizeof(Entity));
-        (*mon)->is_pc = 0;
-        (*mon)->speed = (uint8_t)random_in_range(50, 250);
-        (*mon)->stats = (uint8_t)random_in_range(0, 15);
-    }
-
-    return 0;
-}
-int update_costs(DungeonLevel* d)
-{
-
-    return 0;
 }
 
 
@@ -741,83 +711,178 @@ int print_dungeon_level(DungeonLevel* d, int border)
 
     return 0;
 }
-static int print_trav_weights(PathFindingBuffer* buff, int border)
+// static int print_trav_weights(PathFindingBuffer* buff, int border)
+// {
+//     char* row_fmt = "%.*s\n";
+
+//     if(border)
+//     {
+//         row_fmt = "|%.*s|\n";
+//         // printf("+%.*s+\n", DUNGEON_X_DIM, "-----------------------------------------------------------------------------------------------------------------------------------------------------------------------");
+//     }
+
+//     for(uint32_t y = 0; y < DUNGEON_Y_DIM; y++)
+//     {
+//         char row_chars[DUNGEON_X_DIM];
+//         for(uint32_t x = 0; x < DUNGEON_X_DIM; x++)
+//         {
+//             const int32_t w = buff->nodes[y][x].cost;
+//             row_chars[x] = w == INT_MAX ? ' ' : w == 0 ? '@' : (w % 10) + '0';
+//         }
+
+//         uint32_t i = 0;
+//     #if DUNGEON_PRINT_HARDNESS
+//         char row[20 * DUNGEON_X_DIM + 5];   // "\033[48;2;<3>;127;127m<1>" for each cell + reset code + null termination
+//         for(uint32_t x = 0; x < DUNGEON_X_DIM; x++)
+//         {
+//             if(row_chars[x] == ' ') // dont print a color
+//             {
+//                 i += sprintf(row + i, "\033[0m ");
+//             }
+//             else
+//             {
+//                 uint8_t w = (uint8_t)u32_min((buff->nodes[y][x].cost * 4), 0xFF);
+//                 i += sprintf(row + i, "\033[38;2;127;%d;%dm%c", w, 0xFF - w, row_chars[x]);     // does not export null termination
+//             }
+//         }
+//         strcpy(row + i, "\033[0m");     // null termination is copied as well
+//         i += 4;
+//     #else
+//         char* row = row_chars;
+//         i = DUNGEON_X_DIM;
+//     #endif
+//         printf(row_fmt, i, row);
+//     }
+
+//     if(border)
+//     {
+//         printf("+%.*s+\n", DUNGEON_X_DIM, "-----------------------------------------------------------------------------------------------------------------------------------------------------------------------");
+//     }
+
+//     return 0;
+// }
+// int print_dungeon_level_a3(DungeonLevel* d, int border)
+// {
+//     Vec2u pos;
+//     vec2u_assign(&pos, d->pc_position.x, d->pc_position.y);
+
+//     PathFindingBuffer pbuff;
+//     init_pathing_buffer(&pbuff);
+
+// IF_DEBUG(const uint64_t t1 = us_time();)
+//     dungeon_dijkstra_traverse_floor(&d->map, pos, &pbuff);
+// IF_DEBUG(const uint64_t t2 = us_time();)
+//     print_trav_weights(&pbuff, border);
+
+// IF_DEBUG(const uint64_t t3 = us_time();)
+//     dungeon_dijkstra_traverse_terrain(&d->map, pos, &pbuff);
+// IF_DEBUG(const uint64_t t4 = us_time();)
+//     print_trav_weights(&pbuff, border);
+// IF_DEBUG(const uint64_t t5 = us_time();)
+
+// #if ENABLE_DEBUG_PRINTS
+//     printf(
+//         "WEIGHTMAP GENERATION:\n Floor traversal: %f\n Floor trav print: %f\n Grid traversal: %f\n Grid trav print: %f\n",
+//         (double)(t2 - t1) * 1e-6,
+//         (double)(t3 - t2) * 1e-6,
+//         (double)(t4 - t3) * 1e-6,
+//         (double)(t5 - t4) * 1e-6 );
+// #endif
+
+//     return 0;
+// }
+
+
+
+int init_level(DungeonLevel* d, size_t nmon)
 {
-    char* row_fmt = "%.*s\n";
+    Entity** pc = d->entities[d->pc_position.y] + d->pc_position.x;
+    *pc = malloc(sizeof(Entity));
+    (*pc)->is_pc = 1;
+    (*pc)->speed = 100;
+    (*pc)->priority = 0;
+    (*pc)->turn = 0;
+    vec2u8_copy(&(*pc)->pos, &d->pc_position);
 
-    if(border)
-    {
-        row_fmt = "|%.*s|\n";
-        // printf("+%.*s+\n", DUNGEON_X_DIM, "-----------------------------------------------------------------------------------------------------------------------------------------------------------------------");
-    }
+    heap_init(&d->entity_q, entity_game_comp, NULL);    // queue should not delete entities - we handle this
+    heap_insert(&d->entity_q, *pc);
 
-    for(uint32_t y = 0; y < DUNGEON_Y_DIM; y++)
+    uint8_t x, y;
+    x = d->pc_position.x;
+    y = d->pc_position.y;
+    PRINT_DEBUG("Adding %lu monsters\n", nmon)
+    for(size_t m = 0; m < nmon; m++)
     {
-        char row_chars[DUNGEON_X_DIM];
-        for(uint32_t x = 0; x < DUNGEON_X_DIM; x++)
+        for(uint32_t trav = random_in_range(30, 150); trav > 0;)
         {
-            const int32_t w = buff->nodes[y][x].cost;
-            row_chars[x] = w == INT_MAX ? ' ' : w == 0 ? '@' : (w % 10) + '0';
+            x++;
+            y += (x / DUNGEON_X_DIM);
+            x %= DUNGEON_X_DIM;
+            y %= DUNGEON_Y_DIM;
+            trav -= (d->map.terrain[y][x].type && !d->entities[y][x]);
         }
 
-        uint32_t i = 0;
-    #if DUNGEON_PRINT_HARDNESS
-        char row[20 * DUNGEON_X_DIM + 5];   // "\033[48;2;<3>;127;127m<1>" for each cell + reset code + null termination
-        for(uint32_t x = 0; x < DUNGEON_X_DIM; x++)
-        {
-            if(row_chars[x] == ' ') // dont print a color
-            {
-                i += sprintf(row + i, "\033[0m ");
-            }
-            else
-            {
-                uint8_t w = (uint8_t)u32_min((buff->nodes[y][x].cost * 4), 0xFF);
-                i += sprintf(row + i, "\033[38;2;127;%d;%dm%c", w, 0xFF - w, row_chars[x]);     // does not export null termination
-            }
-        }
-        strcpy(row + i, "\033[0m");     // null termination is copied as well
-        i += 4;
-    #else
-        char* row = row_chars;
-        i = DUNGEON_X_DIM;
-    #endif
-        printf(row_fmt, i, row);
+        PRINT_DEBUG("Allocating monster at (%d, %d)\n", x, y)
+
+        Entity** mon = d->entities[y] + x;
+        *mon = malloc(sizeof(Entity));
+        (*mon)->is_pc = 0;
+        (*mon)->speed = (uint8_t)random_in_range(50, 250);
+        (*mon)->stats = (uint8_t)random_in_range(0, 15);
+        (*mon)->priority = m + 1;
+        (*mon)->turn = 0;
+        vec2u8_assign(&(*mon)->pos, x, y);
+
+        heap_insert(&d->entity_q, *mon);
+    }
+    d->num_monsters = nmon;
+
+    update_costs(d);
+
+    return 0;
+}
+int update_costs(DungeonLevel* d)
+{
+    static PathFindingBuffer buff;
+    static int buff_inited = 0;
+    if(!buff_inited)
+    {
+        init_pathing_buffer(&buff);
+        buff_inited = 1;
     }
 
-    if(border)
+    Vec2u pos;
+    vec2u_assign(&pos, d->pc_position.x, d->pc_position.y);
+
+    dungeon_dijkstra_traverse_floor(&d->map, pos, &buff);
+    for(size_t y = 0; y < DUNGEON_Y_DIM; y++)
     {
-        printf("+%.*s+\n", DUNGEON_X_DIM, "-----------------------------------------------------------------------------------------------------------------------------------------------------------------------");
+        for(size_t x = 0; x < DUNGEON_X_DIM; x++)
+        {
+            d->tunnel_costs[y][x] = buff.nodes[y][x].cost;
+        }
+    }
+    dungeon_dijkstra_traverse_terrain(&d->map, pos, &buff);
+    for(size_t y = 0; y < DUNGEON_Y_DIM; y++)
+    {
+        for(size_t x = 0; x < DUNGEON_X_DIM; x++)
+        {
+            d->terrain_costs[y][x] = buff.nodes[y][x].cost;
+        }
     }
 
     return 0;
 }
-int print_dungeon_level_a3(DungeonLevel* d, int border)
+int iterate_level(DungeonLevel* d)
 {
-    Vec2u pos;
-    vec2u_assign(&pos, d->pc_position.x, d->pc_position.y);
+    int ret = 0;
 
-    PathFindingBuffer pbuff;
-    init_pathing_buffer(&pbuff);
+    Entity* e = heap_peek_min(&d->entity_q);
+    for(const size_t turn = e->turn; e->turn == turn; e = heap_peek_min(&d->entity_q))
+    {
 
-IF_DEBUG(const uint64_t t1 = us_time();)
-    dungeon_dijkstra_traverse_floor(&d->map, pos, &pbuff);
-IF_DEBUG(const uint64_t t2 = us_time();)
-    print_trav_weights(&pbuff, border);
+        
+    }
 
-IF_DEBUG(const uint64_t t3 = us_time();)
-    dungeon_dijkstra_traverse_terrain(&d->map, pos, &pbuff);
-IF_DEBUG(const uint64_t t4 = us_time();)
-    print_trav_weights(&pbuff, border);
-IF_DEBUG(const uint64_t t5 = us_time();)
-
-#if ENABLE_DEBUG_PRINTS
-    printf(
-        "WEIGHTMAP GENERATION:\n Floor traversal: %f\n Floor trav print: %f\n Grid traversal: %f\n Grid trav print: %f\n",
-        (double)(t2 - t1) * 1e-6,
-        (double)(t3 - t2) * 1e-6,
-        (double)(t4 - t3) * 1e-6,
-        (double)(t5 - t4) * 1e-6 );
-#endif
-
-    return 0;
+    return ret;
 }

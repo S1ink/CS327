@@ -3,6 +3,7 @@
 #include <stdint.h>
 
 #include "util/vec_geom.h"
+#include "util/heap.h"
 
 
 enum MonsterStats
@@ -22,5 +23,6 @@ typedef struct
     size_t turn;
 
     Vec2u8 pos;
+    HeapNode* hn;
 }
 Entity;

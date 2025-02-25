@@ -58,14 +58,6 @@ static inline char get_cell_char(CellTerrain c, Entity* e)
     return ' ';
 }
 
-static int32_t entity_game_comp(const void* k, const void* w)
-{
-    Entity *a, *b;
-    a = (Entity*)k;
-    b = (Entity*)w;
-    return (a->turn == b->turn) ? a->priority < b->priority : a->turn < b->turn;
-}
-
 
 /* DungeonMap ROOM UTILIES */
 
@@ -794,15 +786,25 @@ int print_dungeon_level(DungeonLevel* d, int border)
 
 
 
-typedef struct
+// typedef struct
+// {
+//     Entity* e;
+//     HeapNode* hp;
+// }
+// EntityData;
+
+static int32_t entity_game_comp(const void* k, const void* w)
 {
-    Entity* e;
-    HeapNode* hp;
+    Entity *a, *b;
+    a = (Entity*)k;
+    b = (Entity*)w;
+    return (a->turn == b->turn) ? a->priority > b->priority : a->turn > b->turn;
 }
-EntityData;
 
 int init_level(DungeonLevel* d, size_t nmon)
 {
+    heap_init(&d->entity_q, entity_game_comp, NULL);    // queue should not delete entities - we handle this
+
     Entity** pc = d->entities[d->pc_position.y] + d->pc_position.x;
     *pc = malloc(sizeof(Entity));
     (*pc)->is_pc = 1;
@@ -811,12 +813,7 @@ int init_level(DungeonLevel* d, size_t nmon)
     (*pc)->priority = 0;
     (*pc)->turn = 0;
     vec2u8_copy(&(*pc)->pos, &d->pc_position);
-
-    EntityData* ed = malloc(sizeof(EntityData));
-    ed->e = *pc;
-
-    heap_init(&d->entity_q, entity_game_comp, free);    // queue should not delete entities - we handle this
-    ed->hp = heap_insert(&d->entity_q, ed);
+    (*pc)->hn = heap_insert(&d->entity_q, (*pc));
 
     uint8_t x, y;
     x = d->pc_position.x;
@@ -838,15 +835,12 @@ int init_level(DungeonLevel* d, size_t nmon)
         Entity** mon = d->entities[y] + x;
         *mon = malloc(sizeof(Entity));
         (*mon)->is_pc = 0;
-        (*mon)->speed = (uint8_t)random_in_range(50, 250);
+        (*mon)->speed = (uint8_t)random_in_range(50, 200);
         (*mon)->stats = (uint8_t)random_in_range(0, 15);
         (*mon)->priority = m + 1;
         (*mon)->turn = 0;
         vec2u8_assign(&(*mon)->pos, x, y);
-
-        ed = malloc(sizeof(EntityData));
-        ed->e = *mon;
-        ed->hp = heap_insert(&d->entity_q, ed);
+        (*mon)->hn = heap_insert(&d->entity_q, *mon);
     }
     d->num_monsters = nmon;
 
@@ -886,20 +880,42 @@ int update_costs(DungeonLevel* d)
 
     return 0;
 }
+
+// both return -1 on lose event, 1 on win event, 0 else
+int iterate_player(DungeonLevel* d, Entity* e);
+int iterate_monster(DungeonLevel* d, Entity* e);
+// ^ these should update terrain, delete any newly klled entities, etc., and readd the entity to the queue if it is still alive
+
 int iterate_level(DungeonLevel* d)
 {
     int ret = 0;
 
-    EntityData* ed = heap_peek_min(&d->entity_q);
-    for(const size_t turn = ed->e->turn; ed->e->turn == turn; ed = heap_peek_min(&d->entity_q))
+    Entity* e = heap_peek_min(&d->entity_q);
+    for(const size_t turn = e->turn; e->turn == turn; e = heap_peek_min(&d->entity_q))
     {
         heap_remove_min(&d->entity_q);
-        Entity* e = ed->e;
         e->turn += (e->speed / 10);
         PRINT_DEBUG("Popped entity {%d, %d, %#x, %d} with turn %lu --> next turn: %lu\n", e->is_pc, e->priority, e->stats, e->speed, turn, e->turn);
-        // heap_decrease_key_no_replace(&d->entity_q, ed->hp);
-        ed->hp = heap_insert(&d->entity_q, ed);
+
+        if( (ret = e->is_pc ? iterate_player(d, e) : iterate_monster(d, e)) ) break;
     }
 
-    return ret;
+    return ret; // -1 for lose, 1 for win
+}
+
+int iterate_player(DungeonLevel* d, Entity* e)
+{
+    PRINT_DEBUG("Iterating player!\n");
+
+    e->hn = heap_insert(&d->entity_q, e);
+
+    return 0;
+}
+int iterate_monster(DungeonLevel* d, Entity* e)
+{
+    PRINT_DEBUG("Iterating monster #%d!\n", e->priority);
+
+    e->hn = heap_insert(&d->entity_q, e);
+
+    return 0;
 }

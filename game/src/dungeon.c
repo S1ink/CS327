@@ -19,21 +19,10 @@
 
 /* UTILITIES */
 
-GENERATE_MIN_MAX_UTIL(uint32_t, u32)
-
-static inline uint32_t random_in_range(uint32_t min, uint32_t max)
-{
-    return min + (uint32_t)(rand() % (max - min + 1));
-}
-static inline void vec2u_random(Vec2u* v, Vec2u range)
-{
-    v->x = (uint32_t)(rand() % range.x);
-    v->y = (uint32_t)(rand() % range.y);
-}
 static inline void vec2u_random_in_range(Vec2u* v, Vec2u min, Vec2u max)
 {
-    v->x = min.x + (uint32_t)(rand() % (max.x - min.x + 1));
-    v->y = min.y + (uint32_t)(rand() % (max.y - min.y + 1));
+    v->x = (uint32_t)RANDOM_IN_RANGE(min.x, max.x);
+    v->y = (uint32_t)RANDOM_IN_RANGE(min.y, max.y);
 }
 
 static inline char get_cell_char(CellTerrain c, Entity* e)
@@ -76,23 +65,6 @@ int collide_or_tangent(const DungeonRoom* a, const DungeonRoom* b)
         (r >= 0 && s <= 0) &&
         (p || r) && (q || s) && (p || s) && (q || r);
 }
-int in_x_window(const DungeonRoom* a, const DungeonRoom* b)
-{
-    const int32_t
-        p = (int32_t)a->br.x - (int32_t)b->tl.x + 1,
-        q = (int32_t)a->tl.x - (int32_t)b->br.x - 1;
-
-    return (p >= 0 && q <= 0);
-}
-int in_y_window(const DungeonRoom* a, const DungeonRoom* b)
-{
-    const int64_t
-        r = (int32_t)a->br.y - (int32_t)b->tl.y + 1,
-        s = (int32_t)a->tl.y - (int32_t)b->br.y - 1;
-
-    return (r >= 0 && s <= 0);
-}
-
 void room_size(const DungeonRoom* r, Vec2u* s)
 {
     s->x = r->br.x - r->tl.x + 1;
@@ -121,7 +93,6 @@ static int zero_cells(DungeonMap* d)
 
     return 0;
 }
-
 static int create_random_connection(DungeonMap* d, size_t a, size_t b)
 {
     const DungeonRoom* room_data = d->rooms;
@@ -134,7 +105,6 @@ static int create_random_connection(DungeonMap* d, size_t a, size_t b)
 
     return 0;
 }
-
 static int connect_rooms(DungeonMap* d)
 {
     for(size_t i = 0; i < d->num_rooms; i++)
@@ -144,7 +114,6 @@ static int connect_rooms(DungeonMap* d)
 
     return 0;
 }
-
 static int fill_room_cells(DungeonMap* d)
 {
     for(size_t r = 0; r < d->num_rooms; r++)
@@ -168,9 +137,9 @@ static int fill_room_cells(DungeonMap* d)
 
 /* GENERATE ROOMS */
 
-int generate_rooms(DungeonMap* d)
+static int generate_rooms(DungeonMap* d)
 {
-    const size_t target = (size_t)random_in_range(DUNGEON_MIN_NUM_ROOMS, DUNGEON_MAX_NUM_ROOMS);
+    const size_t target = (size_t)RANDOM_IN_RANGE(DUNGEON_MIN_NUM_ROOMS, DUNGEON_MAX_NUM_ROOMS);
     if(d->num_rooms && d->rooms)
         d->rooms = realloc(d->rooms, sizeof(*d->rooms) * target);
     else
@@ -313,9 +282,7 @@ int generate_rooms(DungeonMap* d)
 
     return fill_room_cells(d);
 }
-
-
-int place_stairs(DungeonMap* d)
+static int place_stairs(DungeonMap* d)
 {
     Vec2u p, d_min, d_max;
     vec2u_assign(&d_min, 1, 1);
@@ -350,6 +317,19 @@ int place_stairs(DungeonMap* d)
 
 
 
+/* DUNGEON MAP METHODS */
+
+int zero_dungeon_map(DungeonMap* d)
+{
+    d->num_rooms = 0;
+    d->num_up_stair = 0;
+    d->num_down_stair = 0;
+    d->rooms = 0;
+
+    zero_cells(d);
+
+    return 0;
+}
 int generate_dungeon_map(DungeonMap* d, uint32_t seed)
 {
     if(seed > 0) srand(seed);
@@ -375,27 +355,12 @@ int generate_dungeon_map(DungeonMap* d, uint32_t seed)
 
     return 0;
 }
-
-int zero_dungeon_map(DungeonMap* d)
-{
-    d->num_rooms = 0;
-    d->num_up_stair = 0;
-    d->num_down_stair = 0;
-    d->rooms = 0;
-
-    zero_cells(d);
-
-    return 0;
-}
-
 int destruct_dungeon_map(DungeonMap* d)
 {
     free(d->rooms);
 
     return 0;
 }
-
-
 
 int random_dungeon_map_floor_pos(DungeonMap* d, uint8_t* pos)
 {
@@ -421,7 +386,7 @@ int random_dungeon_map_floor_pos(DungeonMap* d, uint8_t* pos)
 
 
 
-/* SERIALIZATION/DESERIALIZATION */
+/* DUNGEON MAP SERIALIZATION/DESERIALIZATION (+PC location) */
 
 int serialize_dungeon_map(const DungeonMap* d, const Vec2u8* pc_pos, FILE* out)
 {
@@ -625,6 +590,10 @@ int deserialize_dungeon_map(DungeonMap* d, Vec2u8* pc_pos, FILE* in)
 
 
 
+
+
+
+
 int zero_dungeon_level(DungeonLevel* d)
 {
     int ret = zero_dungeon_map(&d->map);
@@ -821,7 +790,7 @@ int init_level(DungeonLevel* d, size_t nmon)
     PRINT_DEBUG("Adding %lu monsters\n", nmon)
     for(size_t m = 0; m < nmon; m++)
     {
-        for(uint32_t trav = random_in_range(30, 150); trav > 0;)
+        for(uint32_t trav = RANDOM_IN_RANGE(30, 150); trav > 0;)
         {
             x++;
             y += (x / DUNGEON_X_DIM);
@@ -835,8 +804,8 @@ int init_level(DungeonLevel* d, size_t nmon)
         Entity** mon = d->entities[y] + x;
         *mon = malloc(sizeof(Entity));
         (*mon)->is_pc = 0;
-        (*mon)->speed = (uint8_t)random_in_range(50, 200);
-        (*mon)->stats = (uint8_t)random_in_range(0, 15);
+        (*mon)->speed = (uint8_t)RANDOM_IN_RANGE(50, 200);
+        (*mon)->stats = (uint8_t)RANDOM_IN_RANGE(0, 15);
         (*mon)->priority = m + 1;
         (*mon)->turn = 0;
         vec2u8_assign(&(*mon)->pos, x, y);

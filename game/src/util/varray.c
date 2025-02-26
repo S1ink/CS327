@@ -6,13 +6,7 @@
 
 static int varray_resize(VArray* v)
 {
-    void* x;
-    if(!(x = realloc(v->data, v->cap * v->esz * 2))) return -1;
-
-    v->data = x;
-    v->cap *= 2;
-
-    return 0;
+    return varray_reserve(v, v->cap * 2);
 }
 
 int varray_init(VArray* v, uint32_t esz)
@@ -36,12 +30,13 @@ int varray_destroy(VArray* v)
 
     return 0;
 }
-int varray_append(VArray* v, void* data)
+int varray_reserve(VArray* v, uint32_t n_elems)
 {
-    if(v->size >= v->cap && !varray_resize(v)) return -1;
+    void* x;
+    if(!(x = realloc(v->data, n_elems * v->esz))) return -1;
 
-    memcpy(v->data + (v->size * v->esz), data, v->esz);
-    v->size++;
+    v->data = x;
+    v->cap = n_elems;
 
     return 0;
 }
@@ -49,6 +44,15 @@ int varray_at(VArray* v, uint32_t idx, void* data)
 {
     if(idx >= v->size) return -1;
     memcpy(data, v->data + (idx * v->esz), v->esz);
+
+    return 0;
+}
+int varray_append(VArray* v, void* data)
+{
+    if(v->size >= v->cap && !varray_resize(v)) return -1;
+
+    memcpy(v->data + (v->size * v->esz), data, v->esz);
+    v->size++;
 
     return 0;
 }

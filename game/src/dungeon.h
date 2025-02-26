@@ -48,8 +48,6 @@ typedef struct
 DungeonRoom;
 
 int collide_or_tangent(const DungeonRoom* a, const DungeonRoom* b);
-int in_x_window(const DungeonRoom* a, const DungeonRoom* b);
-int in_y_window(const DungeonRoom* a, const DungeonRoom* b);
 void room_size(const DungeonRoom* r, Vec2u* s);
 void print_room(const DungeonRoom* r);
 
@@ -67,8 +65,8 @@ typedef struct
 }
 DungeonMap;
 
-int generate_dungeon_map(DungeonMap* d, uint32_t seed);
 int zero_dungeon_map(DungeonMap* d);
+int generate_dungeon_map(DungeonMap* d, uint32_t seed);
 int destruct_dungeon_map(DungeonMap* d);
 
 int random_dungeon_map_floor_pos(DungeonMap* d, uint8_t* pos);

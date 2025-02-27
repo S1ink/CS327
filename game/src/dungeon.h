@@ -47,9 +47,9 @@ typedef struct
 }
 DungeonRoom;
 
-int collide_or_tangent(const DungeonRoom* a, const DungeonRoom* b);
-void room_size(const DungeonRoom* r, Vec2u* s);
-void print_room(const DungeonRoom* r);
+int dungeon_room_collide_or_tangent(const DungeonRoom* a, const DungeonRoom* b);
+void dungeon_room_size(const DungeonRoom* r, Vec2u* s);
+void print_dungeon_room(const DungeonRoom* r);
 
 
 typedef struct
@@ -84,7 +84,9 @@ typedef struct
     int32_t tunnel_costs[DUNGEON_Y_DIM][DUNGEON_X_DIM];
     int32_t terrain_costs[DUNGEON_Y_DIM][DUNGEON_X_DIM];
 
-    Vec2u8 pc_position;
+    Entity* pc;
+    Entity* entity_alloc;
+    MonsterData* monster_alloc;
     uint8_t num_monsters;
 }
 DungeonLevel;
@@ -92,9 +94,8 @@ DungeonLevel;
 int zero_dungeon_level(DungeonLevel* d);
 int destruct_dungeon_level(DungeonLevel* d);
 
-int print_dungeon_level(DungeonLevel* d, int border);
-// int print_dungeon_level_a3(DungeonLevel* d, int border);
+int init_dungeon_level(DungeonLevel* d, Vec2u8 pc_pos, size_t nmon);
+int iterate_dungeon_level(DungeonLevel* d);
 
-int init_level(DungeonLevel* d, size_t nmon);
-int update_costs(DungeonLevel* d);
-int iterate_level(DungeonLevel* d);
+int print_dungeon_level(DungeonLevel* d, int border);
+int print_dungeon_level_costmaps(DungeonLevel* d, int border);

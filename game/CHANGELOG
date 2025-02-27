@@ -35,3 +35,13 @@
 2/17/25 1:00  PM -- add generalized dijkstras + terrain, floor, and corridor algorithms
 2/17/25 1:30  PM -- print floor and terrain cost maps
 2/17/25 8:30  PM -- update makefile and readme
+
+2/23/25 10:00 PM -- some refactoring, add entity + dungeon level structs
+2/24/25 2:00  PM -- nummon flag handler, add dungeon level utilities
+2/24/25 5:00  PM -- add random monster generation
+2/24/25 9:00  PM -- create simulation loop, successfully create entity processing queue, add signal handling
+2/25/25 3:30  PM -- begin entity/monster behavior control
+2/26/25 4:00  PM -- refactor utility functions, remove unused files
+2/26/25 9:00  PM -- refactor entity/monster structs, add support for generic pathing
+2/26/25 11:00 PM -- refactor dungeon functions, add random movement + terrain and entity collition handling
+2/27/25 12:30 AM -- correctly handle terrain breaks, add win/lose status, fix memory leaks

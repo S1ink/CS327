@@ -1,16 +1,17 @@
-#include "dungeon.h"
 #include "dungeon_config.h"
+#include "dungeon.h"
 
+#include "util/vec_geom.h"
 #include "util/debug.h"
 
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include <time.h>
+
 #include <sys/stat.h>
-#include <sys/time.h>
 #include <unistd.h>
 #include <signal.h>
+#include <time.h>
 
 
 typedef struct
@@ -19,6 +20,7 @@ typedef struct
     uint8_t save : 1;
     uint8_t nmon;
     char* save_path;
+    Vec2u8 pc_init;
 }
 RuntimeState;
 
@@ -71,7 +73,6 @@ int handle_level_init(DungeonLevel* d, RuntimeState* state, int argc, char** arg
     }
 
     DungeonMap* map = &d->map;
-    Vec2u8* pc = &d->pc_position;
 
     if(state->load)
     {
@@ -80,7 +81,7 @@ int handle_level_init(DungeonLevel* d, RuntimeState* state, int argc, char** arg
         FILE* f = fopen(state->save_path, "rb");
         if(f)
         {
-            deserialize_dungeon_map(map, pc, f);
+            deserialize_dungeon_map(map, &state->pc_init, f);
             fclose(f);
         }
         else
@@ -94,10 +95,10 @@ int handle_level_init(DungeonLevel* d, RuntimeState* state, int argc, char** arg
         PRINT_DEBUG("GENERATING DUNGEON...\n")
 
         generate_dungeon_map(map, 0);
-        random_dungeon_map_floor_pos(map, pc->data);
+        random_dungeon_map_floor_pos(map, state->pc_init.data);
     }
 
-    init_level(d, state->nmon);
+    init_dungeon_level(d, state->pc_init, state->nmon);
 
     return ret;
 }
@@ -112,7 +113,7 @@ int handle_level_deinit(DungeonLevel* d, RuntimeState* state)
         FILE* f = fopen(state->save_path, "wb");
         if(f)
         {
-            serialize_dungeon_map(&d->map, &d->pc_position, f);
+            serialize_dungeon_map(&d->map, &state->pc_init, f);
             fclose(f);
         }
         else
@@ -132,7 +133,6 @@ int handle_level_deinit(DungeonLevel* d, RuntimeState* state)
 static volatile int is_running = 1;
 static void handle_exit(int x)
 {
-    printf("\nCaught Ctrl-C. Exitting...\n");
     is_running = 0;
 }
 
@@ -145,35 +145,24 @@ int main(int argc, char** argv)
     zero_dungeon_level(&d);
     srand(us_seed());
 
-    // IF_DEBUG(uint64_t t1 = us_time();)
     if(!handle_level_init(&d, &s, argc, argv))
     {
-        int status;
-        int i = 0;
-        do
+        int status = 0;
+        for( size_t i = 0;
+            (i < 200000) && (is_running && !status);
+            i++ )
         {
-            i++;
-            usleep(250000);
             printf("\033[2J\033[1;1H");
             print_dungeon_level(&d, DUNGEON_PRINT_BORDER);
+            // print_dungeon_level_costmaps(&d, DUNGEON_PRINT_BORDER);
+            status = iterate_dungeon_level(&d);
+            usleep(10000);
         }
-        while(is_running && !(status = iterate_level(&d)) && i < 10);
+        printf("\033[2J\033[1;1H");
+        print_dungeon_level(&d, DUNGEON_PRINT_BORDER);
+        if(!is_running) printf("\nCaught Ctrl-C. Exitting...\n");
+        if(status) printf("GAME %s!!!\n", status > 0 ? "WON" : "LOST");
         // TODO: print win/lose screen
-
-    // IF_DEBUG(uint64_t t2 = us_time();)
-    //     print_dungeon_level(&d, DUNGEON_PRINT_BORDER);
-    // IF_DEBUG(uint64_t t3 = us_time();)
-    // //     print_dungeon_level_a3(&d, DUNGEON_PRINT_BORDER);
-    // IF_DEBUG(uint64_t t4 = us_time();)
-
-    // #if ENABLE_DEBUG_PRINTS
-    //     printf(
-    //         "RUNTIME: %f\n Init: %f\n Print: %f\n Weights: %f\n",
-    //         (double)(t4 - t1) * 1e-6,
-    //         (double)(t2 - t1) * 1e-6,
-    //         (double)(t3 - t2) * 1e-6,
-    //         (double)(t4 - t3) * 1e-6 );
-    // #endif
     }
     handle_level_deinit(&d, &s);
 

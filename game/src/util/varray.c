@@ -47,6 +47,11 @@ int varray_at(VArray* v, uint32_t idx, void* data)
 
     return 0;
 }
+void* varray_ptr_at(VArray* v, uint32_t idx)
+{
+    if(idx >= v->size) return NULL;
+    return (void*)(v->data + (idx * v->esz));
+}
 int varray_append(VArray* v, void* data)
 {
     if(v->size >= v->cap && !varray_resize(v)) return -1;

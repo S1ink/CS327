@@ -19,6 +19,7 @@ int varray_init(VArray* v, uint32_t esz);
 int varray_destroy(VArray* v);
 int varray_reserve(VArray* v, uint32_t n_elems);
 int varray_at(VArray* v, uint32_t idx, void* data);
+void* varray_ptr_at(VArray* v, uint32_t idx);
 int varray_append(VArray* v, void* data);
 int varray_pop(VArray* v, void* data);
 int varray_remove(VArray* v, uint32_t idx, void* data);

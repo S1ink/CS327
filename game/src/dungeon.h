@@ -75,14 +75,15 @@ int serialize_dungeon_map(const DungeonMap* d, const Vec2u8* pc_pos, FILE* out);
 int deserialize_dungeon_map(DungeonMap* d, Vec2u8* pc_pos, FILE* in);
 
 
+typedef int32_t DungeonCostMap[DUNGEON_Y_DIM][DUNGEON_X_DIM];
+
 typedef struct
 {
     DungeonMap map;
     Heap entity_q;
 
     Entity* entities[DUNGEON_Y_DIM][DUNGEON_X_DIM];
-    int32_t tunnel_costs[DUNGEON_Y_DIM][DUNGEON_X_DIM];
-    int32_t terrain_costs[DUNGEON_Y_DIM][DUNGEON_X_DIM];
+    DungeonCostMap tunnel_costs, terrain_costs;
 
     Entity* pc;
     Entity* entity_alloc;

@@ -28,5 +28,8 @@ macros: macros.c
 vaargs: vaargs.c
 	gcc vaargs.c -Wall -Werror -o vaargs
 
+return_local: return_local.c
+	gcc return_local.c -Wall -o return_local
+
 clean:
 	rm -rf *.o *~ queue_test strings char varray macros

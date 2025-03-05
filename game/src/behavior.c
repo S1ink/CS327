@@ -203,10 +203,10 @@ static int iterate_monster(DungeonLevel* d, Entity* e)
     }
 
     const int r = rand();
-    if(e->md.erratic && (r % 2))
+    if(e->md.erratic && (r & 1))
     {
         PRINT_DEBUG("Moving erratic...\n");
-        return move_random(d, e, r);
+        return move_random(d, e, (r >> 1));
     }
     else
     {

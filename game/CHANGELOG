@@ -52,3 +52,4 @@
     Add monster movement computation
     Fix bug in bresenham's return value
     Fix bug in terrain costmap
+    Fix nonuniform random direction distribution

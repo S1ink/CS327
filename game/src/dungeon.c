@@ -30,8 +30,8 @@ static inline char get_cell_char(CellTerrain c, Entity* e)
 {
     if(e)
     {
-        if(!e->md) return '@';
-        else return ("0123456789ABCDEF")[e->md->stats];
+        if(!e->is_pc) return '@';
+        else return ("0123456789ABCDEF")[e->md.stats];
     }
     switch(c.is_stair)
     {
@@ -677,7 +677,6 @@ int zero_dungeon_level(DungeonLevel* d)
 
     d->pc = NULL;
     d->entity_alloc = NULL;
-    d->monster_alloc = NULL;
     d->num_monsters = 0;
 
     return ret;
@@ -688,13 +687,7 @@ int destruct_dungeon_level(DungeonLevel* d)
 
     heap_delete(&d->entity_q);
 
-    // for(uint8_t m = 0; m < d->num_monsters; m++)
-    // {
-    //     varray_destroy(&d->monster_alloc[m].path);
-    // }
-
     if(d->entity_alloc) free(d->entity_alloc);
-    if(d->monster_alloc) free(d->monster_alloc);
 
     return ret;
 }
@@ -706,17 +699,17 @@ int init_dungeon_level(DungeonLevel* d, Vec2u8 pc_pos, size_t nmon)
 
 // 2. init pc (alloc for all entities)
     if( !(d->pc = d->entity_alloc = malloc((nmon + 1) * sizeof(Entity))) ) return -1;     // allocate for all entities --> pc gets first element so reuse ptr as address for subsequent monster elements as well
+    d->pc->is_pc = 1;
     d->pc->speed = 100;
     d->pc->priority = 0;
     d->pc->next_turn = 0;
     vec2u8_copy(&d->pc->pos, &pc_pos);
     d->pc->hn = heap_insert(&d->entity_q, d->pc);
-    d->pc->md = NULL;   // only the pc has a null md
     d->entities[pc_pos.y][pc_pos.x] = d->pc; // assign positional pointer
 
 // 3. allocate monster buffers
     PRINT_DEBUG("Allocating %lu monsters\n", nmon)
-    if( !(d->monster_alloc = malloc(nmon * sizeof(MonsterData))) ) return -1;
+    // if( !(d->monster_alloc = malloc(nmon * sizeof(MonsterData))) ) return -1;
 
 // 4. init monsters
     uint8_t x, y;
@@ -734,18 +727,19 @@ int init_dungeon_level(DungeonLevel* d, Vec2u8 pc_pos, size_t nmon)
         }
 
         Entity* me = d->entities[y][x] = d->entity_alloc + m + 1;
-        MonsterData* md = d->monster_alloc + m;
+        // MonsterData* md = d->monster_alloc + m;
 
+        me->is_pc = 0;
         me->speed = (uint8_t)RANDOM_IN_RANGE(50, 200);
         me->priority = m + 1;
         me->next_turn = 0;
         vec2u8_assign(&me->pos, x, y);
         me->hn = heap_insert(&d->entity_q, me);
-        me->md = md;
+        // me->md = md;
 
-        md->stats = (uint8_t)RANDOM_IN_RANGE(0, 15);
-        md->flags = 0;
-        // varray_init(&md->path, sizeof(Vec2u8));
+        me->md.stats = (uint8_t)RANDOM_IN_RANGE(0, 15);
+        me->md.flags = 0;
+        vec2u8_zero(&me->md.pc_rem_pos);
 
         PRINT_DEBUG( "Initialized monster {%d, %d, (%d, %d), %#lx, %#x}\n",
             me->speed, me->priority, x, y, (uint64_t)me->md, me->md->stats );

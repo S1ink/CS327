@@ -10,7 +10,7 @@ int dungeon_level_update_costs(DungeonLevel* d);    // from dungeon.c
 
 static inline int entity_has_tunneling(Entity* e)
 {
-    return e->md && (e->md->stats & TUNNELING);
+    return !e->is_pc && (e->md.tunneling);
 }
 
 static const int8_t OFF_DIRECTIONS[8][2] =
@@ -61,15 +61,14 @@ static int handle_entity_move(DungeonLevel* d, Entity* e, uint8_t dir_idx)
     {
         e->pos.x = x;
         e->pos.y = y;
-        if(!e->md) flags |= FLAG_PC_MOVED;
+        if(e->is_pc) flags |= FLAG_PC_MOVED;
 
         Entity** slot = d->entities[y] + x;
         if(*slot)   // previous entity
         {
             (*slot)->hn = NULL; // this marks that the entity will no longer be iterated -- TODO: immediate heap removal!
-            if((*slot)->md)
+            if(!(*slot)->is_pc)
             {
-                // varray_destroy(&(*slot)->md->path);
                 d->num_monsters -= 1;
             }
             else d->pc = NULL;
@@ -106,6 +105,62 @@ static int move_random(DungeonLevel* d, Entity* e)
     }
 
     return n_valid_dirs ? handle_entity_move(d, e, valid_dirs[rand() % n_valid_dirs]) : 0;
+}
+
+static int iterate_monster(DungeonLevel* d, Entity* e)
+{
+    int r = rand();
+    if(e->md.erratic && (r % 2))
+    {
+        return move_random(d, e);
+    }
+    else
+    {
+        if(e->md.telepathy)
+        {
+            if(e->md.intelligence)
+            {
+                if(e->md.tunneling)
+                {
+                    // gradient descent on terrain map
+                }
+                else
+                {
+                    // gradient descent on floor map
+                }
+            }
+            else
+            {
+                // traverse L-O-S path
+            }
+        }
+        else
+        {
+            int has_los = 0;
+            if(has_los)
+            {
+                // traverse L-O-S path
+            }
+            else
+            {
+                if(e->md.intelligence)
+                {
+                    if(e->md.tunneling)
+                    {
+                        // calc path to LKL accross terrain
+                    }
+                    else
+                    {
+                        // calc path to LKL accross floor
+                    }
+                }
+                else
+                {
+                    // move random, or none
+                }
+            }
+        }
+    }
 }
 
 

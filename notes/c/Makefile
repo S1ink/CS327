@@ -31,5 +31,8 @@ vaargs: vaargs.c
 return_local: return_local.c
 	gcc return_local.c -Wall -o return_local
 
+curses: curses.c
+	gcc curses.c -Wall -lncurses -o curses
+
 clean:
 	rm -rf *.o *~ queue_test strings char varray macros

@@ -87,7 +87,6 @@ typedef struct
 
     Entity* pc;
     Entity* entity_alloc;
-    MonsterData* monster_alloc;
     uint8_t num_monsters;
 }
 DungeonLevel;

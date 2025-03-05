@@ -17,22 +17,44 @@ enum MonsterStats
 
 typedef struct
 {
-    uint8_t stats : 4;
-    uint8_t flags : 4;
+    union
+    {
+        struct
+        {
+            uint8_t intelligence : 1;
+            uint8_t telepathy : 1;
+            uint8_t tunneling : 1;
+            uint8_t erratic : 1;
 
-    // VArray path;    // Vec2u8 data type
+            uint8_t using_rem_pos : 1;
+        };
+        struct
+        {
+            uint8_t stats : 4;
+            uint8_t flags : 4;
+        };
+        uint8_t data;
+    };
+
+    Vec2u8 pc_rem_pos;
 }
 MonsterData;
 
+size_t x = sizeof(MonsterData);
+
 typedef struct
 {
+    uint8_t is_pc;
     uint8_t speed;
     uint8_t priority;
     Vec2u8 pos;
+    MonsterData md;
 
     size_t next_turn;
 
     HeapNode* hn;
-    MonsterData* md;
+
 }
 Entity;
+
+size_t y = sizeof(Entity);

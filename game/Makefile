@@ -2,8 +2,8 @@ rwildcard = $(foreach d,$(wildcard $(addsuffix *,$(1))),$(call rwildcard,$(d)/,$
 
 OPT ?= export
 
-ifeq ($(filter $(OPT),export debug release),)
-$(error invalid 'OPT' option - choose from {export/debug/release})
+ifeq ($(filter $(OPT),export debug colorful release),)
+$(error invalid 'OPT' option - choose from {export/debug/colorful/release})
 endif
 
 CC := gcc
@@ -21,8 +21,12 @@ CFLAGS += -g -O2 -DDUNGEON_PRINT_BORDER=1 -DENABLE_DEBUG_PRINTS=0 -DDUNGEON_PRIN
 CXXFLAGS += -g -O2 -DDUNGEON_PRINT_BORDER=1 -DENABLE_DEBUG_PRINTS=0 -DDUNGEON_PRINT_HARDNESS=0
 LDFLAGS += -g
 else ifeq ($(OPT),debug)
-CFLAGS += -g -Og -DENABLE_DEBUG_PRINTS=1 -DDUNGEON_PRINT_HARDNESS=1
-CXXFLAGS += -g -Og -DENABLE_DEBUG_PRINTS=1 -DDUNGEON_PRINT_HARDNESS=1
+CFLAGS += -g -O2 -DDUNGEON_PRINT_BORDER=1 -DENABLE_DEBUG_PRINTS=1 -DDUNGEON_PRINT_HARDNESS=1
+CXXFLAGS += -g -O2 -DDUNGEON_PRINT_BORDER=1 -DENABLE_DEBUG_PRINTS=1 -DDUNGEON_PRINT_HARDNESS=1
+LDFLAGS += -g
+else ifeq ($(OPT),colorful)
+CFLAGS += -g -O2 -DDUNGEON_PRINT_BORDER=1 -DENABLE_DEBUG_PRINTS=0 -DDUNGEON_PRINT_HARDNESS=1
+CXXFLAGS += -g -O2 -DDUNGEON_PRINT_BORDER=1 -DENABLE_DEBUG_PRINTS=0 -DDUNGEON_PRINT_HARDNESS=1
 LDFLAGS += -g
 else
 CFLAGS += -O3

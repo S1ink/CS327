@@ -40,7 +40,7 @@ typedef struct
 }
 MonsterData;
 
-size_t x = sizeof(MonsterData);
+// size_t x = sizeof(MonsterData);
 
 typedef struct
 {
@@ -57,4 +57,4 @@ typedef struct
 }
 Entity;
 
-size_t y = sizeof(Entity);
+// size_t y = sizeof(Entity);

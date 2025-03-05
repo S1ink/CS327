@@ -30,7 +30,7 @@ static inline char get_cell_char(CellTerrain c, Entity* e)
 {
     if(e)
     {
-        if(!e->is_pc) return '@';
+        if(e->is_pc) return '@';
         else return ("0123456789ABCDEF")[e->md.stats];
     }
     switch(c.is_stair)
@@ -741,8 +741,8 @@ int init_dungeon_level(DungeonLevel* d, Vec2u8 pc_pos, size_t nmon)
         me->md.flags = 0;
         vec2u8_zero(&me->md.pc_rem_pos);
 
-        PRINT_DEBUG( "Initialized monster {%d, %d, (%d, %d), %#lx, %#x}\n",
-            me->speed, me->priority, x, y, (uint64_t)me->md, me->md->stats );
+        PRINT_DEBUG( "Initialized monster {%d, %d, (%d, %d), %#x}\n",
+            me->speed, me->priority, x, y, me->md.stats );
     }
     d->num_monsters = nmon;
 
@@ -764,8 +764,8 @@ int iterate_dungeon_level(DungeonLevel* d)
             e->next_turn += (e->speed / 10);
             e->hn = heap_insert(&d->entity_q, e);
 
-            PRINT_DEBUG( "Popped entity {%d, %d, (%d, %d), %#lx} with turn %lu --> next turn: %lu\n",
-                e->speed, e->priority, e->pos.x, e->pos.y, (uint64_t)e->md, turn, e->next_turn );
+            PRINT_DEBUG( "Popped entity {%d, %d, (%d, %d)} with turn %lu --> next turn: %lu\n",
+                e->speed, e->priority, e->pos.x, e->pos.y, turn, e->next_turn );
 
             if( (ret = iterate_entity(d, e)) ) break;   // exit on win/lose event
         }
@@ -813,6 +813,8 @@ int print_dungeon_level(DungeonLevel* d, int border)
     {
         printf("+%.*s+\n", DUNGEON_X_DIM, "-----------------------------------------------------------------------------------------------------------------------------------------------------------------------");
     }
+
+    fflush(stdout);
 
     return 0;
 }

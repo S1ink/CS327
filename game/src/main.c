@@ -156,7 +156,7 @@ int main(int argc, char** argv)
             print_dungeon_level(&d, DUNGEON_PRINT_BORDER);
             // print_dungeon_level_costmaps(&d, DUNGEON_PRINT_BORDER);
             status = iterate_dungeon_level(&d);
-            usleep(10000);
+            usleep(100000);
         }
         printf("\033[2J\033[1;1H");
         print_dungeon_level(&d, DUNGEON_PRINT_BORDER);

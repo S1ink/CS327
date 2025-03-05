@@ -45,3 +45,10 @@
 2/26/25 9:00  PM -- refactor entity/monster structs, add support for generic pathing
 2/26/25 11:00 PM -- refactor dungeon functions, add random movement + terrain and entity collition handling
 2/27/25 12:30 AM -- correctly handle terrain breaks, add win/lose status, fix memory leaks
+3/4/25:
+    Improve entity data memory usage
+    Add monster iteration logic skeleton
+    Add bresenham's line algorithm
+    Add monster movement computation
+    Fix bug in bresenham's return value
+    Fix bug in terrain costmap

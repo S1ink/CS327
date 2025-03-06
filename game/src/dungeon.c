@@ -16,8 +16,20 @@
 #include <time.h>
 #include <math.h>
 
+/* --- BEHAVIOR.C INTERFACE ------------------------------------------- */
 
-int iterate_entity(DungeonLevel* d, Entity* e);     // declaration for behavior.c impl
+/* Iterate the provided entity's AI and update the game state. */
+int iterate_entity(DungeonLevel* d, Entity* e);
+
+/* --- PARETER FUNCTIONS ---------------------------------------------- */
+
+static int32_t entity_priority_comp(const void* k, const void* w)
+{
+    Entity *a, *b;
+    a = (Entity*)k;
+    b = (Entity*)w;
+    return (a->next_turn == b->next_turn) ? (int32_t)a->priority - (int32_t)b->priority : (int32_t)a->next_turn - (int32_t)b->next_turn;
+}
 
 /* --- UTILITIES ------------------------------------------------------ */
 
@@ -46,13 +58,6 @@ static inline char get_cell_char(CellTerrain c, Entity* e)
         default: break;
     }
     return ' ';
-}
-static int32_t entity_priority_comp(const void* k, const void* w)
-{
-    Entity *a, *b;
-    a = (Entity*)k;
-    b = (Entity*)w;
-    return (a->next_turn == b->next_turn) ? (int32_t)a->priority - (int32_t)b->priority : (int32_t)a->next_turn - (int32_t)b->next_turn;
 }
 
 static int dungeon_map_zero_cells(DungeonMap* d)
@@ -282,7 +287,7 @@ static int dungeon_map_place_stairs(DungeonMap* d)
     return 0;
 }
 
-static int dungeon_level_print_costs(int32_t (*costs)[80], int border)
+static int dungeon_level_print_costs(DungeonCostMap costs, int border)
 {
     char* row_fmt = "%.*s\n";
 
@@ -332,7 +337,7 @@ static int dungeon_level_print_costs(int32_t (*costs)[80], int border)
 
     return 0;
 }
-int dungeon_level_update_costs(DungeonLevel* d)
+int dungeon_level_update_costs(DungeonLevel* d, int both_or_only_terrain)
 {
     static PathFindingBuffer buff;
     static int buff_inited = 0;
@@ -345,12 +350,15 @@ int dungeon_level_update_costs(DungeonLevel* d)
     Vec2u pos;
     vec2u_assign(&pos, d->pc->pos.x, d->pc->pos.y);
 
-    dungeon_dijkstra_traverse_floor(&d->map, pos, &buff);
-    for(size_t y = 0; y < DUNGEON_Y_DIM; y++)
+    if(both_or_only_terrain)
     {
-        for(size_t x = 0; x < DUNGEON_X_DIM; x++)
+        dungeon_dijkstra_traverse_floor(&d->map, pos, &buff);
+        for(size_t y = 0; y < DUNGEON_Y_DIM; y++)
         {
-            d->tunnel_costs[y][x] = buff.nodes[y][x].cost;
+            for(size_t x = 0; x < DUNGEON_X_DIM; x++)
+            {
+                d->tunnel_costs[y][x] = buff.nodes[y][x].cost;
+            }
         }
     }
     dungeon_dijkstra_traverse_terrain(&d->map, pos, &buff);
@@ -705,6 +713,7 @@ int init_dungeon_level(DungeonLevel* d, Vec2u8 pc_pos, size_t nmon)
     d->pc->next_turn = 0;
     vec2u8_copy(&d->pc->pos, &pc_pos);
     d->pc->hn = heap_insert(&d->entity_q, d->pc);
+    d->pc->md.flags = 0;
     d->entities[pc_pos.y][pc_pos.x] = d->pc; // assign positional pointer
 
 // 3. allocate monster buffers
@@ -727,7 +736,6 @@ int init_dungeon_level(DungeonLevel* d, Vec2u8 pc_pos, size_t nmon)
         }
 
         Entity* me = d->entities[y][x] = d->entity_alloc + m + 1;
-        // MonsterData* md = d->monster_alloc + m;
 
         me->is_pc = 0;
         me->speed = (uint8_t)RANDOM_IN_RANGE(50, 200);
@@ -735,7 +743,6 @@ int init_dungeon_level(DungeonLevel* d, Vec2u8 pc_pos, size_t nmon)
         me->next_turn = 0;
         vec2u8_assign(&me->pos, x, y);
         me->hn = heap_insert(&d->entity_q, me);
-        // me->md = md;
 
         me->md.stats = (uint8_t)RANDOM_IN_RANGE(0, 15);
         me->md.flags = 0;
@@ -747,31 +754,44 @@ int init_dungeon_level(DungeonLevel* d, Vec2u8 pc_pos, size_t nmon)
     d->num_monsters = nmon;
 
 // 5. init cost maps
-    dungeon_level_update_costs(d);
+    dungeon_level_update_costs(d, 1);
 
     return 0;
 }
-int iterate_dungeon_level(DungeonLevel* d)
+LevelStatus iterate_dungeon_level(DungeonLevel* d, int until_next_pc_move)
 {
-    int ret = 0;
+    LevelStatus s;
+    s.data = 0;
 
     Entity* e = heap_peek_min(&d->entity_q);
-    for(const size_t turn = e->next_turn; e->next_turn == turn; e = heap_peek_min(&d->entity_q))
+    for(
+        const size_t turn = e->next_turn;
+        until_next_pc_move || (e->next_turn == turn);
+        e = heap_peek_min(&d->entity_q) )
     {
         heap_remove_min(&d->entity_q);
         if(e->hn)   // null hn demarks an entity that has perished
         {
-            e->next_turn += (e->speed / 10);
+            e->next_turn += e->speed;
             e->hn = heap_insert(&d->entity_q, e);
 
             PRINT_DEBUG( "Popped entity {%d, %d, (%d, %d)} with turn %lu --> next turn: %lu\n",
-                e->speed, e->priority, e->pos.x, e->pos.y, turn, e->next_turn );
+                e->speed, e->priority, e->pos.x, e->pos.y, e->next_turn - e->speed, e->next_turn );
 
-            if( (ret = iterate_entity(d, e)) ) break;   // exit on win/lose event
+            iterate_entity(d, e);
+
+            if((s = get_dungeon_level_status(d)).data || (until_next_pc_move && e->is_pc)) break;
         }
     }
 
-    return ret; // -1 for lose, 1 for win
+    return s;
+}
+LevelStatus get_dungeon_level_status(DungeonLevel* d)
+{
+    LevelStatus s;
+    s.has_won = !d->num_monsters;
+    s.has_lost = !d->pc;
+    return s;
 }
 
 int print_dungeon_level(DungeonLevel* d, int border)

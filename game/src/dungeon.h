@@ -77,6 +77,17 @@ int deserialize_dungeon_map(DungeonMap* d, Vec2u8* pc_pos, FILE* in);
 
 typedef int32_t DungeonCostMap[DUNGEON_Y_DIM][DUNGEON_X_DIM];
 
+typedef union
+{
+    struct
+    {
+        uint8_t has_won : 1;
+        uint8_t has_lost : 1;
+    };
+    uint8_t data : 2;
+}
+LevelStatus;
+
 typedef struct
 {
     DungeonMap map;
@@ -85,9 +96,9 @@ typedef struct
     Entity* entities[DUNGEON_Y_DIM][DUNGEON_X_DIM];
     DungeonCostMap tunnel_costs, terrain_costs;
 
-    Entity* pc;
-    Entity* entity_alloc;
-    uint8_t num_monsters;
+    Entity* pc;             // the PC's entity address -- set to null when eaten (lose)
+    Entity* entity_alloc;   // all the entities are allocated contiguously
+    uint8_t num_monsters;   // counts the number of remaining monsters (0 = win)
 }
 DungeonLevel;
 
@@ -95,7 +106,8 @@ int zero_dungeon_level(DungeonLevel* d);
 int destruct_dungeon_level(DungeonLevel* d);
 
 int init_dungeon_level(DungeonLevel* d, Vec2u8 pc_pos, size_t nmon);
-int iterate_dungeon_level(DungeonLevel* d);
+LevelStatus iterate_dungeon_level(DungeonLevel* d, int until_next_pc_move);
+LevelStatus get_dungeon_level_status(DungeonLevel* d);
 
 int print_dungeon_level(DungeonLevel* d, int border);
 int print_dungeon_level_costmaps(DungeonLevel* d, int border);

@@ -1,12 +1,18 @@
-Initializes a dungeon, conducts path finding using only floors as well as the entire map, and prints the dungeon along with both weightmaps to the console.
+Initializes a dungeon, randomly spawns monsters, and iterates through a simulated game. All monsters behave according to
+the 1.04 spec (for each hex number), and the PC targets a random floor location, while attacking any monsters in close proximity.
+The game automatically terminates with an appropriate end screen when either the PC dies or all monsters are killed. Ctrl+C may be
+pressed anytime to terminate the program gracefully.
 
 **BUILD**:
     Run `make`
-*Optionally, to enable colored output and debugging information*:
+*Optionally, to enable colored output*:
+    Run `make rebuild OPT=colorful`
+*And to enable debug printing*:
     Run `make rebuild OPT=debug`
 
 **USAGE**:
-    Run: `./game <--load> <--save>`
+    Run: `./game <--load> <--save> <--nummon #>`
 *Flags*:
-    `--load` : Loads the saved dungeon located at `$HOME/.rlg327/dungeon`. If nonexistent, exits with an error message.
-    `--save` : Generates a new dungeon (unless the load flag is present), and saves it to `$HOME/.rlg327/dungeon`.
+    `--load`   : Loads the saved dungeon located at `$HOME/.rlg327/dungeon`. If nonexistent, exits with an error message.
+    `--save`   : Generates a new dungeon (unless the load flag is present), and saves it to `$HOME/.rlg327/dungeon`.
+    `--nummon` : Specify the number of monsters to spawn. Valid range is [0, 255] (256 overflows to 0).

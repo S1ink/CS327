@@ -5,13 +5,24 @@
 #include "util/math.h"
 #include "util/heap.h"
 
-int dungeon_level_update_costs(DungeonLevel* d);    // from dungeon.c
+#ifndef BRESENHAM_DEBUG
+#define BRESENHAM_DEBUG 0
+#endif
+
+
+/* --- DUNGEON.C INTERNAL INTERFACE --------------------------------------- */
+
+int dungeon_level_update_costs(DungeonLevel* d, int both_or_only_terrain);
 
 /* No header since these are only used in dungeon.c -- declarations are internal */
 
 static inline int entity_has_tunneling(Entity* e)
 {
     return !e->is_pc && (e->md.tunneling);
+}
+static inline int terrain_is_rock(CellTerrain t)
+{
+    return !t.type;
 }
 
 static const int8_t OFF_DIRECTIONS[8][2] =
@@ -29,36 +40,42 @@ static const int8_t OFF_DIRECTIONS[8][2] =
 static int handle_entity_move(DungeonLevel* d, Entity* e, uint8_t x, uint8_t y)
 {
     Entity** prev_slot = d->entities[e->pos.y] + e->pos.x;
-
-    enum
+    struct
     {
-        FLAG_TERRAIN_UPDATED = 0b001,
-        FLAG_PC_MOVED        = 0b010,
-        FLAG_ENTITY_MOVED    = 0b100
-    };
-    int flags = 0;
+        uint8_t terrain_updated : 1;
+        uint8_t floor_updated : 1;
+        uint8_t has_entity_moved : 1;
+        uint8_t pc_moved : 1;
+    }
+    flags;
 
-    if(entity_has_tunneling(e) && !d->map.terrain[y][x].type)
+    *(uint8_t*)(&flags) = 0;
+
+    if(terrain_is_rock(d->map.terrain[y][x]))
     {
-        uint8_t* h =  d->map.hardness[y] + x;
-        *h = (*h > 85 ? *h - 85 : 0);
-        if(!*h)
+        if(entity_has_tunneling(e))
         {
-            d->map.terrain[y][x].type = CORRIDOR;
-            flags |= FLAG_ENTITY_MOVED;
+            uint8_t* h =  d->map.hardness[y] + x;
+            *h = (*h > 85 ? *h - 85 : 0);
+            if(!*h)
+            {
+                d->map.terrain[y][x].type = CORRIDOR;
+                flags.has_entity_moved = 1;
+                flags.floor_updated = 1;
+            }
+            flags.terrain_updated = 1;
         }
-        flags |= FLAG_TERRAIN_UPDATED;
+        // else... entity isnt allowed to move
     }
     else
     {
-        flags |= FLAG_ENTITY_MOVED;
+        flags.has_entity_moved = 1;
     }
 
-    if(flags & FLAG_ENTITY_MOVED)
+    if(flags.has_entity_moved)
     {
         e->pos.x = x;
         e->pos.y = y;
-        if(e->is_pc) flags |= FLAG_PC_MOVED;
 
         Entity** slot = d->entities[y] + x;
         if(*slot)   // previous entity
@@ -74,10 +91,11 @@ static int handle_entity_move(DungeonLevel* d, Entity* e, uint8_t x, uint8_t y)
         *prev_slot = NULL;
     }
 
-    if(flags & (FLAG_TERRAIN_UPDATED | FLAG_PC_MOVED))
+    flags.pc_moved = (flags.has_entity_moved && e->is_pc);
+    if(flags.terrain_updated || flags.pc_moved)
     {
-        PRINT_DEBUG("UPDATING TERRAIN COSTS\n");
-        dungeon_level_update_costs(d);
+        PRINT_DEBUG("UPDATING TERRAIN %sCOSTS\n", flags.floor_updated ? "(and floor) " : "");
+        dungeon_level_update_costs(d, flags.floor_updated || flags.pc_moved);
     }
 
     return 0;
@@ -110,20 +128,22 @@ static int move_random(DungeonLevel* d, Entity* e, int r)
 
 static int bresenham_check_los(DungeonLevel* d, Entity* e, Vec2u8* trav_cell)
 {
-    #define A e->pos
-    #define B d->pc->pos
+    #define ENTITY e->pos
+    #define PLAYER d->pc->pos
 
-    PRINT_DEBUG("BRESENHAM: calculating from (%d, %d) to (%d, %d)\n", A.x, A.y, B.x, B.y);
+#if BRESENHAM_DEBUG
+    PRINT_DEBUG("BRESENHAM: calculating from (%d, %d) to (%d, %d)\n", ENTITY.x, ENTITY.y, PLAYER.x, PLAYER.y);
+#endif
 
-    const int32_t dx = abs((int32_t)B.x - (int32_t)A.x);
-    const int32_t dy = -abs((int32_t)B.y - (int32_t)A.y);
-    const int32_t sx = A.x < B.x ? 1 : -1;
-    const int32_t sy = A.y < B.y ? 1 : -1;
+    const int32_t dx = abs((int32_t)PLAYER.x - (int32_t)ENTITY.x);
+    const int32_t dy = -abs((int32_t)PLAYER.y - (int32_t)ENTITY.y);
+    const int32_t sx = ENTITY.x < PLAYER.x ? 1 : -1;
+    const int32_t sy = ENTITY.y < PLAYER.y ? 1 : -1;
     int32_t err = dx + dy;
 
-    int32_t x = A.x;
-    int32_t y = A.y;
-    for(int i = 0; !(x == B.x && y == B.y); i++)
+    int32_t x = ENTITY.x;
+    int32_t y = ENTITY.y;
+    for(int i = 0; !(x == PLAYER.x && y == PLAYER.y); i++)
     {
         const int32_t err2 = err * 2;
         if(err2 >= dy)
@@ -137,14 +157,16 @@ static int bresenham_check_los(DungeonLevel* d, Entity* e, Vec2u8* trav_cell)
             y += sy;
         }
 
+    #if BRESENHAM_DEBUG
         PRINT_DEBUG("BRESENHAM ITERATION %d : (%d, %d) -- terrain: %d\n", i, x, y, d->map.terrain[y][x].type);
+    #endif
 
-        if(!i)
+        if(!i)  // set on first iteration
         {
             trav_cell->x = (uint8_t)x;
             trav_cell->y = (uint8_t)y;
         }
-        if(!d->map.terrain[y][x].type)
+        if(terrain_is_rock(d->map.terrain[y][x]))  // exit on rock intersection
         {
             return i + 1;
         }
@@ -152,8 +174,8 @@ static int bresenham_check_los(DungeonLevel* d, Entity* e, Vec2u8* trav_cell)
 
     return 0;
 
-    #undef A
-    #undef B
+    #undef ENTITY
+    #undef PLAYER
 }
 
 static void pathing_export_vec2u8(void* v, uint32_t x, uint32_t y)
@@ -170,6 +192,7 @@ static int iterate_monster(DungeonLevel* d, Entity* e)
     }
     flags;
     Vec2u8 move_pos;
+    // vec2u8_copy(&move_pos, &e->pos);    // ensure save no-op so we don't use garbage
 
 #define GET_MIN_COST_NEIGHBOR(vout, map) \
     vec2u8_assign(&vout, e->pos.x + OFF_DIRECTIONS[0][0], e->pos.y + OFF_DIRECTIONS[0][1]); \
@@ -189,10 +212,13 @@ static int iterate_monster(DungeonLevel* d, Entity* e)
 
     if(e->md.intelligence && !e->md.telepathy)  // check LOS if can remember for the future and not telepathic
     {
-        if((flags.can_see_pc = e->md.using_rem_pos = !bresenham_check_los(d, e, &move_pos)))    // set flag and entity state
+        if(e->md.using_rem_pos && vec2u8_equal(&e->pos, &e->md.pc_rem_pos)) e->md.using_rem_pos = 0;
+
+        if((flags.can_see_pc = !bresenham_check_los(d, e, &move_pos)))    // set flag and entity state
         {
-            PRINT_DEBUG("Monster can see PC -- updated rem\n");
+            PRINT_DEBUG("(%#x) : Monster can see PC - updating known location to (%d, %d).\n", e->md.stats, d->pc->pos.x, d->pc->pos.y);
             vec2u8_copy(&e->md.pc_rem_pos, &d->pc->pos);    // update known pc location
+            e->md.using_rem_pos |= 1;
         }
         flags.computed_can_see_pc = 1;
     }
@@ -205,7 +231,7 @@ static int iterate_monster(DungeonLevel* d, Entity* e)
     const int r = rand();
     if(e->md.erratic && (r & 1))
     {
-        PRINT_DEBUG("Moving erratic...\n");
+        PRINT_DEBUG("(%#x) : Moving erraticly.\n", e->md.stats);
         return move_random(d, e, (r >> 1));
     }
     else
@@ -216,28 +242,32 @@ static int iterate_monster(DungeonLevel* d, Entity* e)
             {
                 if(e->md.tunneling)
                 {
-                    PRINT_DEBUG("Moving to lowest cost terrain cell\n");
+                    PRINT_DEBUG("(%#x) : Telepathically moving towards PC using the optimal TUNNELING path.\n", e->md.stats);
                     GET_MIN_COST_NEIGHBOR(move_pos, d->terrain_costs)
-                    // return handle_entity_move(d, e, move_pos.x, move_pos.y);
+                    // return handle_entity_move(d, e, move_pos.x, move_pos.y); (END)
                 }
                 else
                 {
-                    PRINT_DEBUG("Moving to lowest cost floor cell\n");
+                    PRINT_DEBUG("(%#x) : Telepathically moving towards PC using the optimal FLOOR path\n", e->md.stats);
                     GET_MIN_COST_NEIGHBOR(move_pos, d->tunnel_costs)
-                    // return handle_entity_move(d, e, move_pos.x, move_pos.y);
+                    // return handle_entity_move(d, e, move_pos.x, move_pos.y); (END)
                 }
             }
             else
             {
-                PRINT_DEBUG("Moving telepathically to PC using bresenham iteration\n");
-                if(!flags.computed_can_see_pc) flags.can_see_pc = !bresenham_check_los(d, e, &move_pos);
-
-                if(!e->md.tunneling && !d->map.terrain[move_pos.y][move_pos.x].type)
+                PRINT_DEBUG("(%#x) : Telpathically moving towards the PC using the DIRECT path\n", e->md.stats);
+                if(!flags.computed_can_see_pc)
                 {
-                    return 0;   // trying to move into rock, but cannot tunnel --> no movement.
+                    bresenham_check_los(d, e, &move_pos);   // get the next cell directly toward the PC
                 }
 
-                // return handle_entity_move(d, e, move_pos.x, move_pos.y);
+                if(!e->md.tunneling && terrain_is_rock(d->map.terrain[move_pos.y][move_pos.x]))
+                {
+                    PRINT_DEBUG("(%#x) : Not moving since monster is NON-TUNNELING.\n", e->md.stats);
+                    return 0;
+                }
+
+                // return handle_entity_move(d, e, move_pos.x, move_pos.y); (END)
             }
         }
         else
@@ -246,8 +276,8 @@ static int iterate_monster(DungeonLevel* d, Entity* e)
 
             if(flags.can_see_pc)
             {
-                PRINT_DEBUG("Moving directly towards PC (sighting) using precomputed bresenham\n");
-                // return handle_entity_move(d, e, move_pos.x, move_pos.y);
+                PRINT_DEBUG("(%#x) : Moving directly towards the PC (LINE OF SIGHT).\n", e->md.stats);
+                // return handle_entity_move(d, e, move_pos.x, move_pos.y); (END)
             }
             else
             {
@@ -259,19 +289,20 @@ static int iterate_monster(DungeonLevel* d, Entity* e)
 
                     if(e->md.tunneling)
                     {
-                        PRINT_DEBUG("Computing efficient path to PC's LKL over all terrain\n");
+                        PRINT_DEBUG("(%#x) : Moving towards the PC's last known location (%d, %d) using the optimal TUNNELING path.\n",
+                            e->md.stats, e->md.pc_rem_pos.x, e->md.pc_rem_pos.y );
                         dungeon_dijkstra_terrain_path(&d->map, a, b, &move_pos, pathing_export_vec2u8);
                     }
                     else
                     {
-                        PRINT_DEBUG("Computing efficient path to PC's LKL over floors only\n");
+                        PRINT_DEBUG("(%#x) : Moving towards the PC's last known location (%d, %d) using the optimal FLOOR path.\n",
+                            e->md.stats, e->md.pc_rem_pos.x, e->md.pc_rem_pos.y );
                         dungeon_dijkstra_floor_path(&d->map, a, b, &move_pos, pathing_export_vec2u8);
                     }
                 }
                 else
                 {
-                    PRINT_DEBUG("Moving randomly since no other moves are possible\n");
-                    // move random, or none
+                    PRINT_DEBUG("(%#x) : Wandering since no obvious moves are possible.\n", e->md.stats);
                     // return move_random(d, e, r);
                     return 0;
                 }
@@ -285,15 +316,43 @@ static int iterate_monster(DungeonLevel* d, Entity* e)
 #undef GET_MIN_COST_NEIGHBOR
 }
 
+static int iterate_pc(DungeonLevel* d, Entity* e)
+{
+    uint8_t x, y;
+    for(uint8_t i = 0; i < 8; i++)
+    {
+        x = e->pos.x + OFF_DIRECTIONS[i][0];
+        y = e->pos.y + OFF_DIRECTIONS[i][1];
+        if(d->entities[y][x])
+        {
+            PRINT_DEBUG("(PC) : Attacking monster in direction <%d, %d>.\n", OFF_DIRECTIONS[i][0], OFF_DIRECTIONS[i][0]);
+            return handle_entity_move(d, e, x, y);
+        }
+    }
+
+    if(!e->md.using_rem_pos || vec2u8_equal(&e->pos, &e->md.pc_rem_pos))
+    {
+        PRINT_DEBUG("(PC) : Recalculating target position...\n");
+        random_dungeon_map_floor_pos(&d->map, e->md.pc_rem_pos.data);
+        e->md.using_rem_pos = 1;
+    }
+
+    Vec2u8 mv;
+    Vec2u a, b;
+    vec2u_assign(&a, e->pos.x, e->pos.y);
+    vec2u_assign(&b, e->md.pc_rem_pos.x, e->md.pc_rem_pos.y);
+    dungeon_dijkstra_floor_path(&d->map, a, b, &mv, pathing_export_vec2u8);
+
+    PRINT_DEBUG("(PC) : Moving to (%d, %d).\n", mv.x, mv.y);
+    return handle_entity_move(d, e, mv.x, mv.y);
+}
 
 int iterate_entity(DungeonLevel* d, Entity* e)
 {
-    PRINT_DEBUG("Iterating %s!\n", (e->is_pc ? "player" : "monster"));
+    PRINT_DEBUG("Iterating %s! --------------------------------\n", (e->is_pc ? "player" : "monster"));
 
-    // e->hn = heap_insert(&d->entity_q, e);
-    if(!e->is_pc) iterate_monster(d, e);
-    else move_random(d, e, 0);
-    return (d->pc) ? (d->num_monsters ? 0 : 1) : -1;
+    if(e->is_pc) iterate_pc(d, e);
+    else iterate_monster(d, e);
 
     return 0;
 }

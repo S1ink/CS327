@@ -3,6 +3,7 @@
 
 #include "util/vec_geom.h"
 #include "util/debug.h"
+#include "util/math.h"
 
 #include <string.h>
 #include <stdlib.h>
@@ -69,7 +70,7 @@ int handle_level_init(DungeonLevel* d, RuntimeState* state, int argc, char** arg
     }
     if(!nmon_arg)
     {
-        state->nmon = (uint8_t)(rand() % DUNGEON_MAX_NUM_MONSTERS);
+        state->nmon = RANDOM_IN_RANGE(DUNGEON_MIN_NUM_MONSTERS, DUNGEON_MAX_NUM_MONSTERS);
     }
 
     DungeonMap* map = &d->map;
@@ -98,7 +99,7 @@ int handle_level_init(DungeonLevel* d, RuntimeState* state, int argc, char** arg
         random_dungeon_map_floor_pos(map, state->pc_init.data);
     }
 
-    init_dungeon_level(d, state->pc_init, state->nmon);
+    if(!ret) init_dungeon_level(d, state->pc_init, state->nmon);
 
     return ret;
 }
@@ -128,6 +129,89 @@ int handle_level_deinit(DungeonLevel* d, RuntimeState* state)
     return ret;
 }
 
+int print_win_lose(LevelStatus s, volatile int* r)
+{
+    char lose[] =
+        "\033[2J\033[1;1H"
+        "+------------------------------------------------------------------------------+\n"
+        "|                                                                              |\n"
+        "|                                                                              |\n"
+        "|                                                                              |\n"
+        "|                .@       You encountered a problem and need to restart.       |\n"
+        "|               @@                                                             |\n"
+        "|      @@      @@         We're just collecting some error info, and then      |\n"
+        "|             .@+                we'll restart for you (no we won't lol).      |\n"
+        "|             @@                                                               |\n"
+        "|             @@                                                               |\n"
+        "|             @@                                                               |\n"
+        "|             *@+                                                              |\n"
+        "|      @@      @@                                                              |\n"
+        "|               @@                                                             |\n"
+        "|                *@                                                            |\n"
+        "|                                                                              |\n"
+        "|                                                                              |\n"
+        "|                                                                              |\n"
+        "|                                                                              |\n"
+        "|                                                                              |\n"
+        "|     [                                                    ]    % complete     |\n"
+        "|                                                                              |\n"
+        "|                                                                              |\n"
+        "+------------------------------------------------------------------------------+\n";
+
+    char win[] =
+        "\033[2J\033[1;1H"
+        "+------------------------------------------------------------------------------+\n"
+        "|                                                                              |\n"
+        "|                                                                              |\n"
+        "|                                                                              |\n"
+        "|             @.           Congratulations. You are victorious.                |\n"
+        "|              @@                                                              |\n"
+        "|      @@       @@                                                             |\n"
+        "|               +@.                                                            |\n"
+        "|                @@                                                            |\n"
+        "|                @@                                                            |\n"
+        "|                @@                                                            |\n"
+        "|               +@*                                                            |\n"
+        "|      @@       @@                                                             |\n"
+        "|              @@                                                              |\n"
+        "|             @*                                                               |\n"
+        "|                                                                              |\n"
+        "|                                                                              |\n"
+        "|                                                                              |\n"
+        "|                                                                              |\n"
+        "|                                                                              |\n"
+        "|                                                                              |\n"
+        "|                                                                              |\n"
+        "|                                                                              |\n"
+        "+------------------------------------------------------------------------------+\n";
+
+    if(s.has_lost)
+    {
+        uint8_t p = 0;
+        for(; p <= 100 && *r; p = MIN_CACHED(p + RANDOM_IN_RANGE(12, 25), 100))
+        {
+            uint8_t px = (p * 51) / 100;
+            for(int i = 1637; i <= 1637 + px; i++)
+            {
+                lose[i] = '#';
+            }
+            lose[1691] = p >= 100 ? '1' : ' ';
+            lose[1692] = " 1234567890"[(p / 10)];
+            lose[1693] = '0' + (p % 10);
+
+            printf("%s", lose);
+            if(p >= 100) break;
+            usleep(100000 * RANDOM_IN_RANGE(2, 7));
+        }
+    }
+    else
+    {
+        printf("%s", win);
+    }
+
+    return 0;
+}
+
 
 
 static volatile int is_running = 1;
@@ -147,21 +231,26 @@ int main(int argc, char** argv)
 
     if(!handle_level_init(&d, &s, argc, argv))
     {
-        int status = 0;
-        for( size_t i = 0;
-            (i < 200000) && (is_running && !status);
-            i++ )
+        LevelStatus status;
+        status.data = 0;
+        uint64_t ntime_us = us_time();
+        
+        printf("\033[2J\033[1;1H");
+        print_dungeon_level(&d, DUNGEON_PRINT_BORDER);
+        while(is_running && !status.data)
         {
+            status = iterate_dungeon_level(&d, 1);
             printf("\033[2J\033[1;1H");
             print_dungeon_level(&d, DUNGEON_PRINT_BORDER);
             // print_dungeon_level_costmaps(&d, DUNGEON_PRINT_BORDER);
-            status = iterate_dungeon_level(&d);
-            usleep(100000);
+
+            ntime_us += LEVEL_ITERATION_TIME_US;
+            uint64_t n_us = us_time();
+            if(n_us < ntime_us) usleep(ntime_us - n_us);
         }
-        printf("\033[2J\033[1;1H");
-        print_dungeon_level(&d, DUNGEON_PRINT_BORDER);
+
         if(!is_running) printf("\nCaught Ctrl-C. Exitting...\n");
-        if(status) printf("GAME %s!!!\n", status > 0 ? "WON" : "LOST");
+        if(status.data) print_win_lose(status, &is_running);
         // TODO: print win/lose screen
     }
     handle_level_deinit(&d, &s);

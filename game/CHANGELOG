@@ -45,11 +45,16 @@
 2/26/25 9:00  PM -- refactor entity/monster structs, add support for generic pathing
 2/26/25 11:00 PM -- refactor dungeon functions, add random movement + terrain and entity collition handling
 2/27/25 12:30 AM -- correctly handle terrain breaks, add win/lose status, fix memory leaks
-3/4/25:
-    Improve entity data memory usage
-    Add monster iteration logic skeleton
-    Add bresenham's line algorithm
-    Add monster movement computation
-    Fix bug in bresenham's return value
-    Fix bug in terrain costmap
-    Fix nonuniform random direction distribution
+3/4/25  3:30  PM -- Improve entity data memory usage
+3/4/25  6:00  PM -- Add monster logic skeleton
+3/4/25  8:00  PM -- Add line-of-sight calculation
+3/4/25  9:00  PM -- Add single-path dijkstras for last-known-location pathing
+3/4/25  9:30  PM -- Integrate monster movement into logic skeleton
+3/4/25  10:00 PM -- Fix faulty line-of-sight return value
+3/4/25  11:00 PM -- Fix off-by-one cell bug in terrain costmap computation
+3/5/25  12:30 PM -- Fix nonuniform random direction distribution for erratic monsters
+3/5/25  3:00  PM -- Add game status struct, refactor event signaling
+3/5/25  4:00  PM -- Change printing order, make timing more precise
+3/5/25  8:00  PM -- Add better win/lose screens
+3/5/25  8:40  PM -- Upgrade PC ai (attacks monsters)
+3/5/24  9:30  PM -- Fix multiple bugs in monster ai, tune default parameters, verify all input methods

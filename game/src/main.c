@@ -33,9 +33,9 @@ int handle_level_init(DungeonLevel* d, RuntimeState* state, int argc, char** arg
     state->nmon = 0;
     state->save_path = NULL;
 
-    #define MAX_ARGN 4
+    #define MAX_ARGN 5
     int nmon_arg = 0;
-    for(int n = 1; n < argc && n < (MAX_ARGN + 1); n++)
+    for(int n = 1; n < argc && n < MAX_ARGN; n++)
     {
         const char* arg = argv[n];
         if(!strncmp(arg, "--", 2))
@@ -50,6 +50,8 @@ int handle_level_init(DungeonLevel* d, RuntimeState* state, int argc, char** arg
             }
         }
     }
+    #undef MAX_ARGN
+
     if(state->load || state->save)
     {
         const char* home = getenv("HOME");
@@ -185,23 +187,31 @@ int print_win_lose(LevelStatus s, volatile int* r)
         "|                                                                              |\n"
         "+------------------------------------------------------------------------------+\n";
 
+    #define MIN_PERCENT_CHUNK       12
+    #define MAX_PERCENT_CHUNK       37
+    #define LOADING_BAR_START_IDX   1637
+    #define LOADING_BAR_LEN         51
+    #define PERCENT_START_IDX       1691
+    #define MIN_PAUSE_MS            200
+    #define MAX_PAUSE_MS            700
+
     if(s.has_lost)
     {
         uint8_t p = 0;
-        for(; p <= 100 && *r; p = MIN_CACHED(p + RANDOM_IN_RANGE(12, 25), 100))
+        for(; p <= 100 && *r; p = MIN_CACHED(p + RANDOM_IN_RANGE(MIN_PERCENT_CHUNK, MAX_PERCENT_CHUNK), 100))
         {
-            uint8_t px = (p * 51) / 100;
-            for(int i = 1637; i <= 1637 + px; i++)
+            uint8_t px = (p * LOADING_BAR_LEN) / 100;
+            for(int i = LOADING_BAR_START_IDX; i <= LOADING_BAR_START_IDX + px; i++)
             {
                 lose[i] = '#';
             }
-            lose[1691] = p >= 100 ? '1' : ' ';
-            lose[1692] = " 1234567890"[(p / 10)];
-            lose[1693] = '0' + (p % 10);
+            lose[PERCENT_START_IDX + 0] = p >= 100 ? '1' : ' ';
+            lose[PERCENT_START_IDX + 1] = " 1234567890"[(p / 10)];
+            lose[PERCENT_START_IDX + 2] = '0' + (p % 10);
 
             printf("%s", lose);
             if(p >= 100) break;
-            usleep(100000 * RANDOM_IN_RANGE(2, 7));
+            usleep(1000 * RANDOM_IN_RANGE(MIN_PAUSE_MS, MAX_PAUSE_MS));
         }
     }
     else
@@ -210,6 +220,14 @@ int print_win_lose(LevelStatus s, volatile int* r)
     }
 
     return 0;
+
+    #undef MIN_PERCENT_CHUNK
+    #undef MAX_PERCENT_CHUNK
+    #undef LOADING_BAR_START_IDX
+    #undef LOADING_BAR_LEN
+    #undef PERCENT_START_IDX
+    #undef MIN_PAUSE_MS
+    #undef MAX_PAUSE_MS
 }
 
 

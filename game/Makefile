@@ -11,7 +11,7 @@ CXX := g++
 
 CFLAGS := -Wall -Werror -funroll-loops -Isrc
 CXXFLAGS := -Wall -Werror -funroll-loops -Isrc
-LDFLAGS := -lm
+LDFLAGS := -lm -lncurses
 
 SRC_DIR := src
 OBJ_DIR := build
@@ -45,7 +45,7 @@ all: $(BIN)
 
 $(BIN): $(OBJS)
 	@echo Linking $@
-	@$(CC) $(LDFLAGS) -o $@ $^
+	@$(CC) -o $@ $^ $(LDFLAGS)
 
 -include $(OBJS:.o=.d)
 

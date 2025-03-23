@@ -1,5 +1,6 @@
 #include "dungeon_config.h"
 #include "dungeon.h"
+#include "game.h"
 
 #include "util/vec_geom.h"
 #include "util/debug.h"
@@ -14,6 +15,8 @@
 #include <signal.h>
 #include <time.h>
 
+#include <ncurses.h>
+
 
 typedef struct
 {
@@ -25,7 +28,7 @@ typedef struct
 }
 RuntimeState;
 
-int handle_level_init(DungeonLevel* d, RuntimeState* state, int argc, char** argv)
+static inline int handle_level_init(DungeonLevel* d, RuntimeState* state, int argc, char** argv)
 {
     int ret = 0;
     state->load = 0;
@@ -105,7 +108,7 @@ int handle_level_init(DungeonLevel* d, RuntimeState* state, int argc, char** arg
 
     return ret;
 }
-int handle_level_deinit(DungeonLevel* d, RuntimeState* state)
+static inline int handle_level_deinit(DungeonLevel* d, RuntimeState* state)
 {
     int ret = 0;
 
@@ -131,149 +134,95 @@ int handle_level_deinit(DungeonLevel* d, RuntimeState* state)
     return ret;
 }
 
-int print_win_lose(LevelStatus s, volatile int* r)
-{
-    char lose[] =
-        "\033[2J\033[1;1H"
-        "+------------------------------------------------------------------------------+\n"
-        "|                                                                              |\n"
-        "|                                                                              |\n"
-        "|                                                                              |\n"
-        "|                .@       You encountered a problem and need to restart.       |\n"
-        "|               @@                                                             |\n"
-        "|      @@      @@         We're just collecting some error info, and then      |\n"
-        "|             .@+                we'll restart for you (no we won't lol).      |\n"
-        "|             @@                                                               |\n"
-        "|             @@                                                               |\n"
-        "|             @@                                                               |\n"
-        "|             *@+                                                              |\n"
-        "|      @@      @@                                                              |\n"
-        "|               @@                                                             |\n"
-        "|                *@                                                            |\n"
-        "|                                                                              |\n"
-        "|                                                                              |\n"
-        "|                                                                              |\n"
-        "|                                                                              |\n"
-        "|                                                                              |\n"
-        "|     [                                                    ]    % complete     |\n"
-        "|                                                                              |\n"
-        "|                                                                              |\n"
-        "+------------------------------------------------------------------------------+\n";
-
-    char win[] =
-        "\033[2J\033[1;1H"
-        "+------------------------------------------------------------------------------+\n"
-        "|                                                                              |\n"
-        "|                                                                              |\n"
-        "|                                                                              |\n"
-        "|             @.           Congratulations. You are victorious.                |\n"
-        "|              @@                                                              |\n"
-        "|      @@       @@                                                             |\n"
-        "|               +@.                                                            |\n"
-        "|                @@                                                            |\n"
-        "|                @@                                                            |\n"
-        "|                @@                                                            |\n"
-        "|               +@*                                                            |\n"
-        "|      @@       @@                                                             |\n"
-        "|              @@                                                              |\n"
-        "|             @*                                                               |\n"
-        "|                                                                              |\n"
-        "|                                                                              |\n"
-        "|                                                                              |\n"
-        "|                                                                              |\n"
-        "|                                                                              |\n"
-        "|                                                                              |\n"
-        "|                                                                              |\n"
-        "|                                                                              |\n"
-        "+------------------------------------------------------------------------------+\n";
-
-    #define MIN_PERCENT_CHUNK       12
-    #define MAX_PERCENT_CHUNK       37
-    #define LOADING_BAR_START_IDX   1637
-    #define LOADING_BAR_LEN         51
-    #define PERCENT_START_IDX       1691
-    #define MIN_PAUSE_MS            200
-    #define MAX_PAUSE_MS            700
-
-    if(s.has_lost)
-    {
-        uint8_t p = 0;
-        for(; p <= 100 && *r; p = MIN_CACHED(p + RANDOM_IN_RANGE(MIN_PERCENT_CHUNK, MAX_PERCENT_CHUNK), 100))
-        {
-            uint8_t px = (p * LOADING_BAR_LEN) / 100;
-            for(int i = LOADING_BAR_START_IDX; i <= LOADING_BAR_START_IDX + px; i++)
-            {
-                lose[i] = '#';
-            }
-            lose[PERCENT_START_IDX + 0] = p >= 100 ? '1' : ' ';
-            lose[PERCENT_START_IDX + 1] = " 1234567890"[(p / 10)];
-            lose[PERCENT_START_IDX + 2] = '0' + (p % 10);
-
-            printf("%s", lose);
-            if(p >= 100) break;
-            usleep(1000 * RANDOM_IN_RANGE(MIN_PAUSE_MS, MAX_PAUSE_MS));
-        }
-    }
-    else
-    {
-        printf("%s", win);
-    }
-
-    return 0;
-
-    #undef MIN_PERCENT_CHUNK
-    #undef MAX_PERCENT_CHUNK
-    #undef LOADING_BAR_START_IDX
-    #undef LOADING_BAR_LEN
-    #undef PERCENT_START_IDX
-    #undef MIN_PAUSE_MS
-    #undef MAX_PAUSE_MS
-}
-
-
-
 static volatile int is_running = 1;
 static void handle_exit(int x)
 {
     is_running = 0;
 }
+static inline void init_sig()
+{
+    signal(SIGINT, handle_exit);
+    signal(SIGQUIT, handle_exit);
+    signal(SIGILL, handle_exit);
+    signal(SIGABRT, handle_exit);
+    signal(SIGBUS, handle_exit);
+    signal(SIGFPE, handle_exit);
+    signal(SIGSEGV, handle_exit);
+    signal(SIGTERM, handle_exit);
+    signal(SIGSTKFLT, handle_exit);
+    signal(SIGXCPU, handle_exit);
+    signal(SIGXFSZ, handle_exit);
+    signal(SIGPWR, handle_exit);
+}
+
+
+// int print_win_lose(LevelStatus s, volatile int* r);
+
+// inline static int main_104(int argc, char** argv)
+// {
+//     signal(SIGINT, handle_exit);
+
+//     DungeonLevel d;
+//     RuntimeState s;
+//     zero_dungeon_level(&d);
+//     srand(us_seed());
+
+//     if(!handle_level_init(&d, &s, argc, argv))
+//     {
+//         LevelStatus status;
+//         status.data = 0;
+//         uint64_t ntime_us = us_time();
+        
+//         printf("\033[2J\033[1;1H");
+//         print_dungeon_level(&d, DUNGEON_PRINT_BORDER);
+//         while(is_running && !status.data)
+//         {
+//             status = iterate_dungeon_level(&d, 1);
+//             printf("\033[2J\033[1;1H");
+//             print_dungeon_level(&d, DUNGEON_PRINT_BORDER);
+//             // print_dungeon_level_costmaps(&d, DUNGEON_PRINT_BORDER);
+
+//             ntime_us += LEVEL_ITERATION_TIME_US;
+//             uint64_t n_us = us_time();
+//             if(n_us < ntime_us) usleep(ntime_us - n_us);
+//         }
+
+//         if(!is_running) printf("\nCaught Ctrl-C. Exitting...\n");
+//         if(status.data) print_win_lose(status, &is_running);
+//         // TODO: print win/lose screen
+//     }
+//     handle_level_deinit(&d, &s);
+
+//     destruct_dungeon_level(&d);
+
+//     return 0;
+// }
+
+static inline int main_105(int argc, char** argv)
+{
+    Game g;
+    RuntimeState s;
+
+    zero_game(&g);
+    srand(us_seed());
+    init_sig();
+
+    if( !handle_level_init(&g.level, &s, argc, argv) &&
+        !init_game_windows(&g) )
+    {
+        run_game(&g, &is_running);
+        deinit_game_windows(&g);
+    }
+
+    handle_level_deinit(&g.level, &s);
+    destruct_dungeon_level(&g.level);
+
+    return 0;
+}
+
+
 
 int main(int argc, char** argv)
 {
-    signal(SIGINT, handle_exit);
-
-    DungeonLevel d;
-    RuntimeState s;
-    zero_dungeon_level(&d);
-    srand(us_seed());
-
-    if(!handle_level_init(&d, &s, argc, argv))
-    {
-        LevelStatus status;
-        status.data = 0;
-        uint64_t ntime_us = us_time();
-        
-        printf("\033[2J\033[1;1H");
-        print_dungeon_level(&d, DUNGEON_PRINT_BORDER);
-        while(is_running && !status.data)
-        {
-            status = iterate_dungeon_level(&d, 1);
-            printf("\033[2J\033[1;1H");
-            print_dungeon_level(&d, DUNGEON_PRINT_BORDER);
-            // print_dungeon_level_costmaps(&d, DUNGEON_PRINT_BORDER);
-
-            ntime_us += LEVEL_ITERATION_TIME_US;
-            uint64_t n_us = us_time();
-            if(n_us < ntime_us) usleep(ntime_us - n_us);
-        }
-
-        if(!is_running) printf("\nCaught Ctrl-C. Exitting...\n");
-        if(status.data) print_win_lose(status, &is_running);
-        // TODO: print win/lose screen
-    }
-    handle_level_deinit(&d, &s);
-
-    destruct_dungeon_level(&d);
-
-    return 0;
+    return main_105(argc, argv);
 }

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdio.h>
+#include <stdint.h>
 #include <sys/time.h>
 
 #ifndef ENABLE_DEBUG_PRINTS

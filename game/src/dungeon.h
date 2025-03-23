@@ -106,8 +106,34 @@ int zero_dungeon_level(DungeonLevel* d);
 int destruct_dungeon_level(DungeonLevel* d);
 
 int init_dungeon_level(DungeonLevel* d, Vec2u8 pc_pos, size_t nmon);
-LevelStatus iterate_dungeon_level(DungeonLevel* d, int until_next_pc_move);
+// LevelStatus iterate_dungeon_level(DungeonLevel* d, int until_next_pc_move);
 LevelStatus get_dungeon_level_status(DungeonLevel* d);
 
 int print_dungeon_level(DungeonLevel* d, int border);
 int print_dungeon_level_costmaps(DungeonLevel* d, int border);
+
+
+
+
+// ------------------
+static inline char get_cell_char(CellTerrain c, Entity* e)
+{
+    if(e)
+    {
+        if(e->is_pc) return '@';
+        else return ("0123456789ABCDEF")[e->md.stats];
+    }
+    switch(c.is_stair)
+    {
+        case STAIR_UP: return '<';
+        case STAIR_DOWN: return '>';
+        default: break;
+    }
+    switch(c.type)
+    {
+        case CORRIDOR: return '#';
+        case ROOM: return '.';
+        default: break;
+    }
+    return ' ';
+}

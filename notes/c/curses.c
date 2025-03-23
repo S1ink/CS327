@@ -17,6 +17,8 @@ int main(int argc, char** argv)
 
     // getch() --> get a composed key (int32_t)
     // mvprintw(y, x, fmt, ...)  --> move and print to a window --> printf but at a specific location in the window
+    // mvaddch(y, x, char)
+    // mvaddstr(y, x, str)
     // attron(...) --> turn on an attrubute on (bold, underline, etc)
     // attroff(...) --> turn off an attribute
 

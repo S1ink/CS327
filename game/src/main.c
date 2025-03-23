@@ -1,5 +1,6 @@
 #include "dungeon_config.h"
 #include "dungeon.h"
+#include "game.h"
 
 #include "util/vec_geom.h"
 #include "util/debug.h"
@@ -27,7 +28,7 @@ typedef struct
 }
 RuntimeState;
 
-int handle_level_init(DungeonLevel* d, RuntimeState* state, int argc, char** argv)
+static inline int handle_level_init(DungeonLevel* d, RuntimeState* state, int argc, char** argv)
 {
     int ret = 0;
     state->load = 0;
@@ -107,7 +108,7 @@ int handle_level_init(DungeonLevel* d, RuntimeState* state, int argc, char** arg
 
     return ret;
 }
-int handle_level_deinit(DungeonLevel* d, RuntimeState* state)
+static inline int handle_level_deinit(DungeonLevel* d, RuntimeState* state)
 {
     int ret = 0;
 
@@ -133,223 +134,95 @@ int handle_level_deinit(DungeonLevel* d, RuntimeState* state)
     return ret;
 }
 
-
-
-int print_win_lose(LevelStatus s, volatile int* r);
-
 static volatile int is_running = 1;
 static void handle_exit(int x)
 {
     is_running = 0;
-#if CURSES
-    endwin();
-#endif
 }
-
-inline static int one_o_four_main(int argc, char** argv)
+static inline void init_sig()
 {
     signal(SIGINT, handle_exit);
+    signal(SIGQUIT, handle_exit);
+    signal(SIGILL, handle_exit);
+    signal(SIGABRT, handle_exit);
+    signal(SIGBUS, handle_exit);
+    signal(SIGFPE, handle_exit);
+    signal(SIGSEGV, handle_exit);
+    signal(SIGTERM, handle_exit);
+    signal(SIGSTKFLT, handle_exit);
+    signal(SIGXCPU, handle_exit);
+    signal(SIGXFSZ, handle_exit);
+    signal(SIGPWR, handle_exit);
+}
 
-    DungeonLevel d;
-    RuntimeState s;
-    zero_dungeon_level(&d);
-    srand(us_seed());
 
-    if(!handle_level_init(&d, &s, argc, argv))
-    {
-        LevelStatus status;
-        status.data = 0;
-        uint64_t ntime_us = us_time();
+// int print_win_lose(LevelStatus s, volatile int* r);
+
+// inline static int main_104(int argc, char** argv)
+// {
+//     signal(SIGINT, handle_exit);
+
+//     DungeonLevel d;
+//     RuntimeState s;
+//     zero_dungeon_level(&d);
+//     srand(us_seed());
+
+//     if(!handle_level_init(&d, &s, argc, argv))
+//     {
+//         LevelStatus status;
+//         status.data = 0;
+//         uint64_t ntime_us = us_time();
         
-        printf("\033[2J\033[1;1H");
-        print_dungeon_level(&d, DUNGEON_PRINT_BORDER);
-        while(is_running && !status.data)
-        {
-            status = iterate_dungeon_level(&d, 1);
-            printf("\033[2J\033[1;1H");
-            print_dungeon_level(&d, DUNGEON_PRINT_BORDER);
-            // print_dungeon_level_costmaps(&d, DUNGEON_PRINT_BORDER);
+//         printf("\033[2J\033[1;1H");
+//         print_dungeon_level(&d, DUNGEON_PRINT_BORDER);
+//         while(is_running && !status.data)
+//         {
+//             status = iterate_dungeon_level(&d, 1);
+//             printf("\033[2J\033[1;1H");
+//             print_dungeon_level(&d, DUNGEON_PRINT_BORDER);
+//             // print_dungeon_level_costmaps(&d, DUNGEON_PRINT_BORDER);
 
-            ntime_us += LEVEL_ITERATION_TIME_US;
-            uint64_t n_us = us_time();
-            if(n_us < ntime_us) usleep(ntime_us - n_us);
-        }
+//             ntime_us += LEVEL_ITERATION_TIME_US;
+//             uint64_t n_us = us_time();
+//             if(n_us < ntime_us) usleep(ntime_us - n_us);
+//         }
 
-        if(!is_running) printf("\nCaught Ctrl-C. Exitting...\n");
-        if(status.data) print_win_lose(status, &is_running);
-        // TODO: print win/lose screen
-    }
-    handle_level_deinit(&d, &s);
+//         if(!is_running) printf("\nCaught Ctrl-C. Exitting...\n");
+//         if(status.data) print_win_lose(status, &is_running);
+//         // TODO: print win/lose screen
+//     }
+//     handle_level_deinit(&d, &s);
 
-    destruct_dungeon_level(&d);
+//     destruct_dungeon_level(&d);
 
-    return 0;
-}
+//     return 0;
+// }
 
-inline static int one_o_five_main(int argc, char** argv)
+static inline int main_105(int argc, char** argv)
 {
-    DungeonLevel d;
+    Game g;
     RuntimeState s;
-    zero_dungeon_level(&d);
+
+    zero_game(&g);
     srand(us_seed());
+    init_sig();
 
-    if(!handle_level_init(&d, &s, argc, argv))
+    if( !handle_level_init(&g.level, &s, argc, argv) &&
+        !init_game_windows(&g) )
     {
-
+        run_game(&g, &is_running);
+        deinit_game_windows(&g);
     }
-    handle_level_deinit(&d, &s);
 
-    destruct_dungeon_level(&d);
+    handle_level_deinit(&g.level, &s);
+    destruct_dungeon_level(&g.level);
 
     return 0;
 }
 
 
-
-int nc_configure();
-int nc_print_border_backing();
 
 int main(int argc, char** argv)
 {
-    initscr();
-    // cbreak();
-    raw();
-    noecho();
-    curs_set(0);
-    keypad(stdscr, TRUE);
-    signal(SIGINT, handle_exit);
-
-    // nc_configure();
-    nc_print_border_backing();
-    refresh();
-
-    for(;is_running;)
-    {
-        char pb[80];
-        nodelay(stdscr, 0);
-        int c = getch();
-        nodelay(stdscr, 1);
-        size_t i = 0;
-        do
-        {
-            switch(c)
-            {
-                case 'Q':
-                case 03:
-                {
-                    raise(SIGINT);
-                    break;
-                }
-                case '7':
-                case 'y':
-                {
-                    // move up + left
-                    mvaddstr(i + 2, 1, "move up + left    ");
-                    break;
-                }
-                case '8':
-                case 'k':
-                {
-                    // move up
-                    mvaddstr(i + 2, 1, "move up              ");
-                    break;
-                }
-                case '9':
-                case 'u':
-                {
-                    // move up + right
-                    mvaddstr(i + 2, 1, "move up + right   ");
-                    break;
-                }
-                case '6':
-                case 'l':
-                {
-                    // move right
-                    mvaddstr(i + 2, 1, "move right          ");
-                    break;
-                }
-                case '3':
-                case 'n':
-                {
-                    // move down + right
-                    mvaddstr(i + 2, 1, "move down + right       ");
-                    break;
-                }
-                case '2':
-                case 'j':
-                {
-                    // move down
-                    mvaddstr(i + 2, 1, "move down          ");
-                    break;
-                }
-                case '1':
-                case 'b':
-                {
-                    // move down + left
-                    mvaddstr(i + 2, 1, "move down + left        ");
-                    break;
-                }
-                case '4':
-                case 'h':
-                {
-                    // move left
-                    mvaddstr(i + 2, 1, "move left          ");
-                    break;
-                }
-                case '>':
-                {
-                    // down stair
-                    mvaddstr(i + 2, 1, "down stair         ");
-                    break;
-                }
-                case '<':
-                {
-                    // up stair
-                    mvaddstr(i + 2, 1, "up stair          ");
-                    break;
-                }
-                case '5':
-                case ' ':
-                case '.':
-                {
-                    // rest
-                    mvaddstr(i + 2, 1, "rest               ");
-                    break;
-                }
-                case 'm':
-                {
-                    // display map
-                    mvaddstr(i + 2, 1, "monsters           ");
-                    break;
-                }
-                case KEY_UP:
-                {
-                    // scroll up
-                    mvaddstr(i + 2, 1, "scroll up           ");
-                    break;
-                }
-                case KEY_DOWN:
-                {
-                    // scroll down
-                    mvaddstr(i + 2, 1, "scroll down          ");
-                    break;
-                }
-                case 033:
-                {
-                    // escape
-                    mvaddstr(i + 2, 1, "escape              ");
-                    break;
-                }
-                default:
-                {
-                    snprintf(pb, 80, "Read input %#o          ", c);
-                    mvaddstr(i + 2, 1, pb);
-                }
-            }
-            i++;
-        }
-        while(is_running && ((c = getch()) != ERR) && i < 20);
-    }
-
-    return 0;
+    return main_105(argc, argv);
 }

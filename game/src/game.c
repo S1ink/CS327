@@ -25,6 +25,14 @@ int handle_entity_move(Game* g, Entity* e, uint8_t x, uint8_t y);
 /* -------------------------------------------------------------------- */
 
 
+
+#define NC_PRINT(...) \
+    move(0, 0); \
+    clrtoeol(); \
+    mvprintw(0, 0, __VA_ARGS__); \
+    refresh();
+
+
 #define DUNGEON_WIN_OFFSET_X 0
 #define DUNGEON_WIN_OFFSET_Y 1
 
@@ -53,39 +61,49 @@ enum
     MLIST_CMD_SD,       // scroll down
     NUM_MLIST_CMD
 };
+enum
+{
+    DBG_CMD_NONE = 0,
+    DBG_CMD_SHOW_TMAP,
+    DBG_CMD_SHOW_FMAP,
+    DBG_CMD_SHOW_HMAP,
+    DBG_CMD_SHOW_DMAP,
+    NUM_DBG_CMD
+};
 
 typedef struct
 {
     uint8_t move_cmd : REQUIRED_BITS32(NUM_MOVE_CMD - 1);
     uint8_t mlist_cmd : REQUIRED_BITS32(NUM_MLIST_CMD - 1);
+    uint8_t dbg_cmd : REQUIRED_BITS32(NUM_DBG_CMD - 1);
     uint8_t exit : 1;
 }
 InputCommand;
 
-static inline InputCommand get_zeroed_ic()
+static inline InputCommand zeroed_input()
 {
     InputCommand ic;
     ic.move_cmd = 0;
     ic.mlist_cmd = 0;
+    ic.dbg_cmd = 0;
     ic.exit = 0;
     return ic;
 }
 
 static inline InputCommand decode_input_command(int in)
 {
-    InputCommand cmd;
-    cmd.move_cmd = MOVE_CMD_NONE;
-    cmd.mlist_cmd = MLIST_CMD_NONE;
-    cmd.exit = 0;
+    InputCommand cmd = zeroed_input();
 
     switch(in)
     {
+    // --- EXIT ------------------
         case 'Q':
         case 03:    // Ctrl+C
         {
             cmd.exit = 1;
             break;
         }
+    // --- MOVE COMMANDS ---------
         case '7':
         case 'y':
         {
@@ -151,6 +169,7 @@ static inline InputCommand decode_input_command(int in)
             cmd.move_cmd = MOVE_CMD_SKIP;  // rest
             break;
         }
+    // --- MONSTER LIST COMMANDS ----------
         case 'm':
         {
             cmd.mlist_cmd = MLIST_CMD_SHOW;    // display map
@@ -171,12 +190,28 @@ static inline InputCommand decode_input_command(int in)
             cmd.mlist_cmd = MLIST_CMD_HIDE;    // escape
             break;
         }
-        default:
+    // --- DEBUG COMMANDS -----------------
+        case 'T':
         {
-            // char pb[32];
-            // snprintf(pb, 80, "Read unknown input %#o   ", in);
-            // mvaddstr(0, 0, pb);
+            cmd.dbg_cmd = DBG_CMD_SHOW_TMAP;
+            break;
         }
+        case 'D':
+        {
+            cmd.dbg_cmd = DBG_CMD_SHOW_FMAP;
+            break;
+        }
+        case 'H':
+        {
+            cmd.dbg_cmd = DBG_CMD_SHOW_HMAP;
+            break;
+        }
+        case 's':
+        {
+            cmd.dbg_cmd = DBG_CMD_SHOW_DMAP;
+            break;
+        }
+        default: break;
     }
 
     return cmd;
@@ -269,10 +304,18 @@ int nc_print_win_lose(LevelStatus s, volatile int* r)
         }
 
         mvaddstr(14, 38, "Press any key to continue.");
+        refresh();
     }
     else
     {
         mvaddstr(0, 0, win);
+        refresh();
+        if(*r)
+        {
+            usleep(1000000);
+            mvaddstr(14, 38, "Press any key to continue.");
+            refresh();
+        }
     }
 
     return 0;
@@ -296,8 +339,6 @@ static inline int nc_init()
     curs_set(0);
     keypad(stdscr, TRUE);
     start_color();
-
-    // color
 
     refresh();
 
@@ -503,6 +544,21 @@ static inline int iterate_pc(Game* g, int move_cmd, LevelStatus* s)
     return (*s = get_dungeon_level_status(&g->level)).data;
 }
 
+static inline void print_mlist_entry(Game* g, Entity* m, int line)
+{
+    const int
+        dx = (int)g->level.pc->pos.x - (int)m->pos.x,
+        dy = (int)g->level.pc->pos.y - (int)m->pos.y;
+
+    wmove(g->mlist_win, line, 0);
+    wclrtoeol(g->mlist_win);
+    mvwprintw( g->mlist_win, line, 0, "[0x%c] : %d %s, %d %s",
+        ("0123456789ABCDEF")[m->md.stats],
+        abs(dx),
+        dx > 0 ? "West" : "East",
+        abs(dy),
+        dy > 0 ? "North" : "South" );
+}
 static int handle_mlist_cmd(Game* g, int mlist_cmd, int* scroll_amount)
 {
     const int is_currently_mlist = (g->state.active_win == GWIN_MLIST);
@@ -523,16 +579,7 @@ static int handle_mlist_cmd(Game* g, int mlist_cmd, int* scroll_amount)
             {
                 if(m->hn)
                 {
-                    const int
-                        dx = (int)g->level.pc->pos.x - (int)m->pos.x,
-                        dy = (int)g->level.pc->pos.y - (int)m->pos.y;
-
-                    mvwprintw( g->mlist_win, line, 0, "[0x%c] : %d %s, %d %s",
-                        ("0123456789ABCDEF")[m->md.stats],
-                        abs(dx),
-                        dx > 0 ? "West" : "East",
-                        abs(dy),
-                        dy > 0 ? "North" : "South");
+                    print_mlist_entry(g, m, line);
 
                     mon++;
                     line++;
@@ -555,7 +602,6 @@ static int handle_mlist_cmd(Game* g, int mlist_cmd, int* scroll_amount)
             {
                 *scroll_amount += 1;
                 wscrl(g->mlist_win, 1);
-                // wclrtoeol(g->mlist_win);
 
                 const int target_mnum = DUNGEON_Y_DIM - 3 + *scroll_amount;
                 Entity* m = g->level.entity_alloc + 1;
@@ -564,17 +610,7 @@ static int handle_mlist_cmd(Game* g, int mlist_cmd, int* scroll_amount)
                     if(m->hn) mon++;
                 }
 
-                const int
-                    dx = (int)g->level.pc->pos.x - (int)m->pos.x,
-                    dy = (int)g->level.pc->pos.y - (int)m->pos.y;
-
-                mvwprintw( g->mlist_win, DUNGEON_Y_DIM - 3, 0, "[0x%c] : %d %s, %d %s           ",
-                    ("0123456789ABCDEF")[m->md.stats],
-                    abs(dx),
-                    dx > 0 ? "West" : "East",
-                    abs(dy),
-                    dy > 0 ? "North" : "South");
-
+                print_mlist_entry(g, m, DUNGEON_Y_DIM - 3);
                 wrefresh(g->mlist_win);
             }
             break;
@@ -585,7 +621,6 @@ static int handle_mlist_cmd(Game* g, int mlist_cmd, int* scroll_amount)
             {
                 *scroll_amount -= 1;
                 wscrl(g->mlist_win, -1);
-                // wclrtoeol(g->mlist_win);
 
                 const int target_mnum = *scroll_amount;
                 Entity* m = g->level.entity_alloc + 1;
@@ -594,17 +629,7 @@ static int handle_mlist_cmd(Game* g, int mlist_cmd, int* scroll_amount)
                     if(m->hn) mon++;
                 }
 
-                const int
-                    dx = (int)g->level.pc->pos.x - (int)m->pos.x,
-                    dy = (int)g->level.pc->pos.y - (int)m->pos.y;
-
-                mvwprintw( g->mlist_win, 0, 0, "[0x%c] : %d %s, %d %s             ",
-                    ("0123456789ABCDEF")[m->md.stats],
-                    abs(dx),
-                    dx > 0 ? "West" : "East",
-                    abs(dy),
-                    dy > 0 ? "North" : "South");
-
+                print_mlist_entry(g, m, 0);
                 wrefresh(g->mlist_win);
             }
             break;
@@ -671,7 +696,7 @@ int run_game(Game* g, volatile int* r)
     // getch();
 
     LevelStatus status;
-    InputCommand ic = get_zeroed_ic();
+    InputCommand ic = zeroed_input();
     int c;
     int scroll_amount = 0;
 
@@ -699,10 +724,13 @@ int run_game(Game* g, volatile int* r)
         {
             handle_mlist_cmd(g, ic.mlist_cmd, &scroll_amount);
         }
+        else if(ic.dbg_cmd)
+        {
+            
+        }
         else
         {
-            mvprintw(0, 0, "Unknown command : %#o                  ", c);
-            refresh();
+            NC_PRINT("Unknown key: %#o", c);
         }
     }
 

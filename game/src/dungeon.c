@@ -16,10 +16,6 @@
 #include <time.h>
 #include <math.h>
 
-/* --- BEHAVIOR.C INTERFACE ------------------------------------------- */
-
-/* Iterate the provided entity's AI and update the game state. */
-int iterate_entity(DungeonLevel* d, Entity* e);
 
 /* --- PARETER FUNCTIONS ---------------------------------------------- */
 
@@ -38,27 +34,6 @@ static inline void vec2u_random_in_range(Vec2u* v, Vec2u min, Vec2u max)
     v->x = (uint32_t)RANDOM_IN_RANGE(min.x, max.x);
     v->y = (uint32_t)RANDOM_IN_RANGE(min.y, max.y);
 }
-// static inline char get_cell_char(CellTerrain c, Entity* e)
-// {
-//     if(e)
-//     {
-//         if(e->is_pc) return '@';
-//         else return ("0123456789ABCDEF")[e->md.stats];
-//     }
-//     switch(c.is_stair)
-//     {
-//         case STAIR_UP: return '<';
-//         case STAIR_DOWN: return '>';
-//         default: break;
-//     }
-//     switch(c.type)
-//     {
-//         case CORRIDOR: return '#';
-//         case ROOM: return '.';
-//         default: break;
-//     }
-//     return ' ';
-// }
 
 static int dungeon_map_zero_cells(DungeonMap* d)
 {
@@ -758,34 +733,7 @@ int init_dungeon_level(DungeonLevel* d, Vec2u8 pc_pos, size_t nmon)
 
     return 0;
 }
-// LevelStatus iterate_dungeon_level(DungeonLevel* d, int until_next_pc_move)
-// {
-//     LevelStatus s;
-//     s.data = 0;
 
-//     Entity* e = heap_peek_min(&d->entity_q);
-//     for(
-//         const size_t turn = e->next_turn;
-//         until_next_pc_move || (e->next_turn == turn);
-//         e = heap_peek_min(&d->entity_q) )
-//     {
-//         heap_remove_min(&d->entity_q);
-//         if(e->hn)   // null hn demarks an entity that has perished
-//         {
-//             e->next_turn += e->speed;
-//             e->hn = heap_insert(&d->entity_q, e);
-
-//             PRINT_DEBUG( "Popped entity {%d, %d, (%d, %d)} with turn %lu --> next turn: %lu\n",
-//                 e->speed, e->priority, e->pos.x, e->pos.y, e->next_turn - e->speed, e->next_turn );
-
-//             iterate_entity(d, e);
-
-//             if((s = get_dungeon_level_status(d)).data || (until_next_pc_move && e->is_pc)) break;
-//         }
-//     }
-
-//     return s;
-// }
 LevelStatus get_dungeon_level_status(DungeonLevel* d)
 {
     LevelStatus s;

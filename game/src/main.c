@@ -225,4 +225,22 @@ static inline int main_105(int argc, char** argv)
 int main(int argc, char** argv)
 {
     return main_105(argc, argv);
+
+    // initscr();
+    // raw();
+    // noecho();
+    // curs_set(0);
+    // keypad(stdscr, TRUE);
+    // start_color();
+
+    // mvprintw(0, 0, "COLORS SUPPORTED: %d\tCOLOR PAIRS: %d\n", COLORS, COLOR_PAIRS);
+
+    // init_color(255, 500, 900, 500);
+    // init_pair(255, COLOR_BLACK, 255);
+    // attron(COLOR_PAIR(255));
+    // mvprintw(1, 0, "COLORED TEXT");
+    // attroff(COLOR_PAIR(255));
+
+    // getch();
+    // endwin();
 }

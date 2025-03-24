@@ -115,7 +115,7 @@ int print_dungeon_level_costmaps(DungeonLevel* d, int border);
 
 
 
-// ------------------
+// ------------------------------------------------------
 static inline char get_cell_char(CellTerrain c, Entity* e)
 {
     if(e)

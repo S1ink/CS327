@@ -313,6 +313,70 @@ static inline int nc_overwrite_window(WINDOW* w)
 
 
 
+/* --- GRADIENT COLOR GENERATOR ------------------------- */
+
+typedef NCURSES_COLOR_T NCColorT;
+typedef NCColorT NCGradient[128][3];
+
+int generate_color_gradient(
+    NCGradient grad,
+    NCColorT ra,
+    NCColorT ga,
+    NCColorT ba,
+    NCColorT rb,
+    NCColorT gb,
+    NCColorT bb )
+{
+    ra = MIN_CACHED(MAX(ra, 0), 1000);
+    ga = MIN_CACHED(MAX(ga, 0), 1000);
+    ba = MIN_CACHED(MAX(ba, 0), 1000);
+    rb = MIN_CACHED(MAX(rb, 0), 1000);
+    gb = MIN_CACHED(MAX(gb, 0), 1000);
+    bb = MIN_CACHED(MAX(bb, 0), 1000);
+
+    const NCColorT rd = rb - ra;
+    const NCColorT gd = gb - ga;
+    const NCColorT bd = bb - ba;
+
+    for(size_t i = 0; i < 128; i++)
+    {
+        grad[i][0] = ra + ((rd * i) / 127);
+        grad[i][1] = ga + ((gd * i) / 127);
+        grad[i][2] = ba + ((bd * i) / 127);
+    }
+
+    return 0;
+}
+void nc_init_gradient_colors(NCGradient grad)
+{
+    for(NCColorT i = 0; i < 128; i++)
+    {
+        init_color(128 + i, grad[i][0], grad[i][1], grad[i][2]);
+    }
+}
+void nc_init_gradient_pairs_fg(NCColorT bg)
+{
+    for(NCColorT i = 128; i < 256; i++)
+    {
+        init_pair(i, i, bg);
+    }
+}
+void nc_init_gradient_pairs_bg(NCColorT fg)
+{
+    for(NCColorT i = 128; i < 256; i++)
+    {
+        init_pair(i, fg, i);
+    }
+}
+inline void nc_print_grad_char(int y, int x, NCURSES_PAIRS_T v, chtype c)
+{
+    attron(COLOR_PAIR(128 + v));
+    mvaddch(y, x, c);
+    attroff(COLOR_PAIR(128 + v));
+}
+
+
+
 static inline int write_dungeon_map(Game* g)
 {
     char row[DUNGEON_X_DIM - 2];
@@ -478,6 +542,19 @@ int deinit_game_windows(Game* g)
 
 int run_game(Game* g, volatile int* r)
 {
+    NCGradient t_grad, t_grad2;
+    generate_color_gradient(t_grad, 500, 0, 500, 500, 1000, 500);
+    generate_color_gradient(t_grad2, 0, 0, 0, 500, 700, 1000);
+    nc_init_gradient_colors(t_grad2);
+    nc_init_gradient_pairs_bg(COLOR_WHITE);
+
+    for(size_t i = 0; i < 128; i++)
+    {
+        nc_print_grad_char(0, i, i, ' ');
+    }
+
+    getch();
+
     LevelStatus status;
     int c;
     int should_iterate_monsters = 1;

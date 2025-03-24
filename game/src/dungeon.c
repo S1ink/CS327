@@ -17,7 +17,7 @@
 #include <math.h>
 
 
-/* --- PARETER FUNCTIONS ---------------------------------------------- */
+/* --- PARAMETER FUNCTIONS ---------------------------------------------- */
 
 static int32_t entity_priority_comp(const void* k, const void* w)
 {

@@ -62,6 +62,15 @@ typedef struct
 }
 InputCommand;
 
+static inline InputCommand get_zeroed_ic()
+{
+    InputCommand ic;
+    ic.move_cmd = 0;
+    ic.mlist_cmd = 0;
+    ic.exit = 0;
+    return ic;
+}
+
 static inline InputCommand decode_input_command(int in)
 {
     InputCommand cmd;
@@ -318,7 +327,7 @@ static inline int nc_overwrite_window(WINDOW* w)
 typedef NCURSES_COLOR_T NCColorT;
 typedef NCColorT NCGradient[128][3];
 
-int generate_color_gradient(
+void generate_color_gradient(
     NCGradient grad,
     NCColorT ra,
     NCColorT ga,
@@ -327,12 +336,12 @@ int generate_color_gradient(
     NCColorT gb,
     NCColorT bb )
 {
-    ra = MIN_CACHED(MAX(ra, 0), 1000);
-    ga = MIN_CACHED(MAX(ga, 0), 1000);
-    ba = MIN_CACHED(MAX(ba, 0), 1000);
-    rb = MIN_CACHED(MAX(rb, 0), 1000);
-    gb = MIN_CACHED(MAX(gb, 0), 1000);
-    bb = MIN_CACHED(MAX(bb, 0), 1000);
+    // ra = MIN_CACHED(MAX(ra, 0), 1000);
+    // ga = MIN_CACHED(MAX(ga, 0), 1000);
+    // ba = MIN_CACHED(MAX(ba, 0), 1000);
+    // rb = MIN_CACHED(MAX(rb, 0), 1000);
+    // gb = MIN_CACHED(MAX(gb, 0), 1000);
+    // bb = MIN_CACHED(MAX(bb, 0), 1000);
 
     const NCColorT rd = rb - ra;
     const NCColorT gd = gb - ga;
@@ -344,28 +353,28 @@ int generate_color_gradient(
         grad[i][1] = ga + ((gd * i) / 127);
         grad[i][2] = ba + ((bd * i) / 127);
     }
-
-    return 0;
 }
-void nc_init_gradient_colors(NCGradient grad)
+void nc_apply_gradient(NCGradient grad)
 {
     for(NCColorT i = 0; i < 128; i++)
     {
         init_color(128 + i, grad[i][0], grad[i][1], grad[i][2]);
     }
 }
-void nc_init_gradient_pairs_fg(NCColorT bg)
+void nc_apply_gradient_pairs_fg(NCGradient grad, NCColorT bg)
 {
-    for(NCColorT i = 128; i < 256; i++)
+    for(NCColorT i = 0; i < 128; i++)
     {
-        init_pair(i, i, bg);
+        init_color(128 + i, grad[i][0], grad[i][1], grad[i][2]);
+        init_pair(128 + i, 128 + i, bg);
     }
 }
-void nc_init_gradient_pairs_bg(NCColorT fg)
+void nc_apply_gradient_pairs_bg(NCGradient grad)
 {
-    for(NCColorT i = 128; i < 256; i++)
+    for(NCColorT i = 0; i < 128; i++)
     {
-        init_pair(i, fg, i);
+        init_color(128 + i, grad[i][0], grad[i][1], grad[i][2]);
+        init_pair(128 + i, (grad[i][0] + grad[i][1] + grad[i][2] > 1500 ? COLOR_BLACK : COLOR_WHITE), 128 + i);
     }
 }
 inline void nc_print_grad_char(int y, int x, NCURSES_PAIRS_T v, chtype c)
@@ -494,6 +503,118 @@ static inline int iterate_pc(Game* g, int move_cmd, LevelStatus* s)
     return (*s = get_dungeon_level_status(&g->level)).data;
 }
 
+static int handle_mlist_cmd(Game* g, int mlist_cmd, int* scroll_amount)
+{
+    const int is_currently_mlist = (g->state.active_win == GWIN_MLIST);
+
+    switch(mlist_cmd)
+    {
+        case MLIST_CMD_SHOW:
+        {
+            g->state.active_win = GWIN_MLIST;
+
+            werase(g->mlist_win);
+            *scroll_amount = 0;
+
+            size_t line = 0;
+            size_t mon = 0;
+            Entity* m = g->level.entity_alloc + 1;
+            for(;mon < g->level.num_monsters && line < DUNGEON_Y_DIM - 2; m++)
+            {
+                if(m->hn)
+                {
+                    const int
+                        dx = (int)g->level.pc->pos.x - (int)m->pos.x,
+                        dy = (int)g->level.pc->pos.y - (int)m->pos.y;
+
+                    mvwprintw( g->mlist_win, line, 0, "[0x%c] : %d %s, %d %s",
+                        ("0123456789ABCDEF")[m->md.stats],
+                        abs(dx),
+                        dx > 0 ? "West" : "East",
+                        abs(dy),
+                        dy > 0 ? "North" : "South");
+
+                    mon++;
+                    line++;
+                }
+            }
+            // *window handler will refresh when it overwrites*
+            break;
+        }
+        case MLIST_CMD_HIDE:
+        {
+            if(is_currently_mlist)
+            {
+                g->state.active_win = GWIN_MAP;
+            }
+            break;
+        }
+        case MLIST_CMD_SU:
+        {
+            if(is_currently_mlist && (int)g->level.num_monsters - *scroll_amount > (DUNGEON_Y_DIM - 2))
+            {
+                *scroll_amount += 1;
+                wscrl(g->mlist_win, 1);
+                // wclrtoeol(g->mlist_win);
+
+                const int target_mnum = DUNGEON_Y_DIM - 3 + *scroll_amount;
+                Entity* m = g->level.entity_alloc + 1;
+                for(int mon = 0; !m->hn || mon < target_mnum; m++)
+                {
+                    if(m->hn) mon++;
+                }
+
+                const int
+                    dx = (int)g->level.pc->pos.x - (int)m->pos.x,
+                    dy = (int)g->level.pc->pos.y - (int)m->pos.y;
+
+                mvwprintw( g->mlist_win, DUNGEON_Y_DIM - 3, 0, "[0x%c] : %d %s, %d %s           ",
+                    ("0123456789ABCDEF")[m->md.stats],
+                    abs(dx),
+                    dx > 0 ? "West" : "East",
+                    abs(dy),
+                    dy > 0 ? "North" : "South");
+
+                wrefresh(g->mlist_win);
+            }
+            break;
+        }
+        case MLIST_CMD_SD:
+        {
+            if(is_currently_mlist && *scroll_amount > 0)
+            {
+                *scroll_amount -= 1;
+                wscrl(g->mlist_win, -1);
+                // wclrtoeol(g->mlist_win);
+
+                const int target_mnum = *scroll_amount;
+                Entity* m = g->level.entity_alloc + 1;
+                for(int mon = 0; !m->hn || mon < target_mnum; m++)
+                {
+                    if(m->hn) mon++;
+                }
+
+                const int
+                    dx = (int)g->level.pc->pos.x - (int)m->pos.x,
+                    dy = (int)g->level.pc->pos.y - (int)m->pos.y;
+
+                mvwprintw( g->mlist_win, 0, 0, "[0x%c] : %d %s, %d %s             ",
+                    ("0123456789ABCDEF")[m->md.stats],
+                    abs(dx),
+                    dx > 0 ? "West" : "East",
+                    abs(dy),
+                    dy > 0 ? "North" : "South");
+
+                wrefresh(g->mlist_win);
+            }
+            break;
+        }
+        default: break;
+    }
+
+    return 0;
+}
+
 
 
 int zero_game(Game* g)
@@ -511,14 +632,9 @@ int init_game_windows(Game* g)
     nc_init();
 
     g->map_win = newwin(DUNGEON_Y_DIM, DUNGEON_X_DIM, DUNGEON_WIN_OFFSET_Y, DUNGEON_WIN_OFFSET_X);
-    g->mlist_win = newwin(10, 14, 10, 10);  // TODO
+    g->mlist_win = newwin(DUNGEON_Y_DIM - 2, DUNGEON_X_DIM - 2, DUNGEON_WIN_OFFSET_Y + 1, DUNGEON_WIN_OFFSET_X + 1);
     scrollok(g->mlist_win, TRUE);
     idlok(g->mlist_win, TRUE);
-
-    for(size_t i = 1; i < 9; i++)
-    {
-        mvwaddstr(g->mlist_win, i, 1, "example text");
-    }
 
     if(DUNGEON_PRINT_BORDER)
     {
@@ -542,36 +658,34 @@ int deinit_game_windows(Game* g)
 
 int run_game(Game* g, volatile int* r)
 {
-    NCGradient t_grad, t_grad2;
-    generate_color_gradient(t_grad, 500, 0, 500, 500, 1000, 500);
-    generate_color_gradient(t_grad2, 0, 0, 0, 500, 700, 1000);
-    nc_init_gradient_colors(t_grad2);
-    nc_init_gradient_pairs_bg(COLOR_WHITE);
+    // NCGradient t_grad, t_grad2;
+    // generate_color_gradient(t_grad, 500, 0, 500, 500, 1000, 500);
+    // generate_color_gradient(t_grad2, 0, 0, 0, 500, 700, 1000);
+    // nc_apply_gradient_pairs_fg(t_grad, COLOR_WHITE);
 
-    for(size_t i = 0; i < 128; i++)
-    {
-        nc_print_grad_char(0, i, i, ' ');
-    }
+    // for(size_t i = 0; i < 128; i++)
+    // {
+    //     nc_print_grad_char(0, i, i, 'x');
+    // }
 
-    getch();
+    // getch();
 
     LevelStatus status;
+    InputCommand ic = get_zeroed_ic();
     int c;
-    int should_iterate_monsters = 1;
+    int scroll_amount = 0;
 
     write_dungeon_map(g);
     g->state.active_win = GWIN_MAP;
 
-    for(status.data = 0; *r && !status.data;)
+    for(status.data = 0; !status.data && *r;)
     {
         const int is_currently_map = (g->state.active_win == GWIN_MAP);
-        const int is_currently_mlist = (g->state.active_win == GWIN_MLIST);
 
         display_active_window(g);
-        if(is_currently_map && should_iterate_monsters && iterate_next_pc(g, &status)) break;  // game done when iterate_next_pc() returns non-zero
+        if(is_currently_map && ic.move_cmd && iterate_next_pc(g, &status)) break;  // game done when iterate_next_pc() returns non-zero
 
-        const InputCommand ic = decode_input_command((c = getch()));
-        should_iterate_monsters = 0;
+        ic = decode_input_command((c = getch()));
 
         if(ic.exit)
         {
@@ -580,47 +694,10 @@ int run_game(Game* g, volatile int* r)
         else if(ic.move_cmd && is_currently_map)
         {
             iterate_pc(g, ic.move_cmd, &status);
-            should_iterate_monsters = 1;
         }
         else if(ic.mlist_cmd)
         {
-            switch(ic.mlist_cmd)
-            {
-                case MLIST_CMD_SHOW:
-                {
-                    g->state.active_win = GWIN_MLIST;
-                    break;
-                }
-                case MLIST_CMD_HIDE:
-                {
-                    if(is_currently_mlist)
-                    {
-                        g->state.active_win = GWIN_MAP;
-                    }
-                    break;
-                }
-                case MLIST_CMD_SU:
-                {
-                    if(is_currently_mlist)
-                    {
-                        wscrl(g->mlist_win, 1);
-                        // nc_print_border(g->mlist_win);
-                        wrefresh(g->mlist_win);
-                    }
-                    break;
-                }
-                case MLIST_CMD_SD:
-                {
-                    if(is_currently_mlist)
-                    {
-                        wscrl(g->mlist_win, -1);
-                        // nc_print_border(g->mlist_win);
-                        wrefresh(g->mlist_win);
-                    }
-                    break;
-                }
-                default: break;
-            }
+            handle_mlist_cmd(g, ic.mlist_cmd, &scroll_amount);
         }
         else
         {

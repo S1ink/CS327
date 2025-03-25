@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <limits.h>
 
 #include <unistd.h>
 #include <signal.h>
@@ -303,7 +304,9 @@ int nc_print_win_lose(LevelStatus s, volatile int* r)
             usleep(1000 * RANDOM_IN_RANGE(MIN_PAUSE_MS, MAX_PAUSE_MS));
         }
 
+        attron(WA_BLINK);
         mvaddstr(14, 38, "Press any key to continue.");
+        attroff(WA_BLINK);
         refresh();
     }
     else
@@ -313,7 +316,9 @@ int nc_print_win_lose(LevelStatus s, volatile int* r)
         if(*r)
         {
             usleep(1000000);
+            attron(WA_BLINK);
             mvaddstr(14, 38, "Press any key to continue.");
+            attroff(WA_BLINK);
             refresh();
         }
     }
@@ -339,6 +344,11 @@ static inline int nc_init()
     curs_set(0);
     keypad(stdscr, TRUE);
     start_color();
+
+    for(size_t i = 1; i < 8; i++)
+    {
+        init_pair(i, i, COLOR_BLACK);
+    }
 
     refresh();
 
@@ -418,11 +428,11 @@ void nc_apply_gradient_pairs_bg(NCGradient grad)
         init_pair(128 + i, (grad[i][0] + grad[i][1] + grad[i][2] > 1500 ? COLOR_BLACK : COLOR_WHITE), 128 + i);
     }
 }
-inline void nc_print_grad_char(int y, int x, NCURSES_PAIRS_T v, chtype c)
+inline void nc_print_grad_char(WINDOW* w, int y, int x, NCURSES_PAIRS_T v, chtype c)
 {
-    attron(COLOR_PAIR(128 + v));
-    mvaddch(y, x, c);
-    attroff(COLOR_PAIR(128 + v));
+    wattron(w, COLOR_PAIR(128 + v));
+    mvwaddch(w, y, x, c);
+    wattroff(w, COLOR_PAIR(128 + v));
 }
 
 
@@ -438,6 +448,68 @@ static inline int write_dungeon_map(Game* g)
         }
         mvwaddnstr(g->map_win, y, 1, row, DUNGEON_X_DIM - 2);
     }
+
+    return 0;
+}
+static inline int write_dungeon_map_hardness(Game* g)
+{
+    for(uint32_t y = 1; y < (DUNGEON_Y_DIM - 1); y++)
+    {
+        for(uint32_t x = 1; x < (DUNGEON_X_DIM - 1); x++)
+        {
+            CellTerrain t = g->level.map.terrain[y][x];
+            if(t.type)
+            {
+                mvwaddch(g->map_win, y, x, get_cell_char(t, g->level.entities[y][x]));
+            }
+            else
+            {
+                nc_print_grad_char(g->map_win, y, x, (g->level.map.hardness[y][x] / 2), ' ');
+            }
+        }
+    }
+
+    return 0;
+}
+static inline int write_dungeon_floor_weights(Game* g)
+{
+    for(uint32_t y = 1; y < (DUNGEON_Y_DIM - 1); y++)
+    {
+        for(uint32_t x = 1; x < (DUNGEON_X_DIM - 1); x++)
+        {
+            const int32_t w = g->level.tunnel_costs[y][x];
+            if(w == INT_MAX)
+            {
+                mvwaddch(g->map_win, y, x, ' ');
+            }
+            else
+            {
+                nc_print_grad_char(g->map_win, y, x, (127 - MIN_CACHED(w * 2, 127)), w == 0 ? '@' : (w % 10) + '0');
+            }
+        }
+    }
+
+    return 0;
+}
+static inline int write_dungeon_terrain_weights(Game* g)
+{
+    for(uint32_t y = 1; y < (DUNGEON_Y_DIM - 1); y++)
+    {
+        for(uint32_t x = 1; x < (DUNGEON_X_DIM - 1); x++)
+        {
+            const int32_t w = g->level.terrain_costs[y][x];
+            if(w == INT_MAX)
+            {
+                mvwaddch(g->map_win, y, x, ' ');
+            }
+            else
+            {
+                nc_print_grad_char(g->map_win, y, x, (127 - MIN_CACHED(w * 2, 127)), w == 0 ? '@' : (w % 10) + '0');
+            }
+        }
+    }
+
+    return 0;
 
     return 0;
 }
@@ -548,16 +620,19 @@ static inline void print_mlist_entry(Game* g, Entity* m, int line)
 {
     const int
         dx = (int)g->level.pc->pos.x - (int)m->pos.x,
-        dy = (int)g->level.pc->pos.y - (int)m->pos.y;
+        dy = (int)g->level.pc->pos.y - (int)m->pos.y,
+        ds = abs(dx) + abs(dy);
 
     wmove(g->mlist_win, line, 0);
     wclrtoeol(g->mlist_win);
+    if(ds < 5) wattron(g->mlist_win, COLOR_PAIR(COLOR_RED));
     mvwprintw( g->mlist_win, line, 0, "[0x%c] : %d %s, %d %s",
         ("0123456789ABCDEF")[m->md.stats],
         abs(dx),
         dx > 0 ? "West" : "East",
         abs(dy),
         dy > 0 ? "North" : "South" );
+    if(ds < 5) wattroff(g->mlist_win, COLOR_PAIR(COLOR_RED));
 }
 static int handle_mlist_cmd(Game* g, int mlist_cmd, int* scroll_amount)
 {
@@ -586,6 +661,9 @@ static int handle_mlist_cmd(Game* g, int mlist_cmd, int* scroll_amount)
                 }
             }
             // *window handler will refresh when it overwrites*
+
+            NC_PRINT("%d monsters remain.", g->level.num_monsters);
+
             break;
         }
         case MLIST_CMD_HIDE:
@@ -640,6 +718,43 @@ static int handle_mlist_cmd(Game* g, int mlist_cmd, int* scroll_amount)
     return 0;
 }
 
+static inline int handle_dbg_cmd(Game* g, int dbg_cmd)
+{
+    if(g->state.active_win == GWIN_MAP)
+    {
+        switch(dbg_cmd)
+        {
+            case DBG_CMD_SHOW_DMAP:
+            {
+                write_dungeon_map(g);
+                wrefresh(g->map_win);
+                break;
+            }
+            case DBG_CMD_SHOW_FMAP:
+            {
+                write_dungeon_floor_weights(g);
+                wrefresh(g->map_win);
+                break;
+            }
+            case DBG_CMD_SHOW_HMAP:
+            {
+                write_dungeon_map_hardness(g);
+                wrefresh(g->map_win);
+                break;
+            }
+            case DBG_CMD_SHOW_TMAP:
+            {
+                write_dungeon_terrain_weights(g);
+                wrefresh(g->map_win);
+                break;
+            }
+            default: break;
+        }
+    }
+
+    return 0;
+}
+
 
 
 int zero_game(Game* g)
@@ -683,10 +798,10 @@ int deinit_game_windows(Game* g)
 
 int run_game(Game* g, volatile int* r)
 {
-    // NCGradient t_grad, t_grad2;
-    // generate_color_gradient(t_grad, 500, 0, 500, 500, 1000, 500);
+    NCGradient t_grad;
+    generate_color_gradient(t_grad, 500, 0, 500, 500, 1000, 500);
     // generate_color_gradient(t_grad2, 0, 0, 0, 500, 700, 1000);
-    // nc_apply_gradient_pairs_fg(t_grad, COLOR_WHITE);
+    nc_apply_gradient_pairs_bg(t_grad);
 
     // for(size_t i = 0; i < 128; i++)
     // {
@@ -726,7 +841,7 @@ int run_game(Game* g, volatile int* r)
         }
         else if(ic.dbg_cmd)
         {
-            
+            handle_dbg_cmd(g, ic.dbg_cmd);
         }
         else
         {

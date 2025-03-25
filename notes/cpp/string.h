@@ -22,15 +22,15 @@ public:
 
     string2& operator += (const string2&);
     string2& operator += (const char*);
-    string2  operator +  (const string2&);
-    string2  operator +  (const char*);
+    string2  operator +  (const string2&) const;
+    string2  operator +  (const char*) const;
 
-    bool operator == (const string2&);
-    bool operator != (const string2&);
-    bool operator >= (const string2&);
-    bool operator <= (const string2&);
-    bool operator >  (const string2&);
-    bool operator <  (const string2&);
+    bool operator == (const string2&) const;
+    bool operator != (const string2&) const;
+    bool operator >= (const string2&) const;
+    bool operator <= (const string2&) const;
+    bool operator >  (const string2&) const;
+    bool operator <  (const string2&) const;
 
     inline const char* c_str() const { return this->str; }
     inline operator const char*() const { return this->str; }

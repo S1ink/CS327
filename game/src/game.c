@@ -19,9 +19,9 @@
 /* --- BEHAVIOR.C INTERFACE ------------------------------------------- */
 
 /* Iterate the provided monster's AI and update the game state. */
-int iterate_monster(Game* d, Entity* e);
+int iterate_monster(DungeonLevel* d, Entity* e);
 /* Move an entity. */
-int handle_entity_move(Game* g, Entity* e, uint8_t x, uint8_t y);
+int handle_entity_move(DungeonLevel* d, Entity* e, uint8_t x, uint8_t y);
 
 /* -------------------------------------------------------------------- */
 
@@ -547,7 +547,11 @@ static inline int iterate_next_pc(Game* g, LevelStatus* s)
 
             if(!e->is_pc)
             {
-                iterate_monster(g, e);
+                Vec2u8 p = e->pos;
+                if(iterate_monster(&g->level, e))
+                {
+                    // handle map update
+                }
             }
         }
     }
@@ -587,7 +591,10 @@ static inline int iterate_pc(Game* g, int move_cmd, LevelStatus* s)
                 x = pc->pos.x + off[(move_cmd - MOVE_CMD_U) * 2 + 0],
                 y = pc->pos.y + off[(move_cmd - MOVE_CMD_U) * 2 + 1];
 
-            handle_entity_move(g, pc, x, y);
+            if(handle_entity_move(&g->level, pc, x, y))
+            {
+                // handle map update
+            }
 
             break;
         }

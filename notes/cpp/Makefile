@@ -5,4 +5,4 @@ swap: swap.cpp
 	g++ swap.cpp -o swap
 
 string2 : string.cpp
-	g++ string.cpp -o string2
+	g++ string.cpp -o string2 -DSTRING2_MAIN=1

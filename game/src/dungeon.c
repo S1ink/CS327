@@ -76,7 +76,7 @@ static int dungeon_map_fill_room_cells(DungeonMap* d)
         {
             for(size_t x = room->tl.x; x <= room->br.x; x++)
             {
-                d->terrain[y][x].type = ROOM;
+                d->terrain[y][x].type = CELLTYPE_ROOM;
             }
         }
     }
@@ -262,56 +262,6 @@ static int dungeon_map_place_stairs(DungeonMap* d)
     return 0;
 }
 
-static int dungeon_level_print_costs(DungeonCostMap costs, int border)
-{
-    char* row_fmt = "%.*s\n";
-
-    if(border)
-    {
-        row_fmt = "|%.*s|\n";
-        printf("+%.*s+\n", DUNGEON_X_DIM, "-----------------------------------------------------------------------------------------------------------------------------------------------------------------------");
-    }
-
-    for(uint32_t y = 0; y < DUNGEON_Y_DIM; y++)
-    {
-        char row_chars[DUNGEON_X_DIM];
-        for(uint32_t x = 0; x < DUNGEON_X_DIM; x++)
-        {
-            const int32_t w = costs[y][x];
-            row_chars[x] = w == INT_MAX ? ' ' : w == 0 ? '@' : (w % 10) + '0';
-        }
-
-        uint32_t i = 0;
-    #if DUNGEON_PRINT_HARDNESS
-        char row[20 * DUNGEON_X_DIM + 5];   // "\033[48;2;<3>;127;127m<1>" for each cell + reset code + null termination
-        for(uint32_t x = 0; x < DUNGEON_X_DIM; x++)
-        {
-            if(row_chars[x] == ' ') // dont print a color
-            {
-                i += sprintf(row + i, "\033[0m ");
-            }
-            else
-            {
-                const uint8_t w = (uint8_t)MIN_CACHED((costs[y][x] * 4), 0xFF);
-                i += sprintf(row + i, "\033[38;2;127;%d;%dm%c", w, 0xFF - w, row_chars[x]);     // does not export null termination
-            }
-        }
-        strcpy(row + i, "\033[0m");     // null termination is copied as well
-        i += 4;
-    #else
-        char* row = row_chars;
-        i = DUNGEON_X_DIM;
-    #endif
-        printf(row_fmt, i, row);
-    }
-
-    if(border)
-    {
-        printf("+%.*s+\n", DUNGEON_X_DIM, "-----------------------------------------------------------------------------------------------------------------------------------------------------------------------");
-    }
-
-    return 0;
-}
 int dungeon_level_update_costs(DungeonLevel* d, int both_or_only_terrain)
 {
     static PathFindingBuffer buff;
@@ -485,9 +435,9 @@ int serialize_dungeon_map(const DungeonMap* d, const Vec2u8* pc_pos, FILE* out)
             const CellTerrain c = d->terrain[y][x];
             switch(c.type)
             {
-                case ROCK: dungeon_bytes[y][x] = d->hardness[y][x]; break;
-                case ROOM:
-                case CORRIDOR: dungeon_bytes[y][x] = 0; break;
+                case CELLTYPE_ROCK: dungeon_bytes[y][x] = d->hardness[y][x]; break;
+                case CELLTYPE_ROOM:
+                case CELLTYPE_CORRIDOR: dungeon_bytes[y][x] = 0; break;
             }
 
             switch(c.is_stair)
@@ -512,7 +462,7 @@ int serialize_dungeon_map(const DungeonMap* d, const Vec2u8* pc_pos, FILE* out)
                     }
                     break;
                 }
-                case NO_STAIR:
+                case STAIR_NONE:
                 default: break;
             }
         }
@@ -583,7 +533,7 @@ int deserialize_dungeon_map(DungeonMap* d, Vec2u8* pc_pos, FILE* in)
 
             if( !(d->hardness[y][x] = dungeon_bytes[y][x]) )
             {
-                c->type = CORRIDOR;
+                c->type = CELLTYPE_CORRIDOR;
             }
         }
     }
@@ -664,17 +614,6 @@ int zero_dungeon_level(DungeonLevel* d)
 
     return ret;
 }
-int destruct_dungeon_level(DungeonLevel* d)
-{
-    int ret = destruct_dungeon_map(&d->map);
-
-    heap_delete(&d->entity_q);
-
-    if(d->entity_alloc) free(d->entity_alloc);
-
-    return ret;
-}
-
 int init_dungeon_level(DungeonLevel* d, Vec2u8 pc_pos, size_t nmon)
 {
 // 1. init priority q
@@ -733,15 +672,20 @@ int init_dungeon_level(DungeonLevel* d, Vec2u8 pc_pos, size_t nmon)
 
     return 0;
 }
-
-LevelStatus get_dungeon_level_status(DungeonLevel* d)
+int destruct_dungeon_level(DungeonLevel* d)
 {
-    LevelStatus s;
-    s.has_won = !d->num_monsters;
-    s.has_lost = !d->pc;
-    return s;
+    int ret = destruct_dungeon_map(&d->map);
+
+    heap_delete(&d->entity_q);
+
+    if(d->entity_alloc) free(d->entity_alloc);
+
+    return ret;
 }
 
+
+
+#if 0
 int print_dungeon_level(DungeonLevel* d, int border)
 {
     char* row_fmt = "%.*s\n";
@@ -786,6 +730,57 @@ int print_dungeon_level(DungeonLevel* d, int border)
 
     return 0;
 }
+
+static int dungeon_level_print_costs(DungeonCostMap costs, int border)
+{
+    char* row_fmt = "%.*s\n";
+
+    if(border)
+    {
+        row_fmt = "|%.*s|\n";
+        printf("+%.*s+\n", DUNGEON_X_DIM, "-----------------------------------------------------------------------------------------------------------------------------------------------------------------------");
+    }
+
+    for(uint32_t y = 0; y < DUNGEON_Y_DIM; y++)
+    {
+        char row_chars[DUNGEON_X_DIM];
+        for(uint32_t x = 0; x < DUNGEON_X_DIM; x++)
+        {
+            const int32_t w = costs[y][x];
+            row_chars[x] = w == INT_MAX ? ' ' : w == 0 ? '@' : (w % 10) + '0';
+        }
+
+        uint32_t i = 0;
+    #if DUNGEON_PRINT_HARDNESS
+        char row[20 * DUNGEON_X_DIM + 5];   // "\033[48;2;<3>;127;127m<1>" for each cell + reset code + null termination
+        for(uint32_t x = 0; x < DUNGEON_X_DIM; x++)
+        {
+            if(row_chars[x] == ' ') // dont print a color
+            {
+                i += sprintf(row + i, "\033[0m ");
+            }
+            else
+            {
+                const uint8_t w = (uint8_t)MIN_CACHED((costs[y][x] * 4), 0xFF);
+                i += sprintf(row + i, "\033[38;2;127;%d;%dm%c", w, 0xFF - w, row_chars[x]);     // does not export null termination
+            }
+        }
+        strcpy(row + i, "\033[0m");     // null termination is copied as well
+        i += 4;
+    #else
+        char* row = row_chars;
+        i = DUNGEON_X_DIM;
+    #endif
+        printf(row_fmt, i, row);
+    }
+
+    if(border)
+    {
+        printf("+%.*s+\n", DUNGEON_X_DIM, "-----------------------------------------------------------------------------------------------------------------------------------------------------------------------");
+    }
+
+    return 0;
+}
 int print_dungeon_level_costmaps(DungeonLevel* d, int border)
 {
     dungeon_level_print_costs(d->tunnel_costs, border);
@@ -793,3 +788,4 @@ int print_dungeon_level_costmaps(DungeonLevel* d, int border)
 
     return 0;
 }
+#endif

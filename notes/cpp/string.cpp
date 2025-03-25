@@ -18,6 +18,12 @@ string2::string2(const string2& s)
     this->str = strdup(s.str);
 }
 
+string2::string2(string2&& s)
+{
+    this->str = s.str;
+    s.str = static_cast<char*>(calloc(1, 1));
+}
+
 string2::~string2()
 {
     free(this->str);
@@ -69,7 +75,7 @@ string2& string2::operator += (const char* str)
 
     return *this;
 }
-string2 string2::operator + (const string2& s)
+string2 string2::operator + (const string2& s) const
 {
     // return string2{ *this } += s;
 
@@ -81,7 +87,7 @@ string2 string2::operator + (const string2& s)
 
     return x;
 }
-string2 string2::operator + (const char* str)
+string2 string2::operator + (const char* str) const
 {
     // return string2{ *this } += str;
 
@@ -94,27 +100,27 @@ string2 string2::operator + (const char* str)
     return x;
 }
 
-bool string2::operator == (const string2& s)
+bool string2::operator == (const string2& s) const
 {
     return static_cast<bool>(!strcmp(this->str, s.str));
 }
-bool string2::operator != (const string2& s)
+bool string2::operator != (const string2& s) const
 {
     return static_cast<bool>(strcmp(this->str, s.str));
 }
-bool string2::operator >= (const string2& s)
+bool string2::operator >= (const string2& s) const
 {
     return strcmp(this->str, s.str) >= 0;
 }
-bool string2::operator <= (const string2& s)
+bool string2::operator <= (const string2& s) const
 {
     return strcmp(this->str, s.str) <= 0;
 }
-bool string2::operator >  (const string2& s)
+bool string2::operator >  (const string2& s) const
 {
     return strcmp(this->str, s.str) > 0;
 }
-bool string2::operator <  (const string2& s)
+bool string2::operator <  (const string2& s) const
 {
     return strcmp(this->str, s.str) < 0;
 }
@@ -127,5 +133,31 @@ std::ostream& operator<<(std::ostream& o, const string2& s)
 
 std::istream& operator>>(std::istream& i, string2& s)
 {
-    return (i >> s.str);
+    free(s.str);
+    s.str = static_cast<char*>(malloc(80));
+
+    return i.getline(s.str, s.length(), '\n');
 }
+
+
+
+
+
+#ifndef STRING2_MAIN
+#define STRING2_MAIN 1
+#endif
+
+#if STRING2_MAIN
+int main(int argc, char** argv)
+{
+    string2 x = { "Hello World" };
+
+    std::cout << x << std::endl;
+
+    x = "foo";
+
+    std::cout << x << std::endl;
+
+    return 0;
+}
+#endif

@@ -1,6 +1,5 @@
 #include "dungeon.h"
 #include "pathing.h"
-#include "game.h"
 
 #include "util/debug.h"
 #include "util/math.h"
@@ -38,9 +37,9 @@ static const int8_t OFF_DIRECTIONS[8][2] =
     { -1, +1 },
 };
 
-int handle_entity_move(Game* g, Entity* e, uint8_t x, uint8_t y)
+// returns 1 if the entity successfully moved, 0 otherwise
+int handle_entity_move(DungeonLevel* d, Entity* e, uint8_t x, uint8_t y)
 {
-    DungeonLevel* d = &g->level;
     Entity** prev_slot = d->entities[e->pos.y] + e->pos.x;
     struct
     {
@@ -61,7 +60,7 @@ int handle_entity_move(Game* g, Entity* e, uint8_t x, uint8_t y)
             *h = (*h > 85 ? *h - 85 : 0);
             if(!*h)
             {
-                d->map.terrain[y][x].type = CORRIDOR;
+                d->map.terrain[y][x].type = CELLTYPE_CORRIDOR;
                 flags.has_entity_moved = 1;
                 flags.floor_updated = 1;
             }
@@ -76,9 +75,6 @@ int handle_entity_move(Game* g, Entity* e, uint8_t x, uint8_t y)
 
     if(flags.has_entity_moved)
     {
-        mvwaddch(g->map_win, e->pos.y, e->pos.x, get_cell_char(d->map.terrain[e->pos.y][e->pos.x], NULL));
-        mvwaddch(g->map_win, y, x, get_cell_char(d->map.terrain[y][x], e));
-
         e->pos.x = x;
         e->pos.y = y;
 
@@ -103,14 +99,16 @@ int handle_entity_move(Game* g, Entity* e, uint8_t x, uint8_t y)
         dungeon_level_update_costs(d, flags.floor_updated || flags.pc_moved);
     }
 
-    return 0;
+    return flags.has_entity_moved;
 }
-static int handle_entity_move_dir(Game* g, Entity* e, uint8_t dir_idx)
+// returns the result of handle_entity_move()
+static int handle_entity_move_dir(DungeonLevel* d, Entity* e, uint8_t dir_idx)
 {
-    return handle_entity_move( g, e, (e->pos.x + OFF_DIRECTIONS[dir_idx][0]), (e->pos.y + OFF_DIRECTIONS[dir_idx][1]) );
+    return handle_entity_move( d, e, (e->pos.x + OFF_DIRECTIONS[dir_idx][0]), (e->pos.y + OFF_DIRECTIONS[dir_idx][1]) );
 }
 
-static int move_random(Game* g, Entity* e, int r)
+// returns the result of handle_entity_move_dir() a valid direction was detected, otherwise 0
+static int move_random(DungeonLevel* d, Entity* e, int r)
 {
     const int has_tunneling = entity_has_tunneling(e);
 
@@ -121,14 +119,14 @@ static int move_random(Game* g, Entity* e, int r)
     {
         x = e->pos.x + OFF_DIRECTIONS[i][0];
         y = e->pos.y + OFF_DIRECTIONS[i][1];
-        if(g->level.map.terrain[y][x].type || (has_tunneling && g->level.map.hardness[y][x] < 0xFF))
+        if(d->map.terrain[y][x].type || (has_tunneling && d->map.hardness[y][x] < 0xFF))
         {
             valid_dirs[n_valid_dirs] = i;
             n_valid_dirs++;
         }
     }
 
-    return n_valid_dirs ? handle_entity_move_dir(g, e, valid_dirs[(r ? r : rand()) % n_valid_dirs]) : 0;
+    return n_valid_dirs ? handle_entity_move_dir(d, e, valid_dirs[(r ? r : rand()) % n_valid_dirs]) : 0;
 }
 
 static int bresenham_check_los(DungeonLevel* d, Entity* e, Vec2u8* trav_cell)
@@ -188,10 +186,9 @@ static void pathing_export_vec2u8(void* v, uint32_t x, uint32_t y)
     vec2u8_assign((Vec2u8*)v, x, y);
 }
 
-int iterate_monster(Game* g, Entity* e)
+// returns 0 if no movement occurred, otherwise returns the result of move_random() or handle_entity_move()
+int iterate_monster(DungeonLevel* d, Entity* e)
 {
-    DungeonLevel* d = &g->level;
-
     struct
     {
         uint8_t can_see_pc : 1;
@@ -239,7 +236,7 @@ int iterate_monster(Game* g, Entity* e)
     if(e->md.erratic && (r & 1))
     {
         PRINT_DEBUG("(%#x) : Moving erraticly.\n", e->md.stats);
-        return move_random(g, e, (r >> 1));
+        return move_random(d, e, (r >> 1));
     }
     else
     {
@@ -318,7 +315,7 @@ int iterate_monster(Game* g, Entity* e)
     }
 
     PRINT_DEBUG("MOVING TO: (%d, %d)\n", move_pos.x, move_pos.y);
-    return handle_entity_move(g, e, move_pos.x, move_pos.y);
+    return handle_entity_move(d, e, move_pos.x, move_pos.y);
 
 #undef GET_MIN_COST_NEIGHBOR
 }

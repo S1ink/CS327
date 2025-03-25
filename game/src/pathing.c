@@ -200,7 +200,7 @@ static int32_t corridor_path_cell_weight(const DungeonMap* d, uint32_t x, uint32
 }
 static void corridor_path_export(void* d, uint32_t x, uint32_t y)
 {
-    ((DungeonMap*)d)->terrain[y][x].type = CORRIDOR;
+    ((DungeonMap*)d)->terrain[y][x].type = CELLTYPE_CORRIDOR;
 }
 
 int dungeon_dijkstra_corridor_path(DungeonMap* d, Vec2u from, Vec2u to)
@@ -222,7 +222,7 @@ int dungeon_dijkstra_corridor_path(DungeonMap* d, Vec2u from, Vec2u to)
 
 static int floor_traversal_should_use(const DungeonMap* d, uint32_t x, uint32_t y)
 {
-    return d->terrain[y][x].type != ROCK;
+    return d->terrain[y][x].type != CELLTYPE_ROCK;
 }
 static int32_t floor_traversal_cell_weight(const DungeonMap* d, uint32_t x, uint32_t y)
 {
@@ -246,7 +246,7 @@ static int terrain_traversal_should_use(const DungeonMap* d, uint32_t x, uint32_
 }
 static int32_t terrain_traversal_cell_weight(const DungeonMap* d, uint32_t x, uint32_t y)
 {
-    return d->terrain[y][x].type == ROCK ? (1 + d->hardness[y][x] / 85) : 1;
+    return d->terrain[y][x].type == CELLTYPE_ROCK ? (1 + d->hardness[y][x] / 85) : 1;
 }
 
 int dungeon_dijkstra_traverse_terrain(DungeonMap* d, Vec2u from, PathFindingBuffer* buff)

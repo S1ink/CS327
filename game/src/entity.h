@@ -7,12 +7,12 @@
 #include "util/heap.h"
 
 
-enum MonsterStats
+enum
 {
-    INTELLIGENCE    = 0b0001,
-    TELEPATHY       = 0b0010,
-    TUNNELING       = 0b0100,
-    ERRATIC         = 0b1000
+    MONSTAT_INTELLIGENCE    = 0b0001,
+    MONSTAT_TELEPATHY       = 0b0010,
+    MONSTAT_TUNNELING       = 0b0100,
+    MONSTAT_ERRATIC         = 0b1000
 };
 
 typedef struct
@@ -40,8 +40,6 @@ typedef struct
 }
 MonsterData;
 
-// size_t x = sizeof(MonsterData);
-
 typedef struct
 {
     uint8_t is_pc;
@@ -53,8 +51,15 @@ typedef struct
     size_t next_turn;
 
     HeapNode* hn;
-
 }
 Entity;
 
-// size_t y = sizeof(Entity);
+
+
+
+
+// ------------------------------------------------
+static inline char get_entity_char(const Entity* e)
+{
+    return e->is_pc ? '@' : ("0123456789ABCDEF")[e->md.stats];
+}

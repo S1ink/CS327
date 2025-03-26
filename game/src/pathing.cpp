@@ -70,7 +70,7 @@ int dungeon_dijkstra_single_path(
         }
     }
 // ALGO
-    while((p = heap_remove_min(&h)))
+    while((p = static_cast<CellPathNode*>(heap_remove_min(&h))))
     {
         p->hn = NULL;   // node was deleted from the heap
 
@@ -154,7 +154,7 @@ int dungeon_dijkstra_traverse_grid(
         }
     }
 // ALGO
-    while((p = heap_remove_min(&h)))
+    while((p = static_cast<CellPathNode*>(heap_remove_min(&h))))
     {
         p->hn = NULL;   // node was deleted from the heap
 

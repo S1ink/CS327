@@ -1,8 +1,9 @@
 #include <stdio.h>
 #include <stdint.h>
+#include <stdlib.h>
 
 
-int main(int argc, char** argv)
+static inline void bonus()
 {
     int i;
     uint64_t prod, prod2;
@@ -44,4 +45,55 @@ int main(int argc, char** argv)
         printf("%#x\t", (int)((char*)&prod)[i]);
     }
     putchar('\n');
+}
+
+#define TEST_NULL_MALLOC 0
+char* strdup_(const char* s)
+{
+    char* e;
+    for(e = s; *e; e++) {}
+#if TEST_NULL_MALLOC
+    char* m = NULL;
+#else
+    char* m = malloc((e - s) + 1);
+#endif
+    if(m)
+    {
+        for(int i = 0; (m[i] = s[i]); i++) {}
+    }
+    return m;
+}
+
+char* strcat_(char* dst, const char* src)
+{
+    char* c;
+    for(c = dst; *c; c++) {}
+    for(int i = 0; (c[i] = src[i]); i++) {}
+    return dst;
+}
+
+
+int main(int argc, char** argv)
+{
+    printf("------------- strdup() #1 ---\n");
+    {
+        const char* x = "hi mom";
+        char* y = strdup_(x);
+        printf("\"%s\"\n\"%s\"\n", x, y);
+        free(y);
+    }
+    printf("------------- strdup() #2 ---\n");
+    {
+        const char* x = "";
+        char* y = strdup_(x);
+        printf("\"%s\"\n\"%s\"\n", x, y);
+        free(y);
+    }
+    printf("------------- strcat() #1 ---\n");
+    {
+        char buff[64] = "hi mom";
+        printf("\"%s\"\n", buff);
+        printf("\"%s\"\n", strcat_(buff, " how are you?"));
+        printf("\"%s\"\n", strcat_(buff, " i'm pretty good ig."));
+    }
 }

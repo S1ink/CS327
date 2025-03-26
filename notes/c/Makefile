@@ -34,5 +34,8 @@ return_local: return_local.c
 curses: curses.c
 	gcc curses.c -Wall -lncurses -o curses
 
+mid_ex: mid_ex.c
+	gcc mid_ex.c -Wall -o mid_ex
+
 clean:
 	rm -rf *.o *~ queue_test strings char varray macros

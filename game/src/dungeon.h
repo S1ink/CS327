@@ -117,11 +117,6 @@ static inline LevelStatus get_dungeon_level_status(DungeonLevel* d)
     return s;
 }
 
-#if 0
-int cout_print_dungeon_level(DungeonLevel* d, int border);
-int cout_print_dungeon_level_costmaps(DungeonLevel* d, int border);
-#endif
-
 
 
 

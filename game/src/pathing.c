@@ -10,21 +10,21 @@ static int32_t cell_path_cost_cmp(const void* k, const void* w)
     return ((CellPathNode*)k)->cost - ((CellPathNode*)w)->cost;
 }
 
-int init_pathing_buffer(PathFindingBuffer* buff)
+int init_pathing_buffer(PathFindingBuffer buff)
 {
     for(size_t y = 0; y < DUNGEON_Y_DIM; y++)
     {
         for(size_t x = 0; x < DUNGEON_X_DIM; x++)
         {
-            buff->nodes[y][x].pos.x = x;
-            buff->nodes[y][x].pos.y = y;
+            buff[y][x].pos.x = x;
+            buff[y][x].pos.y = y;
         }
     }
     return 0;
 }
 
 int dungeon_dijkstra_single_path(
-    PathFindingBuffer* buff,
+    PathFindingBuffer buff,
     DungeonMap* d,
     void* out,
     Vec2u from,
@@ -47,11 +47,11 @@ int dungeon_dijkstra_single_path(
     {
         for(x = 0; x < DUNGEON_X_DIM; x++)
         {
-            buff->nodes[y][x].cost = INT_MAX;
+            buff[y][x].cost = INT_MAX;
         }
     }
 // INIT SRC NODE
-    buff->nodes[from.y][from.x].cost = 0;
+    buff[from.y][from.x].cost = 0;
 // CREATE HEAP
     heap_init(&h, cell_path_cost_cmp, NULL);
 // CREATE HEAP NODES
@@ -61,11 +61,11 @@ int dungeon_dijkstra_single_path(
         {
             if(should_use_cell(d, x, y))
             {
-                buff->nodes[y][x].hn = heap_insert(&h, buff->nodes[y] + x);
+                buff[y][x].hn = heap_insert(&h, buff[y] + x);
             }
             else
             {
-                buff->nodes[y][x].hn = NULL;
+                buff[y][x].hn = NULL;
             }
         }
     }
@@ -80,7 +80,7 @@ int dungeon_dijkstra_single_path(
             for(vec2u8_copy(&iter8, &to8); !vec2u8_equal(&iter8, &from8); vec2u8_copy(&iter8, &p->from))
             {
                 on_cell_path(out, iter8.x, iter8.y);
-                p = &buff->nodes[iter8.y][iter8.x];
+                p = &buff[iter8.y][iter8.x];
             }
             heap_delete(&h);
             return 0;
@@ -90,11 +90,11 @@ int dungeon_dijkstra_single_path(
 
         // CHECK CARDINAL DIRECTIONS
     #define CHECK_NEIGHBOR(x, y) \
-        if( (buff->nodes[(y)][(x)].hn) && (buff->nodes[(y)][(x)].cost > p_cost) ) \
+        if( (buff[(y)][(x)].hn) && (buff[(y)][(x)].cost > p_cost) ) \
         { \
-            buff->nodes[(y)][(x)].cost = p_cost; \
-            vec2u8_copy(&buff->nodes[(y)][(x)].from, &p->pos); \
-            heap_decrease_key_no_replace(&h, buff->nodes[(y)][(x)].hn); \
+            buff[(y)][(x)].cost = p_cost; \
+            vec2u8_copy(&buff[(y)][(x)].from, &p->pos); \
+            heap_decrease_key_no_replace(&h, buff[(y)][(x)].hn); \
         }
 
         CHECK_NEIGHBOR(p->pos.x, p->pos.y - 1)
@@ -115,7 +115,7 @@ int dungeon_dijkstra_single_path(
 }
 
 int dungeon_dijkstra_traverse_grid(
-    PathFindingBuffer* buff,
+    PathFindingBuffer buff,
     DungeonMap* d,
     Vec2u from,
     int(*should_use_cell)(const DungeonMap*, uint32_t x, uint32_t y),
@@ -131,11 +131,11 @@ int dungeon_dijkstra_traverse_grid(
     {
         for(x = 0; x < DUNGEON_X_DIM; x++)
         {
-            buff->nodes[y][x].cost = INT_MAX;
+            buff[y][x].cost = INT_MAX;
         }
     }
 // INIT SRC NODE
-    buff->nodes[from.y][from.x].cost = 0;
+    buff[from.y][from.x].cost = 0;
 // CREATE HEAP
     heap_init(&h, cell_path_cost_cmp, NULL);
 // CREATE HEAP NODES
@@ -145,11 +145,11 @@ int dungeon_dijkstra_traverse_grid(
         {
             if(should_use_cell(d, x, y))
             {
-                buff->nodes[y][x].hn = heap_insert(&h, buff->nodes[y] + x);
+                buff[y][x].hn = heap_insert(&h, buff[y] + x);
             }
             else
             {
-                buff->nodes[y][x].hn = NULL;
+                buff[y][x].hn = NULL;
             }
         }
     }
@@ -163,11 +163,11 @@ int dungeon_dijkstra_traverse_grid(
         // CHECK CARDINAL DIRECTIONS
     #define CHECK_NEIGHBOR(x, y) \
         p_cost = p->cost + cell_weight(d, x, y); \
-        if( (buff->nodes[(y)][(x)].hn) && (buff->nodes[(y)][(x)].cost > p_cost) ) \
+        if( (buff[(y)][(x)].hn) && (buff[(y)][(x)].cost > p_cost) ) \
         { \
-            buff->nodes[(y)][(x)].cost = p_cost; \
-            vec2u8_copy(&buff->nodes[(y)][(x)].from, &p->pos); \
-            heap_decrease_key_no_replace(&h, buff->nodes[(y)][(x)].hn); \
+            buff[(y)][(x)].cost = p_cost; \
+            vec2u8_copy(&buff[(y)][(x)].from, &p->pos); \
+            heap_decrease_key_no_replace(&h, buff[(y)][(x)].hn); \
         }
 
         CHECK_NEIGHBOR(p->pos.x, p->pos.y - 1)
@@ -208,10 +208,10 @@ int dungeon_dijkstra_corridor_path(DungeonMap* d, Vec2u from, Vec2u to)
     static PathFindingBuffer buff;
     static uint32_t init = 0;
 
-    if(!init) init_pathing_buffer(&buff);
+    if(!init) init_pathing_buffer(buff);
 
     return dungeon_dijkstra_single_path(
-        &buff, d, d, from, to,
+        buff, d, d, from, to,
         corridor_path_should_use,
         corridor_path_cell_weight,
         corridor_path_export,
@@ -229,7 +229,7 @@ static int32_t floor_traversal_cell_weight(const DungeonMap* d, uint32_t x, uint
     return 1;
 }
 
-int dungeon_dijkstra_traverse_floor(DungeonMap* d, Vec2u from, PathFindingBuffer* buff)
+int dungeon_dijkstra_traverse_floor(DungeonMap* d, Vec2u from, PathFindingBuffer buff)
 {
     return dungeon_dijkstra_traverse_grid(
         buff, d, from,
@@ -249,7 +249,7 @@ static int32_t terrain_traversal_cell_weight(const DungeonMap* d, uint32_t x, ui
     return d->terrain[y][x].type == CELLTYPE_ROCK ? (1 + d->hardness[y][x] / 85) : 1;
 }
 
-int dungeon_dijkstra_traverse_terrain(DungeonMap* d, Vec2u from, PathFindingBuffer* buff)
+int dungeon_dijkstra_traverse_terrain(DungeonMap* d, Vec2u from, PathFindingBuffer buff)
 {
     return dungeon_dijkstra_traverse_grid(
         buff, d, from,
@@ -268,10 +268,10 @@ int dungeon_dijkstra_floor_path(
     static PathFindingBuffer buff;
     static uint32_t init = 0;
 
-    if(!init) init_pathing_buffer(&buff);
+    if(!init) init_pathing_buffer(buff);
 
     return dungeon_dijkstra_single_path(
-        &buff, d, out, from, to,
+        buff, d, out, from, to,
         floor_traversal_should_use,
         floor_traversal_cell_weight,
         on_path_cell,
@@ -285,10 +285,10 @@ int dungeon_dijkstra_terrain_path(
     static PathFindingBuffer buff;
     static uint32_t init = 0;
 
-    if(!init) init_pathing_buffer(&buff);
+    if(!init) init_pathing_buffer(buff);
 
     return dungeon_dijkstra_single_path(
-        &buff, d, out, from, to,
+        buff, d, out, from, to,
         terrain_traversal_should_use,
         terrain_traversal_cell_weight,
         on_path_cell,

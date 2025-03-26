@@ -17,16 +17,12 @@ typedef struct
 }
 CellPathNode;
 
-typedef struct
-{
-    CellPathNode nodes[DUNGEON_Y_DIM][DUNGEON_X_DIM];
-}
-PathFindingBuffer;
+typedef CellPathNode PathFindingBuffer[DUNGEON_Y_DIM][DUNGEON_X_DIM];
 
-int init_pathing_buffer(PathFindingBuffer* buff);
+int init_pathing_buffer(PathFindingBuffer buff);
 
 int dungeon_dijkstra_single_path(
-    PathFindingBuffer* buff,
+    PathFindingBuffer buff,
     DungeonMap* d,
     void* out,
     Vec2u from,
@@ -36,7 +32,7 @@ int dungeon_dijkstra_single_path(
     void(*on_path_cell)(void*, uint32_t x, uint32_t y),
     int use_diag );
 int dungeon_dijkstra_traverse_grid(
-    PathFindingBuffer* buff,
+    PathFindingBuffer buff,
     DungeonMap* d,
     Vec2u from,
     int(*should_use_cell)(const DungeonMap*, uint32_t x, uint32_t y),
@@ -44,8 +40,8 @@ int dungeon_dijkstra_traverse_grid(
     int use_diag );
 
 int dungeon_dijkstra_corridor_path(DungeonMap* d, Vec2u from, Vec2u to);
-int dungeon_dijkstra_traverse_floor(DungeonMap* d, Vec2u from, PathFindingBuffer* buff);
-int dungeon_dijkstra_traverse_terrain(DungeonMap* d, Vec2u from, PathFindingBuffer* buff);
+int dungeon_dijkstra_traverse_floor(DungeonMap* d, Vec2u from, PathFindingBuffer buff);
+int dungeon_dijkstra_traverse_terrain(DungeonMap* d, Vec2u from, PathFindingBuffer buff);
 
 int dungeon_dijkstra_floor_path(
     DungeonMap* d,

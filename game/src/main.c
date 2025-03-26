@@ -13,7 +13,6 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <signal.h>
-#include <time.h>
 
 #include <ncurses.h>
 
@@ -156,47 +155,6 @@ static inline void init_sig()
 }
 
 
-// int print_win_lose(LevelStatus s, volatile int* r);
-
-// inline static int main_104(int argc, char** argv)
-// {
-//     signal(SIGINT, handle_exit);
-
-//     DungeonLevel d;
-//     RuntimeState s;
-//     zero_dungeon_level(&d);
-//     srand(us_seed());
-
-//     if(!handle_level_init(&d, &s, argc, argv))
-//     {
-//         LevelStatus status;
-//         status.data = 0;
-//         uint64_t ntime_us = us_time();
-        
-//         printf("\033[2J\033[1;1H");
-//         print_dungeon_level(&d, DUNGEON_PRINT_BORDER);
-//         while(is_running && !status.data)
-//         {
-//             status = iterate_dungeon_level(&d, 1);
-//             printf("\033[2J\033[1;1H");
-//             print_dungeon_level(&d, DUNGEON_PRINT_BORDER);
-//             // print_dungeon_level_costmaps(&d, DUNGEON_PRINT_BORDER);
-
-//             ntime_us += LEVEL_ITERATION_TIME_US;
-//             uint64_t n_us = us_time();
-//             if(n_us < ntime_us) usleep(ntime_us - n_us);
-//         }
-
-//         if(!is_running) printf("\nCaught Ctrl-C. Exitting...\n");
-//         if(status.data) print_win_lose(status, &is_running);
-//         // TODO: print win/lose screen
-//     }
-//     handle_level_deinit(&d, &s);
-
-//     destruct_dungeon_level(&d);
-
-//     return 0;
-// }
 
 static inline int main_105(int argc, char** argv)
 {
@@ -225,22 +183,4 @@ static inline int main_105(int argc, char** argv)
 int main(int argc, char** argv)
 {
     return main_105(argc, argv);
-
-    // initscr();
-    // raw();
-    // noecho();
-    // curs_set(0);
-    // keypad(stdscr, TRUE);
-    // start_color();
-
-    // mvprintw(0, 0, "COLORS SUPPORTED: %d\tCOLOR PAIRS: %d\n", COLORS, COLOR_PAIRS);
-
-    // init_color(255, 500, 900, 500);
-    // init_pair(255, COLOR_BLACK, 255);
-    // attron(COLOR_PAIR(255));
-    // mvprintw(1, 0, "COLORED TEXT");
-    // attroff(COLOR_PAIR(255));
-
-    // getch();
-    // endwin();
 }

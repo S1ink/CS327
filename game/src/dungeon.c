@@ -1,5 +1,5 @@
-#include "dungeon.h"
 #include "dungeon_config.h"
+#include "dungeon.h"
 #include "pathing.h"
 
 #include "util/perlin.h"
@@ -268,7 +268,7 @@ int dungeon_level_update_costs(DungeonLevel* d, int both_or_only_terrain)
     static int buff_inited = 0;
     if(!buff_inited)
     {
-        init_pathing_buffer(&buff);
+        init_pathing_buffer(buff);
         buff_inited = 1;
     }
 
@@ -277,21 +277,21 @@ int dungeon_level_update_costs(DungeonLevel* d, int both_or_only_terrain)
 
     if(both_or_only_terrain)
     {
-        dungeon_dijkstra_traverse_floor(&d->map, pos, &buff);
+        dungeon_dijkstra_traverse_floor(&d->map, pos, buff);
         for(size_t y = 0; y < DUNGEON_Y_DIM; y++)
         {
             for(size_t x = 0; x < DUNGEON_X_DIM; x++)
             {
-                d->tunnel_costs[y][x] = buff.nodes[y][x].cost;
+                d->tunnel_costs[y][x] = buff[y][x].cost;
             }
         }
     }
-    dungeon_dijkstra_traverse_terrain(&d->map, pos, &buff);
+    dungeon_dijkstra_traverse_terrain(&d->map, pos, buff);
     for(size_t y = 0; y < DUNGEON_Y_DIM; y++)
     {
         for(size_t x = 0; x < DUNGEON_X_DIM; x++)
         {
-            d->terrain_costs[y][x] = buff.nodes[y][x].cost;
+            d->terrain_costs[y][x] = buff[y][x].cost;
         }
     }
 

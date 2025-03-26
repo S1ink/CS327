@@ -57,4 +57,20 @@
 3/5/25  4:00  PM -- Change printing order, make timing more precise
 3/5/25  8:00  PM -- Add better win/lose screens
 3/5/25  8:40  PM -- Upgrade PC ai (attacks monsters)
-3/5/24  9:30  PM -- Fix multiple bugs in monster ai, tune default parameters, verify all input methods
+3/5/25  9:30  PM -- Fix multiple bugs in monster ai, tune default parameters, verify all input methods
+
+3/15/25 9:00  PM -- Add ncurses library and initialize a window
+3/16/25 10:00 PM -- Test getting input from ncurses and map all required input commands
+3/22/25 3:00  PM -- Add "game" struct to handle ncurses windows
+3/22/25 4:00  PM -- Reorganize input mappings, redo signal handling, upgrade game loop, simplify main file
+3/22/25 5:00  PM -- Integrate PC controls
+3/22/25 7:00  PM -- Add map printing and monster/PC movement updating (game is playable)
+3/23/25 9:00  PM -- Test ncurses color support, create "gradient buffer" and initialization functions
+3/24/25 2:00  PM -- Add scrolling support for the monster list
+3/24/25 4:30  PM -- Improve monster list code readability
+3/24/25 10:30 PM -- Add gradient support for hardness/weight maps, currently don't update on entity moves
+3/24/25 6:00  PM -- Cleanup component dependencies
+3/24/25 9:30  PM -- Support redrawing debug maps on entity moves
+3/24/25 10:30 PM -- Fix a few bugs, cleanup makefile, minimize includes, improve gradient colors, test with valgrind
+3/24/25 11:00 PM -- Fix gradient generation bug and tune colors
+3/24/25 11:30 PM -- Update readme

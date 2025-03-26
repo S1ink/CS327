@@ -43,18 +43,10 @@
 #endif
 
 
-#ifndef DUNGEON_PRINT_HARDNESS
-#define DUNGEON_PRINT_HARDNESS 0
-#endif
-
 #ifndef DUNGEON_PRINT_BORDER
 #define DUNGEON_PRINT_BORDER 0
 #endif
 
 #ifndef DUNGEON_FILE_NAME
 #define DUNGEON_FILE_NAME "/dungeon"
-#endif
-
-#ifndef LEVEL_ITERATION_TIME_US
-#define LEVEL_ITERATION_TIME_US 250000
 #endif

@@ -8,7 +8,7 @@
 #define ENABLE_DEBUG_PRINTS 0
 #endif
 
-#if ENABLE_DEBUG_PRINTS
+#if ENABLE_DEBUG_PRINTS && 0
     #define PRINT_DEBUG(...) printf(__VA_ARGS__); fflush(stdout);
     #define IF_DEBUG(x) x
 #else

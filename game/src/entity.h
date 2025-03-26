@@ -3,7 +3,6 @@
 #include <stdint.h>
 
 #include "util/vec_geom.h"
-#include "util/varray.h"
 #include "util/heap.h"
 
 

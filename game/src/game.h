@@ -1,8 +1,8 @@
 #pragma once
 
-#include "util/math.h"
-
 #include "dungeon.h"
+
+#include "util/math.h"
 
 #include <stdint.h>
 #include <ncurses.h>

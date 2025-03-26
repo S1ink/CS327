@@ -14,8 +14,9 @@ enum
     MONSTAT_ERRATIC         = 0b1000
 };
 
-typedef struct
+class MonsterData
 {
+public:
     union
     {
         struct
@@ -36,11 +37,11 @@ typedef struct
     };
 
     Vec2u8 pc_rem_pos;
-}
-MonsterData;
+};
 
-typedef struct
+class Entity
 {
+public:
     uint8_t is_pc;
     uint8_t speed;
     uint8_t priority;
@@ -50,8 +51,7 @@ typedef struct
     size_t next_turn;
 
     HeapNode* hn;
-}
-Entity;
+};
 
 
 

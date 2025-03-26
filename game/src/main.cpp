@@ -17,15 +17,15 @@
 #include <ncurses.h>
 
 
-typedef struct
+class RuntimeState
 {
+public:
     uint8_t load : 1;
     uint8_t save : 1;
     uint8_t nmon;
     char* save_path;
     Vec2u8 pc_init;
-}
-RuntimeState;
+};
 
 static inline int handle_level_init(DungeonLevel* d, RuntimeState* state, int argc, char** argv)
 {

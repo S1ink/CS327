@@ -8,16 +8,16 @@
 #include <stdint.h>
 
 
-typedef struct
+class CellPathNode
 {
+public:
     HeapNode* hn;
     Vec2u8 pos;
     Vec2u8 from;
     int32_t cost;
-}
-CellPathNode;
+};
 
-typedef CellPathNode PathFindingBuffer[DUNGEON_Y_DIM][DUNGEON_X_DIM];
+using PathFindingBuffer = CellPathNode[DUNGEON_Y_DIM][DUNGEON_X_DIM];
 
 int init_pathing_buffer(PathFindingBuffer buff);
 

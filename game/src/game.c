@@ -650,7 +650,14 @@ static inline int iterate_pc(Game* g, int move_cmd, LevelStatus* s, int dmode)
                 generate_dungeon_map(&g->level.map, 0);
                 random_dungeon_map_floor_pos(&g->level.map, pc_pos.data);
                 init_dungeon_level(&g->level, pc_pos, RANDOM_IN_RANGE(DUNGEON_MIN_NUM_MONSTERS, DUNGEON_MAX_NUM_MONSTERS));
-                nc_write_dungeon_map(g);
+                switch(dmode)
+                {
+                    default:
+                    case MDISPLAY_DUNGEON: nc_write_dungeon_map(g); break;
+                    case MDISPLAY_HARDNESS: nc_write_hardness_map(g); break;
+                    case MDISPLAY_FWEIGHT: nc_write_dungeon_weights(g, g->level.tunnel_costs); break;
+                    case MDISPLAY_TWEIGHT: nc_write_dungeon_weights(g, g->level.terrain_costs); break;
+                }
             }
             break;
         }

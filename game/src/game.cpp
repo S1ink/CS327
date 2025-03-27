@@ -64,7 +64,8 @@ static inline int nc_deinit()
 
 static inline int nc_print_border(WINDOW* w)
 {
-    return wborder(w, '|', '|', '-', '-', '+', '+', '+', '+');
+    // return wborder(w, '|', '|', '-', '-', '+', '+', '+', '+');
+    return box(w, 0, 0);
     // return wborder(w, 179, 179, 196, 196, 218, 191, 192, 217);
 }
 static inline int nc_overwrite_window(WINDOW* w)

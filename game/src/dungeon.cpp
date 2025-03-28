@@ -88,9 +88,9 @@ static int dungeon_map_generate_rooms(DungeonMap* d)
 {
     const size_t target = (size_t)RANDOM_IN_RANGE(DUNGEON_MIN_NUM_ROOMS, DUNGEON_MAX_NUM_ROOMS);
     if(d->num_rooms && d->rooms)
-        d->rooms = realloc(d->rooms, sizeof(*d->rooms) * target);
+        d->rooms = static_cast<DungeonRoom*>(realloc(d->rooms, sizeof(*d->rooms) * target));
     else
-        d->rooms = malloc(sizeof(*d->rooms) * target);
+        d->rooms = static_cast<DungeonRoom*>(malloc(sizeof(*d->rooms) * target));
 
     if(!d->rooms)
         return -1;
@@ -151,7 +151,7 @@ static int dungeon_map_generate_rooms(DungeonMap* d)
     }
     PRINT_DEBUG("Total dungeons generated: %lu\n", R)
 
-    d->rooms = realloc(d->rooms, sizeof(*d->rooms) * R);
+    d->rooms = static_cast<DungeonRoom*>(realloc(d->rooms, sizeof(*d->rooms) * R));
     if(!d->rooms) return -1;
     d->num_rooms = R;
 
@@ -421,8 +421,8 @@ int serialize_dungeon_map(const DungeonMap* d, const Vec2u8* pc_pos, FILE* out)
     fwrite(pc_loc, sizeof(*pc_loc), (sizeof(pc_loc) / sizeof(*pc_loc)), out);
 
     uint8_t *up_stair, *down_stair;
-    up_stair = malloc(sizeof(*up_stair) * d->num_up_stair * 2);
-    down_stair = malloc(sizeof(*down_stair) * d->num_down_stair * 2);
+    up_stair = static_cast<uint8_t*>(malloc(sizeof(*up_stair) * d->num_up_stair * 2));
+    down_stair = static_cast<uint8_t*>(malloc(sizeof(*down_stair) * d->num_down_stair * 2));
     if(!up_stair || !down_stair) return -1;
 
 // 5. Write DungeonMap bytes
@@ -547,9 +547,9 @@ int deserialize_dungeon_map(DungeonMap* d, Vec2u8* pc_pos, FILE* in)
 
 // read each room
     if(prev_num_rooms && d->rooms)
-        d->rooms = realloc(d->rooms, sizeof(*d->rooms) * d->num_rooms);
+        d->rooms = static_cast<DungeonRoom*>(realloc(d->rooms, sizeof(*d->rooms) * d->num_rooms));
     else
-        d->rooms = malloc(sizeof(*d->rooms) * d->num_rooms);
+        d->rooms = static_cast<DungeonRoom*>(malloc(sizeof(*d->rooms) * d->num_rooms));
     if(!d->rooms)
         return -1;
 
@@ -620,7 +620,7 @@ int init_dungeon_level(DungeonLevel* d, Vec2u8 pc_pos, size_t nmon)
     heap_init(&d->entity_q, entity_priority_comp, NULL);    // queue should not delete entities - we handle this
 
 // 2. init pc (alloc for all entities)
-    if( !(d->pc = d->entity_alloc = malloc((nmon + 1) * sizeof(Entity))) ) return -1;     // allocate for all entities --> pc gets first element so reuse ptr as address for subsequent monster elements as well
+    if( !(d->pc = d->entity_alloc = static_cast<Entity*>(malloc((nmon + 1) * sizeof(Entity)))) ) return -1;     // allocate for all entities --> pc gets first element so reuse ptr as address for subsequent monster elements as well
     d->pc->is_pc = 1;
     d->pc->speed = 100;
     d->pc->priority = 0;

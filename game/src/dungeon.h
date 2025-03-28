@@ -26,15 +26,16 @@ enum
     STAIR_MAX_VALUE
 };
 
-typedef struct
+class CellTerrain
 {
+public:
     uint8_t type : REQUIRED_BITS32(CELLTYPE_MAX_VALUE - 1);
     uint8_t is_stair : REQUIRED_BITS32(STAIR_MAX_VALUE - 1);
-}
-CellTerrain;
+};
 
-typedef struct
+class DungeonRoom
 {
+public:
     Vec2u tl;
     Vec2u br;
 
@@ -46,16 +47,16 @@ typedef struct
      *    .....BR
      * 
      *    ^ A 6x3-cell room! */
-}
-DungeonRoom;
+};
 
 int dungeon_room_collide_or_tangent(const DungeonRoom* a, const DungeonRoom* b);
 void dungeon_room_size(const DungeonRoom* r, Vec2u* s);
 void print_dungeon_room(const DungeonRoom* r);
 
 
-typedef struct
+class DungeonMap
 {
+public:
     CellTerrain terrain[DUNGEON_Y_DIM][DUNGEON_X_DIM];
     uint8_t hardness[DUNGEON_Y_DIM][DUNGEON_X_DIM];
 
@@ -64,8 +65,7 @@ typedef struct
     uint16_t num_rooms;
     uint16_t num_up_stair;
     uint16_t num_down_stair;
-}
-DungeonMap;
+};
 
 int zero_dungeon_map(DungeonMap* d);
 int generate_dungeon_map(DungeonMap* d, uint32_t seed);
@@ -77,21 +77,22 @@ int serialize_dungeon_map(const DungeonMap* d, const Vec2u8* pc_pos, FILE* out);
 int deserialize_dungeon_map(DungeonMap* d, Vec2u8* pc_pos, FILE* in);
 
 
-typedef int32_t DungeonCostMap[DUNGEON_Y_DIM][DUNGEON_X_DIM];
+using DungeonCostMap = int32_t[DUNGEON_Y_DIM][DUNGEON_X_DIM];
 
-typedef union
+union LevelStatus
 {
+public:
     struct
     {
         uint8_t has_won : 1;
         uint8_t has_lost : 1;
     };
     uint8_t data : 2;
-}
-LevelStatus;
+};
 
-typedef struct
+class DungeonLevel
 {
+public:
     DungeonMap map;
     Heap entity_q;
 
@@ -101,8 +102,7 @@ typedef struct
     Entity* pc;             // the PC's entity address -- set to null when eaten (lose)
     Entity* entity_alloc;   // all the entities are allocated contiguously
     uint8_t num_monsters;   // counts the number of remaining monsters (0 = win)
-}
-DungeonLevel;
+};
 
 int zero_dungeon_level(DungeonLevel* d);
 int init_dungeon_level(DungeonLevel* d, Vec2u8 pc_pos, size_t nmon);

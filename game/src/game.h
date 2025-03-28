@@ -16,8 +16,9 @@ enum
     NUM_GWIN
 };
 
-typedef struct
+class Game
 {
+public:
     WINDOW* map_win;
     WINDOW* mlist_win;
 
@@ -29,8 +30,7 @@ typedef struct
         uint8_t displayed_win : REQUIRED_BITS32(NUM_GWIN - 1);
     }
     state;
-}
-Game;
+};
 
 int zero_game(Game* g);
 int init_game_windows(Game* g);

@@ -44,6 +44,7 @@ static inline int nc_init()
     curs_set(0);
     keypad(stdscr, TRUE);
     start_color();
+    set_escdelay(0);
 
     for(size_t i = 1; i < 8; i++)
     {
@@ -63,7 +64,8 @@ static inline int nc_deinit()
 
 static inline int nc_print_border(WINDOW* w)
 {
-    return wborder(w, '|', '|', '-', '-', '+', '+', '+', '+');
+    // return wborder(w, '|', '|', '-', '-', '+', '+', '+', '+');
+    return box(w, 0, 0);
     // return wborder(w, 179, 179, 196, 196, 218, 191, 192, 217);
 }
 static inline int nc_overwrite_window(WINDOW* w)
@@ -564,7 +566,7 @@ static inline int iterate_next_pc(Game* g, LevelStatus* s, int dmode)
     s->data = 0;
     do
     {
-        e = heap_remove_min(q);
+        e = static_cast<Entity*>(heap_remove_min(q));
         if(e->hn)   // null heap node means the entity has perished
         {
             e->next_turn += e->speed;
@@ -608,7 +610,7 @@ static inline int iterate_pc(Game* g, int move_cmd, LevelStatus* s, int dmode)
         case MOVE_CMD_DL:
         case MOVE_CMD_DR:
         {
-            const uint8_t off[] = {
+            const int8_t off[] = {
                  0, -1,
                  0, +1,
                 -1,  0,
@@ -619,8 +621,8 @@ static inline int iterate_pc(Game* g, int move_cmd, LevelStatus* s, int dmode)
                 +1, +1
             };
             const uint8_t
-                x = pc->pos.x + off[(move_cmd - MOVE_CMD_U) * 2 + 0],
-                y = pc->pos.y + off[(move_cmd - MOVE_CMD_U) * 2 + 1];
+                x = static_cast<uint8_t>(static_cast<int8_t>(pc->pos.x) + off[(move_cmd - MOVE_CMD_U) * 2 + 0]),
+                y = static_cast<uint8_t>(static_cast<int8_t>(pc->pos.y) + off[(move_cmd - MOVE_CMD_U) * 2 + 1]);
 
             Vec2u8 pre;
             vec2u8_copy(&pre, &pc->pos);

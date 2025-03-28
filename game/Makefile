@@ -49,6 +49,10 @@ $(OBJ_DIR)/%.c.o : $(SRC_DIR)/%.c | $(OBJ_DIR) $(OBJ_DIRS)
 	@echo Compiling $(<F)
 	@$(CC) $(CFLAGS) -MMD -MF $(OBJ_DIR)/$*.d -c -o $@ $<
 
+$(OBJ_DIR)/%.cpp.o : $(SRC_DIR)/%.cpp | $(OBJ_DIR) $(OBJ_DIRS)
+	@echo Compiling $(<F)
+	@$(CXX) $(CXXFLAGS) -MMD -MF $(OBJ_DIR)/$*.d -c -o $@ $<
+
 $(OBJ_DIR) $(OBJ_DIRS):
 	mkdir -p $@
 

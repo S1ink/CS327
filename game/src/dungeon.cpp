@@ -604,6 +604,7 @@ int zero_dungeon_level(DungeonLevel* d)
 {
     int ret = zero_dungeon_map(&d->map);
 
+    memset(d->fog_map, 0x0, sizeof(uint8_t) * DUNGEON_Y_DIM * DUNGEON_X_DIM);
     memset(d->entities, 0x0, sizeof(Entity*) * DUNGEON_Y_DIM * DUNGEON_X_DIM);
     memset(d->tunnel_costs, INT_MAX, sizeof(int32_t) * DUNGEON_Y_DIM * DUNGEON_X_DIM);
     memset(d->terrain_costs, INT_MAX, sizeof(int32_t) * DUNGEON_Y_DIM * DUNGEON_X_DIM);

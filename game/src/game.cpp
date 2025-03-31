@@ -169,6 +169,8 @@ enum
     MOVE_CMD_DR,
     MOVE_CMD_US,    // up stair
     MOVE_CMD_DS,    // down stair
+    MOVE_CMD_GOTO,
+    MOVE_CMD_RGOTO,
     NUM_MOVE_CMD
 };
 enum
@@ -187,6 +189,7 @@ enum
     DBG_CMD_SHOW_FMAP,
     DBG_CMD_SHOW_HMAP,
     DBG_CMD_SHOW_DMAP,
+    DBG_CMD_TOGGLE_FOG,
     NUM_DBG_CMD
 };
 
@@ -288,6 +291,16 @@ static inline InputCommand decode_input_command(int in)
             cmd.move_cmd = MOVE_CMD_SKIP;  // rest
             break;
         }
+        case 'g':
+        {
+            cmd.move_cmd = MOVE_CMD_GOTO;
+            break;
+        }
+        case 'r':
+        {
+            cmd.move_cmd = MOVE_CMD_RGOTO;
+            break;
+        }
     // --- MONSTER LIST COMMANDS ----------
         case 'm':
         {
@@ -328,6 +341,11 @@ static inline InputCommand decode_input_command(int in)
         case 's':
         {
             cmd.dbg_cmd = DBG_CMD_SHOW_DMAP;
+            break;
+        }
+        case 'f':
+        {
+            cmd.dbg_cmd = DBG_CMD_TOGGLE_FOG;
             break;
         }
         default: break;
@@ -543,7 +561,8 @@ static inline int display_active_window(Game* g)
 
 enum
 {
-    MDISPLAY_DUNGEON = 0,
+    MDISPLAY_FOG = 0,
+    MDISPLAY_DUNGEON,
     MDISPLAY_HARDNESS,
     MDISPLAY_FWEIGHT,
     MDISPLAY_TWEIGHT,
@@ -597,6 +616,33 @@ static inline int iterate_next_pc(Game* g, LevelStatus* s, int dmode)
 
 static inline int iterate_pc(Game* g, int move_cmd, LevelStatus* s, int dmode)
 {
+    static bool is_goto = false;    // TODO
+    static const int8_t off[] = {
+         0, -1,
+         0, +1,
+        -1,  0,
+        +1,  0,
+        -1, -1,
+        +1, -1,
+        -1, +1,
+        +1, +1
+    };
+
+#define MOVE_PC(x, y) \
+    Vec2u8 pre; \
+    vec2u8_copy(&pre, &pc->pos); \
+    if(handle_entity_move(&g->level, pc, (x), (y))) \
+    { \
+        if(dmode == MDISPLAY_FWEIGHT || dmode == MDISPLAY_TWEIGHT) \
+        { \
+            nc_write_dungeon_weights(g, dmode == MDISPLAY_TWEIGHT ? g->level.terrain_costs : g->level.tunnel_costs); \
+        } \
+        else \
+        { \
+            nc_write_moved(g, pre, pc->pos, dmode); \
+        } \
+    }
+
     Entity* pc = g->level.pc;
     const CellTerrain t = g->level.map.terrain[pc->pos.y][pc->pos.x];
     switch(move_cmd)
@@ -610,40 +656,18 @@ static inline int iterate_pc(Game* g, int move_cmd, LevelStatus* s, int dmode)
         case MOVE_CMD_DL:
         case MOVE_CMD_DR:
         {
-            const int8_t off[] = {
-                 0, -1,
-                 0, +1,
-                -1,  0,
-                +1,  0,
-                -1, -1,
-                +1, -1,
-                -1, +1,
-                +1, +1
-            };
             const uint8_t
                 x = static_cast<uint8_t>(static_cast<int8_t>(pc->pos.x) + off[(move_cmd - MOVE_CMD_U) * 2 + 0]),
                 y = static_cast<uint8_t>(static_cast<int8_t>(pc->pos.y) + off[(move_cmd - MOVE_CMD_U) * 2 + 1]);
 
-            Vec2u8 pre;
-            vec2u8_copy(&pre, &pc->pos);
-            if(handle_entity_move(&g->level, pc, x, y))
-            {
-                if(dmode == MDISPLAY_FWEIGHT || dmode == MDISPLAY_TWEIGHT)
-                {
-                    nc_write_dungeon_weights(g, dmode == MDISPLAY_TWEIGHT ? g->level.terrain_costs : g->level.tunnel_costs);
-                }
-                else
-                {
-                    nc_write_moved(g, pre, pc->pos, dmode);
-                }
-            }
+            MOVE_PC(x, y)
 
             break;
         }
         case MOVE_CMD_US:
         case MOVE_CMD_DS:
         {
-            if((move_cmd - 9) == (int)t.is_stair)
+            if(!is_goto && (move_cmd - 9) == (int)t.is_stair)
             {
                 Vec2u8 pc_pos;
 
@@ -660,6 +684,31 @@ static inline int iterate_pc(Game* g, int move_cmd, LevelStatus* s, int dmode)
                     case MDISPLAY_FWEIGHT: nc_write_dungeon_weights(g, g->level.tunnel_costs); break;
                     case MDISPLAY_TWEIGHT: nc_write_dungeon_weights(g, g->level.terrain_costs); break;
                 }
+            }
+            break;
+        }
+        case MOVE_CMD_GOTO:
+        {
+            if(is_goto)
+            {
+                MOVE_PC(pc->md.pc_rem_pos.x, pc->md.pc_rem_pos.y)
+                is_goto = false;
+            }
+            else
+            {
+
+                is_goto = true;
+            }
+            break;
+        }
+        case MOVE_CMD_RGOTO:
+        {
+            if(is_goto)
+            {
+                Vec2u8 r;
+                random_dungeon_map_floor_pos(&g->level.map, r.data);
+                MOVE_PC(r.x, r.y)
+                is_goto = false;
             }
             break;
         }

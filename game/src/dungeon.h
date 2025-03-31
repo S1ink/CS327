@@ -77,7 +77,10 @@ int serialize_dungeon_map(const DungeonMap* d, const Vec2u8* pc_pos, FILE* out);
 int deserialize_dungeon_map(DungeonMap* d, Vec2u8* pc_pos, FILE* in);
 
 
-using DungeonCostMap = int32_t[DUNGEON_Y_DIM][DUNGEON_X_DIM];
+
+template<typename T>
+using DungeonGrid = T[DUNGEON_Y_DIM][DUNGEON_X_DIM];
+using DungeonCostMap = DungeonGrid<int32_t>;
 
 union LevelStatus
 {
@@ -96,7 +99,8 @@ public:
     DungeonMap map;
     Heap entity_q;
 
-    Entity* entities[DUNGEON_Y_DIM][DUNGEON_X_DIM];
+    DungeonGrid<uint8_t> fog_map;
+    DungeonGrid<Entity*> entities;
     DungeonCostMap tunnel_costs, terrain_costs;
 
     Entity* pc;             // the PC's entity address -- set to null when eaten (lose)

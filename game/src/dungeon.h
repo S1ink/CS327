@@ -99,7 +99,7 @@ public:
     DungeonMap map;
     Heap entity_q;
 
-    DungeonGrid<uint8_t> fog_map;
+    DungeonGrid<char> fog_map;
     DungeonGrid<Entity*> entities;
     DungeonCostMap tunnel_costs, terrain_costs;
 

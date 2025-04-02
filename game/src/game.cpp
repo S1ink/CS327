@@ -537,6 +537,13 @@ static inline int nc_write_dungeon_weights(Game* g, DungeonCostMap weights)
 
     return 0;
 }
+static inline int nc_write_fog_map(Game* g)
+{
+    for(uint32_t y = 1; y < DUNGEON_Y_DIM - 1; y++)
+    {
+        mvwaddnstr(g->map_win, y, 1, g->level.fog_map[y] + 1, DUNGEON_X_DIM - 2);
+    }
+}
 
 static inline int display_active_window(Game* g)
 {

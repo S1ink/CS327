@@ -1,5 +1,5 @@
 Initializes a dungeon, randomly spawns monsters, and starts a playable game (using ncurses). All controls listed in the
-1.05 specification are implemented, as well as the following:
+1.06 specification are implemented, as well as the following:
  1. Ctrl+C exits the program (as well as 'Q').
  2. 'H' displays the hardness map (in color).
  3. 'D' displays the floor weightmap (in color).

@@ -74,3 +74,8 @@
 3/24/25 10:30 PM -- Fix a few bugs, cleanup makefile, minimize includes, improve gradient colors, test with valgrind
 3/24/25 11:00 PM -- Fix gradient generation bug and tune colors
 3/24/25 11:30 PM -- Update readme
+
+3/26/25 5:00  PM -- Upgrade everything to compile under C++
+4/2/25  12:00 AM -- Add ncurses management classes
+4/2/25  2:00  PM -- Add gradient management class, convert more window operations
+

@@ -38,7 +38,7 @@ static const int8_t OFF_DIRECTIONS[8][2] =
 };
 
 // returns 1 if the entity successfully moved, 0 otherwise
-int handle_entity_move(DungeonLevel* d, Entity* e, uint8_t x, uint8_t y)
+int handle_entity_move(DungeonLevel* d, Entity* e, uint8_t x, uint8_t y, bool is_goto)
 {
     Entity** prev_slot = d->entities[e->pos.y] + e->pos.x;
     struct
@@ -66,6 +66,14 @@ int handle_entity_move(DungeonLevel* d, Entity* e, uint8_t x, uint8_t y)
             }
             flags.terrain_updated = 1;
         }
+        else if(is_goto && e->is_pc)
+        {
+            d->map.hardness[y][x] = 0;
+            d->map.terrain[y][x].type = CELLTYPE_CORRIDOR;
+            flags.has_entity_moved = 1;
+            flags.floor_updated = 1;
+            flags.terrain_updated = 1;
+        }
         // else... entity isnt allowed to move
     }
     else
@@ -86,13 +94,16 @@ int handle_entity_move(DungeonLevel* d, Entity* e, uint8_t x, uint8_t y)
             {
                 d->num_monsters -= 1;
             }
-            else d->pc = NULL;
+            else if(!is_goto) d->pc = NULL;
         }
         *slot = e;
         *prev_slot = NULL;
     }
 
-    flags.pc_moved = (flags.has_entity_moved && e->is_pc);
+    if((flags.pc_moved = (flags.has_entity_moved && e->is_pc)) && !is_goto)
+    {
+        copy_fog_vis_cells(d);
+    }
     if(flags.terrain_updated || flags.pc_moved)
     {
         PRINT_DEBUG("UPDATING TERRAIN %sCOSTS\n", flags.floor_updated ? "(and floor) " : "");
@@ -104,7 +115,7 @@ int handle_entity_move(DungeonLevel* d, Entity* e, uint8_t x, uint8_t y)
 // returns the result of handle_entity_move()
 static int handle_entity_move_dir(DungeonLevel* d, Entity* e, uint8_t dir_idx)
 {
-    return handle_entity_move( d, e, (e->pos.x + OFF_DIRECTIONS[dir_idx][0]), (e->pos.y + OFF_DIRECTIONS[dir_idx][1]) );
+    return handle_entity_move( d, e, (e->pos.x + OFF_DIRECTIONS[dir_idx][0]), (e->pos.y + OFF_DIRECTIONS[dir_idx][1]), false );
 }
 
 // returns the result of handle_entity_move_dir() a valid direction was detected, otherwise 0
@@ -315,7 +326,7 @@ int iterate_monster(DungeonLevel* d, Entity* e)
     }
 
     PRINT_DEBUG("MOVING TO: (%d, %d)\n", move_pos.x, move_pos.y);
-    return handle_entity_move(d, e, move_pos.x, move_pos.y);
+    return handle_entity_move(d, e, move_pos.x, move_pos.y, false);
 
 #undef GET_MIN_COST_NEIGHBOR
 }

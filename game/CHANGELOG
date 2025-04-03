@@ -78,4 +78,6 @@
 3/26/25 5:00  PM -- Upgrade everything to compile under C++
 4/2/25  12:00 AM -- Add ncurses management classes
 4/2/25  2:00  PM -- Add gradient management class, convert more window operations
-
+4/2/25  8:50  PM -- Complete C++ classes, fix some bugs, implement goto functionality
+4/2/25  9:45  PM -- Semi functional semi-foggy fog of war (VER BUGGY)
+4/2/25  9:55  PM -- Fix reading null PC pointer

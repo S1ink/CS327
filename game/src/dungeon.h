@@ -93,6 +93,37 @@ public:
     uint8_t data : 2;
 };
 
+#pragma GCC diagnostic ignored "-Wunused-variable"
+static inline int8_t VIS_OFFSETS[21][2] =   // (Y, X)
+{
+    { -2, -1 },
+    { -2, 0 },
+    { -2, 1 },
+
+    { -1, -2 },
+    { -1, -1 },
+    { -1, 0 },
+    { -1, 1 },
+    { -1, 2 },
+
+    { 0, -2 },
+    { 0, -1 },
+    { 0, 0 },
+    { 0, 1 },
+    { 0, 2 },
+
+    { 1, -2 },
+    { 1, -1 },
+    { 1, 0 },
+    { 1, 1 },
+    { 1, 2 },
+
+    { 2, -1 },
+    { 2, 0 },
+    { 2, 1 },
+};
+#pragma GCC diagnostic pop
+
 class DungeonLevel
 {
 public:
@@ -111,6 +142,8 @@ public:
 int zero_dungeon_level(DungeonLevel* d);
 int init_dungeon_level(DungeonLevel* d, Vec2u8 pc_pos, size_t nmon);
 int destruct_dungeon_level(DungeonLevel* d);
+
+int copy_fog_vis_cells(DungeonLevel* d);
 
 // LevelStatus iterate_dungeon_level(DungeonLevel* d, int until_next_pc_move);
 static inline LevelStatus get_dungeon_level_status(DungeonLevel* d)

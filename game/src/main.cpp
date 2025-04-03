@@ -1,6 +1,7 @@
 #include "dungeon_config.h"
 #include "dungeon.h"
-#include "game.h"
+// #include "game.h"
+#include "new/lol.hpp"
 
 #include "util/vec_geom.h"
 #include "util/debug.h"
@@ -91,7 +92,7 @@ static inline int handle_level_init(DungeonLevel* d, RuntimeState* state, int ar
         }
         else
         {
-            printf("ERROR: Failed to load dungeon from '%s' (file does not exist)\n", state->save_path);
+            fprintf(stderr, "ERROR: Failed to load dungeon from '%s' (file does not exist)\n", state->save_path);
             ret = -1;
         }
     }
@@ -123,7 +124,7 @@ static inline int handle_level_deinit(DungeonLevel* d, RuntimeState* state)
         }
         else
         {
-            printf("ERROR: Failed to save dungeon to '%s'\n", state->save_path);
+            fprintf(stderr, "ERROR: Failed to save dungeon to '%s'\n", state->save_path);
             ret = -1;
         }
     }
@@ -156,20 +157,17 @@ static inline void init_sig()
 
 
 
-static inline int main_105(int argc, char** argv)
+static inline int main_106(int argc, char** argv)
 {
     Game g;
     RuntimeState s;
 
-    zero_game(&g);
     srand(us_seed());
     init_sig();
 
-    if( !handle_level_init(&g.level, &s, argc, argv) &&
-        !init_game_windows(&g) )
+    if( !handle_level_init(&g.level, &s, argc, argv) )
     {
-        run_game(&g, &is_running);
-        deinit_game_windows(&g);
+        g.run(&is_running);
     }
 
     handle_level_deinit(&g.level, &s);
@@ -182,5 +180,5 @@ static inline int main_105(int argc, char** argv)
 
 int main(int argc, char** argv)
 {
-    return main_105(argc, argv);
+    return main_106(argc, argv);
 }

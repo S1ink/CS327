@@ -671,6 +671,9 @@ int init_dungeon_level(DungeonLevel* d, Vec2u8 pc_pos, size_t nmon)
 // 5. init cost maps
     dungeon_level_update_costs(d, 1);
 
+// 6. init fog vis
+    copy_fog_vis_cells(d);
+
     return 0;
 }
 int destruct_dungeon_level(DungeonLevel* d)
@@ -682,4 +685,21 @@ int destruct_dungeon_level(DungeonLevel* d)
     if(d->entity_alloc) free(d->entity_alloc);
 
     return ret;
+}
+
+int copy_fog_vis_cells(DungeonLevel* d)
+{
+    for(size_t i = 0; i < 21; i++)
+    {
+        const auto v = VIS_OFFSETS[i];
+        const int8_t y = static_cast<int8_t>(d->pc->pos.y) + v[0];
+        const int8_t x = static_cast<int8_t>(d->pc->pos.x) + v[1];
+
+        if(y >= 0 && y < DUNGEON_Y_DIM && x >= 0 && x < DUNGEON_X_DIM)
+        {
+            d->fog_map[y][x] = get_terrain_char(d->map.terrain[y][x]);
+        }
+    }
+
+    return 0;
 }

@@ -10,7 +10,7 @@ CC := gcc
 CXX := g++
 
 CFLAGS := -Wall -Werror -funroll-loops -Isrc
-CXXFLAGS := -Wall -Werror -funroll-loops -Isrc
+CXXFLAGS := -std=c++17 -lstdc++ -Wall -Werror -funroll-loops -Isrc
 LDFLAGS := -lm -lncurses
 
 SRC_DIR := src
@@ -41,7 +41,7 @@ all: $(BIN)
 
 $(BIN): $(OBJS)
 	@echo Linking $@
-	@$(CC) -o $@ $^ $(LDFLAGS)
+	@$(CXX) -o $@ $^ $(LDFLAGS)
 
 -include $(OBJS:.o=.d)
 

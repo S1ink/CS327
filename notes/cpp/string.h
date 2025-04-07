@@ -35,8 +35,16 @@ public:
     inline const char* c_str() const { return this->str; }
     inline operator const char*() const { return this->str; }
 
-    inline char operator[](size_t i) const { return this->str[i]; }
-    inline char& operator[](size_t i) { return this->str[i]; }
+    inline char operator[](size_t i) const
+    {
+        if(i >= strlen(this->str)) throw __PRETTY_FUNCTION__;
+        return this->str[i];
+    }
+    inline char& operator[](size_t i)
+    {
+        if(i >= strlen(this->str)) throw __PRETTY_FUNCTION__;
+        return this->str[i];
+    }
 
     inline size_t length() const { return strlen(this->str); }
 

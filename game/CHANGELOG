@@ -81,3 +81,8 @@
 4/2/25  8:50  PM -- Complete C++ classes, fix some bugs, implement goto functionality
 4/2/25  9:45  PM -- Semi functional semi-foggy fog of war (VER BUGGY)
 4/2/25  9:55  PM -- Fix reading null PC pointer
+
+4/6/25  2:30  PM -- Add monster description struct
+4/6/25  3:30  PM -- Create parsing skeleton
+4/6/25  7:30  PM -- Finish monster description parser
+4/6/25  8:00  PM -- Monster description serializer and verify parsing

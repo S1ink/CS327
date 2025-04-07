@@ -178,7 +178,55 @@ static inline int main_106(int argc, char** argv)
 
 
 
+#include "new/items.hpp"
+
 int main(int argc, char** argv)
 {
-    return main_106(argc, argv);
+    // return main_106(argc, argv);
+
+    std::stringstream ss{
+        "RLG327 MONSTER DESCRIPTION 1\n"
+        "BEGIN MONSTER\n"
+        "NAME Junior Barbarian\n"
+        "SYMB p\n"
+        "COLOR BLUE\n"
+        "DESC\n"
+        "This is a junior barbarian. He--or is it she? You can't tell for sure--\n"
+        "looks like... it should still be in barbarian school. The barbarians are\n"
+        "putting them in the dungeons young these days. It's wearing dirty, tattered\n"
+        "cloth armor and wielding a wooden sword. You have a hard time feeling\n"
+        "intimidated.\n"
+        ".\n"
+        "SPEED 7+1d4\n"
+        "DAM 0+1d4\n"
+        "HP 12+2d6\n"
+        "RRTY 100\n"
+        "ABIL SMART\n"
+        "END\n\n"
+        "BEGIN MONSTER\n"
+        "NAME Amazon Lich Queen\n"
+        "DESC\n"
+        "She was a powerful Amazon warrior in life. Death at the hands of the undead\n"
+        "hordes was followed by her resurrection through dark, necromantic arts. Her\n"
+        "power in life didn't approach her undead glory. Clad in night-black robes\n"
+        "that don't move in the wind, her incorporeal form commands the power of death\n"
+        "over life. You may just be her next victim. You fear for your soul as you\n"
+        "quake before her malevolent majesty.\n"
+        ".\n"
+        "SYMB p\n"
+        "COLOR BLACK\n"
+        "ABIL SMART PASS\n"
+        "DAM 30+5d9\n"
+        "HP 2999+1d1001\n"
+        "SPEED 10+10d2\n"
+        "RRTY 20\n"
+        "END\n" };
+
+    std::vector<MonDescription> md;
+    MonDescription::parse(ss, md);
+
+    for(const MonDescription& m : md)
+    {
+        m.serialize(std::cout);
+    }
 }

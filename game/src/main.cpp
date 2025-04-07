@@ -7,6 +7,9 @@
 #include "util/debug.h"
 #include "util/math.h"
 
+#include <string>
+#include <fstream>
+
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -18,13 +21,70 @@
 #include <ncurses.h>
 
 
+class DungeonFIO
+{
+public:
+    static inline const std::string& getDirectory()
+    {
+        if(DungeonFIO::directory.empty()) DungeonFIO::init();
+        return DungeonFIO::directory;
+    }
+
+    static inline const std::string& getLevelSaveFileName()
+    {
+        if(DungeonFIO::directory.empty()) DungeonFIO::init();
+        return DungeonFIO::level_save_fn;
+    }
+    static inline const std::string& getMonDescriptionsFileName()
+    {
+        if(DungeonFIO::directory.empty()) DungeonFIO::init();
+        return DungeonFIO::mon_desc_fn;
+    }
+    static inline const std::string& openObjDescriptionsFileName()
+    {
+        if(DungeonFIO::directory.empty()) DungeonFIO::init();
+        return DungeonFIO::obj_desc_fn;
+    }
+
+    static inline std::fstream openLevelSave()
+    {
+        return std::fstream{ DungeonFIO::getLevelSaveFileName() };
+    }
+    static inline std::ifstream openMonDescriptions()
+    {
+        return std::ifstream{ DungeonFIO::getMonDescriptionsFileName() };
+    }
+    static inline std::ifstream openObjDescriptions()
+    {
+        return std::ifstream{ DungeonFIO::openObjDescriptionsFileName() };
+    }
+
+protected:
+    static void init()
+    {
+        (DungeonFIO::directory = getenv("HOME")) += "/.rlg327";
+        mkdir(DungeonFIO::directory.c_str(), 0700);
+
+        DungeonFIO::level_save_fn = DungeonFIO::directory + "/" DUNGEON_FILE_NAME;
+        DungeonFIO::mon_desc_fn = DungeonFIO::directory + "/" MOSNTER_DESC_FILE_NAME;
+        DungeonFIO::obj_desc_fn = DungeonFIO::directory + "/" OBJECT_DESC_FILE_NAME;
+    }
+
+protected:
+    static inline std::string directory;
+    static inline std::string level_save_fn;
+    static inline std::string mon_desc_fn;
+    static inline std::string obj_desc_fn;
+
+};
+
+
 class RuntimeState
 {
 public:
     uint8_t load : 1;
     uint8_t save : 1;
     uint8_t nmon;
-    char* save_path;
     Vec2u8 pc_init;
 };
 
@@ -34,7 +94,6 @@ static inline int handle_level_init(DungeonLevel* d, RuntimeState* state, int ar
     state->load = 0;
     state->save = 0;
     state->nmon = 0;
-    state->save_path = NULL;
 
     #define MAX_ARGN 5
     int nmon_arg = 0;
@@ -55,24 +114,6 @@ static inline int handle_level_init(DungeonLevel* d, RuntimeState* state, int ar
     }
     #undef MAX_ARGN
 
-    if(state->load || state->save)
-    {
-        const char* home = getenv("HOME");
-        const char* rel_save_dir = "/.rlg327";
-        const char* rel_save_file = DUNGEON_FILE_NAME;
-
-        const size_t home_strlen = strlen(home);
-        const size_t rel_save_dir_strlen = strlen(rel_save_dir);
-        const size_t rel_save_file_strlen = strlen(rel_save_file);
-
-        state->save_path = (char*)malloc(home_strlen + rel_save_dir_strlen + rel_save_file_strlen + 1);
-        if(!state->save_path) ret = -1;
-
-        strcpy(state->save_path, home);
-        strcat(state->save_path, rel_save_dir);
-        mkdir(state->save_path, 0700);
-        strcat(state->save_path, rel_save_file);
-    }
     if(!nmon_arg)
     {
         state->nmon = RANDOM_IN_RANGE(DUNGEON_MIN_NUM_MONSTERS, DUNGEON_MAX_NUM_MONSTERS);
@@ -84,7 +125,7 @@ static inline int handle_level_init(DungeonLevel* d, RuntimeState* state, int ar
     {
         PRINT_DEBUG("LOADING DUNGEON FROM '%s'\n", state->save_path);
 
-        FILE* f = fopen(state->save_path, "rb");
+        FILE* f = fopen(DungeonFIO::getLevelSaveFileName().c_str(), "rb");
         if(f)
         {
             deserialize_dungeon_map(map, &state->pc_init, f);
@@ -92,7 +133,11 @@ static inline int handle_level_init(DungeonLevel* d, RuntimeState* state, int ar
         }
         else
         {
-            fprintf(stderr, "ERROR: Failed to load dungeon from '%s' (file does not exist)\n", state->save_path);
+            fprintf(
+                stderr,
+                "ERROR: Failed to load dungeon from '%s' (file does not exist)\n",
+                DungeonFIO::getLevelSaveFileName().c_str() );
+
             ret = -1;
         }
     }
@@ -116,7 +161,7 @@ static inline int handle_level_deinit(DungeonLevel* d, RuntimeState* state)
     {
         PRINT_DEBUG("SAVING DUNGEON TO '%s'\n", state->save_path)
 
-        FILE* f = fopen(state->save_path, "wb");
+        FILE* f = fopen(DungeonFIO::getLevelSaveFileName().c_str(), "wb");
         if(f)
         {
             serialize_dungeon_map(&d->map, &state->pc_init, f);
@@ -124,12 +169,14 @@ static inline int handle_level_deinit(DungeonLevel* d, RuntimeState* state)
         }
         else
         {
-            fprintf(stderr, "ERROR: Failed to save dungeon to '%s'\n", state->save_path);
+            fprintf(
+                stderr,
+                "ERROR: Failed to save dungeon to '%s'\n", 
+                DungeonFIO::getLevelSaveFileName().c_str() );
+
             ret = -1;
         }
     }
-
-    free(state->save_path);
 
     return ret;
 }
@@ -179,54 +226,24 @@ static inline int main_106(int argc, char** argv)
 
 
 #include "new/items.hpp"
+#include <iostream>
 
 int main(int argc, char** argv)
 {
     // return main_106(argc, argv);
 
-    std::stringstream ss{
-        "RLG327 MONSTER DESCRIPTION 1\n"
-        "BEGIN MONSTER\n"
-        "NAME Junior Barbarian\n"
-        "SYMB p\n"
-        "COLOR BLUE\n"
-        "DESC\n"
-        "This is a junior barbarian. He--or is it she? You can't tell for sure--\n"
-        "looks like... it should still be in barbarian school. The barbarians are\n"
-        "putting them in the dungeons young these days. It's wearing dirty, tattered\n"
-        "cloth armor and wielding a wooden sword. You have a hard time feeling\n"
-        "intimidated.\n"
-        ".\n"
-        "SPEED 7+1d4\n"
-        "DAM 0+1d4\n"
-        "HP 12+2d6\n"
-        "RRTY 100\n"
-        "ABIL SMART\n"
-        "END\n\n"
-        "BEGIN MONSTER\n"
-        "NAME Amazon Lich Queen\n"
-        "DESC\n"
-        "She was a powerful Amazon warrior in life. Death at the hands of the undead\n"
-        "hordes was followed by her resurrection through dark, necromantic arts. Her\n"
-        "power in life didn't approach her undead glory. Clad in night-black robes\n"
-        "that don't move in the wind, her incorporeal form commands the power of death\n"
-        "over life. You may just be her next victim. You fear for your soul as you\n"
-        "quake before her malevolent majesty.\n"
-        ".\n"
-        "SYMB p\n"
-        "COLOR BLACK\n"
-        "ABIL SMART PASS\n"
-        "DAM 30+5d9\n"
-        "HP 2999+1d1001\n"
-        "SPEED 10+10d2\n"
-        "RRTY 20\n"
-        "END\n" };
+    auto f = DungeonFIO::openMonDescriptions();
 
     std::vector<MonDescription> md;
-    MonDescription::parse(ss, md);
+    MonDescription::parse(f, md);
 
     for(const MonDescription& m : md)
     {
+        std::string mm;
+        memToStr(m, mm);
+        std::cout << "[[ " << mm << " ]]\n" << std::endl;
+
         m.serialize(std::cout);
+        std::cout << std::endl;
     }
 }

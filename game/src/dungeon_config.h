@@ -43,7 +43,15 @@
 #endif
 
 #ifndef DUNGEON_FILE_NAME
-#define DUNGEON_FILE_NAME "/dungeon"
+#define DUNGEON_FILE_NAME "dungeon"
+#endif
+
+#ifndef MONSTER_DESC_FILE_NAME
+#define MOSNTER_DESC_FILE_NAME "monster_desc.txt"
+#endif
+
+#ifndef OBJECT_DESC_FILE_NAME
+#define OBJECT_DESC_FILE_NAME "object_desc.txt"
 #endif
 
 

@@ -226,12 +226,11 @@ static inline int main_106(int argc, char** argv)
 
 
 #include "new/items.hpp"
+#include "new/generic_parse.hpp"
 #include <iostream>
 
-int main(int argc, char** argv)
+static inline int main_107(int argc, char** argv)
 {
-    // return main_106(argc, argv);
-
     auto f = DungeonFIO::openMonDescriptions();
 
     std::vector<MonDescription> md;
@@ -246,4 +245,43 @@ int main(int argc, char** argv)
         m.serialize(std::cout);
         std::cout << std::endl;
     }
+
+    return 0;
+}
+
+int main(int argc, char** argv)
+{
+    // return main_106(argc, argv);
+
+    struct Temp
+    {
+        int c;
+        char x;
+        std::string s;
+    };
+
+    std::stringstream io
+    {
+        "BEGIN_STRUCT\n"
+        "CHAR a\n"
+        "INTEGER 8932\n"
+        "STRING Hello world its me, MOM!!!\n"
+        "END_STRUCT\n"
+    };
+
+    SequentialParser<Temp> p;
+    p.addStartToken("BEGIN_STRUCT");
+    p.addEndToken("END_STRUCT");
+    p.addPrimitiveToken<char>("CHAR", [](Temp& t) -> char& { return t.x; });
+    p.addPrimitiveToken<int>("INTEGER", [](Temp& t) -> int& { return t.c; });
+    p.addStringToken("STRING", [](Temp& t) -> std::string& { return t.s; });
+
+    std::vector<Temp> tx;
+    p.parse(io, tx);
+
+    for(const Temp& t : tx)
+    {
+        std::cout << t.c << " | " << t.x << " | " << t.s << std::endl;
+    }
+
 }

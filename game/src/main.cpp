@@ -258,30 +258,46 @@ int main(int argc, char** argv)
         int c;
         char x;
         std::string s;
+        std::string p;
     };
 
     std::stringstream io
     {
-        "BEGIN_STRUCT\n"
+        "BEGIN STRUCT\n"
         "CHAR a\n"
         "INTEGER 8932\n"
         "STRING Hello world its me, MOM!!!\n"
-        "END_STRUCT\n"
+        "PARA\n"
+        "Mom is a very nice person.\n"
+        "She makes me coffe every morning!\n"
+        "我很喜欢我的妈妈！\n"
+        ".\n"
+        "END STRUCT\n"
+        "\n"
+        "jfkldsjkl\n"
+        "BEGIN STRUCT\n"
+        "helljfeiowjfklds\n"
+        "INTEGER 67\n"
+        "CHAR Y\n"
+        "STRING Yo nice to meet you MOM!!!\n"
+        // "CHAR I\n"
+        "END STRUCT\n"
     };
 
     SequentialParser<Temp> p;
-    p.addStartToken("BEGIN_STRUCT");
-    p.addEndToken("END_STRUCT");
+    p.addStartToken("BEGIN STRUCT");
+    p.addEndToken("END STRUCT");
     p.addPrimitiveToken<char>("CHAR", [](Temp& t) -> char& { return t.x; });
     p.addPrimitiveToken<int>("INTEGER", [](Temp& t) -> int& { return t.c; });
     p.addStringToken("STRING", [](Temp& t) -> std::string& { return t.s; });
+    p.addParagraphToken("PARA", [](Temp& t) -> std::string& { return t.p; });
 
     std::vector<Temp> tx;
     p.parse(io, tx);
 
     for(const Temp& t : tx)
     {
-        std::cout << t.c << " | " << t.x << " | " << t.s << std::endl;
+        std::cout << t.c << " | " << t.x << " | " << t.s  << '\n' << t.p << std::endl;
     }
 
 }

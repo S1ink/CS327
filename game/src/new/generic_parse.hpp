@@ -1,5 +1,6 @@
 #pragma once
 
+#include <initializer_list>
 #include <unordered_map>
 #include <type_traits>
 #include <functional>
@@ -7,25 +8,25 @@
 #include <cstdint>
 #include <fstream>
 #include <sstream>
+#include <utility>
 #include <string>
 #include <vector>
 #include <cmath>
+
+#include "items.hpp"
 
 
 template<typename T>
 class SequentialParser
 {
-    enum
-    {
-        MARKER_NONE = 0,
-        MARKER_START_OBJECT,
-        MARKER_END_OBJECT
-    };
-
     using FunctorT = std::function<void(std::istream&, std::istream&, T&)>;
 
     template<typename M>
     using MemberAccessor = std::function<M&(T&)>;
+    template<typename A>
+    using KeywordToken = std::pair<std::string, A>;
+    template<typename A>
+    using AttributeMap = std::unordered_map<std::string, A>;
 
 public:
     inline SequentialParser() = default;
@@ -46,8 +47,21 @@ public:
     void addParagraphToken(const std::string& t, const MemberAccessor<std::string>& a);
     template<typename P, typename E = P>
     void addPrimitiveToken(const std::string& t, const MemberAccessor<P>& a);
-    // void addRollableToken(const std::string& t)
-    // void addKeywordToken(const std::string& t)
+    void addRollableToken(const std::string& t, const MemberAccessor<RollNum>& a);
+
+    template<typename A>
+    inline void addAttributeToken(
+        const std::string& t,
+        const MemberAccessor<A>& a,
+        std::initializer_list<KeywordToken<A>> attributes )
+    {
+        this->addAttributeToken(t, a, std::unordered_map<std::string, A>{ attributes });
+    }
+    template<typename A>
+    void addAttributeToken(
+        const std::string& t,
+        const MemberAccessor<A>& a,
+        AttributeMap<A>&& m );
 
     void parse(std::istream& in, std::vector<T>& out);
 
@@ -56,17 +70,22 @@ protected:
     static FunctorT makeParagraphExtractor(const MemberAccessor<std::string>& a);
     template<typename P, typename E = P>
     static FunctorT makePrimitiveExtractor(const MemberAccessor<P>& a);
+    static FunctorT makeRollableExtractor(const MemberAccessor<RollNum>& a);
+    template<typename A>
+    static FunctorT makeAttributeExtractor(
+        const MemberAccessor<A>& a,
+        const AttributeMap<A>& m );
 
 protected:
     struct TokenFunctor
     {
         FunctorT extractor{ nullptr };
         size_t idx{ 0 };
-        uint8_t marker{ MARKER_NONE };
     };
 
 protected:
     std::unordered_map<std::string, TokenFunctor> token_map;
+    std::string start_object_token, end_object_token;
     size_t next_token_idx{ 0 };
 
 };
@@ -78,21 +97,13 @@ protected:
 template<typename T>
 void SequentialParser<T>::addStartToken(const std::string& t)
 {
-    this->token_map[t] =
-        TokenFunctor
-        {
-            .marker = MARKER_START_OBJECT
-        };
+    this->start_object_token = t;
 }
 
 template<typename T>
 void SequentialParser<T>::addEndToken(const std::string& t)
 {
-    this->token_map[t] =
-        TokenFunctor
-        {
-            .marker = MARKER_END_OBJECT
-        };
+    this->end_object_token = t;
 }
 
 template<typename T>
@@ -146,6 +157,34 @@ void SequentialParser<T>::addPrimitiveToken(
         };
 }
 
+template<typename T>
+void SequentialParser<T>::addRollableToken(
+    const std::string& t,
+    const MemberAccessor<RollNum>& a )
+{
+    this->token_map[t] =
+        TokenFunctor
+        {
+            .extractor = SequentialParser<T>::makeRollableExtractor(a),
+            .idx = this->next_token_idx++;
+        };
+}
+
+template<typename T>
+template<typename A>
+void SequentialParser<T>::addAttributeToken(
+    const std::string& t,
+    const MemberAccessor<A>& a,
+    AttributeMap<A>&& m )
+{
+    this->token_map[t] =
+        TokenFunctor
+        {
+            .extractor = SequentialParser<T>::makeAttributeExtractor(a, m),
+            .idx = this->next_token_idx++
+        };
+}
+
 
 
 template<typename T>
@@ -158,6 +197,7 @@ typename SequentialParser<T>::FunctorT SequentialParser<T>::makeStringExtractor(
             std::getline(line, a(x));
         };
 }
+
 template<typename T>
 typename SequentialParser<T>::FunctorT SequentialParser<T>::makeParagraphExtractor(
     const MemberAccessor<std::string>& a )
@@ -173,6 +213,7 @@ typename SequentialParser<T>::FunctorT SequentialParser<T>::makeParagraphExtract
             a(x).pop_back();
         };
 }
+
 template<typename T>
 template<typename P, typename E>
 typename SequentialParser<T>::FunctorT SequentialParser<T>::makePrimitiveExtractor(
@@ -194,6 +235,48 @@ typename SequentialParser<T>::FunctorT SequentialParser<T>::makePrimitiveExtract
         };
 }
 
+template<typename T>
+typename SequentialParser<T>::FunctorT SequentialParser<T>::makeRollableExtractor(
+    const MemberAccessor<RollNum>& a )
+{
+    return
+        [a](std::istream& line, std::istream& stream, T& x) -> void
+        {
+            std::string seg;
+
+            std::getline(line, seg, '+');
+            a(x).base = static_cast<uint32_t>( atoi(seg.c_str()) );
+
+            std::getline(line, seg, 'd');
+            a(x).rolls = static_cast<uint16_t>( atoi(seg.c_str()) );
+
+            line >> a(x).sides;
+        };
+}
+
+template<typename T>
+template<typename A>
+typename SequentialParser<T>::FunctorT SequentialParser<T>::makeAttributeExtractor(
+    const MemberAccessor<A>& a,
+    const AttributeMap<A>& m )
+{
+    return
+        [a](std::istream& line, std::istream& stream, T& x) -> void
+        {
+            std::string seg;
+            do
+            {
+                std::getline(line, seg, ' ');
+                auto search = m.find(seg);
+                if(search != m.end())
+                {
+                    a(x) |= search->second;
+                }
+            }
+            while(!line.eof());
+        };
+}
+
 
 
 
@@ -207,10 +290,26 @@ void SequentialParser<T>::parse(std::istream& in, std::vector<T>& out)
     bool in_object = false;
     std::vector<bool> token_mask;
 
-    size_t i = 0;
     for(std::getline(in, line); !in.eof(); std::getline(in, line))
     {
-        std::cout << "got line - " << line << std::endl;
+        if( !in_object &&
+            !this->start_object_token.compare(0, this->start_object_token.length(), line) )
+        {
+            if(!in_object)
+            {
+                out.emplace_back();
+                in_object = true;
+                token_mask.assign(this->next_token_idx, false);
+            }
+            continue;
+        }
+        else
+        if( in_object &&
+            !this->end_object_token.compare(0, this->end_object_token.length(), line) )
+        {
+            in_object = false;
+            continue;
+        }
 
         std::stringstream ss{ line };
         std::getline(ss, line, ' ');
@@ -218,41 +317,15 @@ void SequentialParser<T>::parse(std::istream& in, std::vector<T>& out)
         auto search = this->token_map.find(line);
         if(search == this->token_map.end()) continue;
 
-        std::cout << "found match" << std::endl;
-
         const TokenFunctor& tk = search->second;
-        switch(tk.marker)
+        if(in_object && (token_mask[tk.idx] = !token_mask[tk.idx]))
         {
-            case MARKER_START_OBJECT:
-            {
-                std::cout << "marker start object" << std::endl;
-                if(!in_object)
-                {
-                    if(i >= out.size())
-                    {
-                        out.emplace_back();
-                    }
-                    in_object = true;
-                    token_mask.assign(this->next_token_idx, false);
-                }
-                continue;
-            }
-            case MARKER_END_OBJECT:
-            {
-                std::cout << "marker end object" << std::endl;
-                i += static_cast<size_t>(in_object);
-                in_object = false;
-                continue;
-            }
-            default:
-            {
-                if(in_object && (token_mask[tk.idx] = !token_mask[tk.idx]))
-                {
-                    std::cout << "extracting..." << std::endl;
-                    tk.extractor(ss, in, out.back());
-                }
-                in_object = false;
-            }
+            tk.extractor(ss, in, out.back());
+        }
+        else
+        {
+            out.pop_back();
+            in_object = false;
         }
     }
 }

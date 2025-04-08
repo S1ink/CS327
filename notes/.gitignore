@@ -1,7 +1,5 @@
-*
-!*.gitignore
-!Makefile
-!*.c
-!*.cpp
-!*.h
-!*.txt
+bst
+c_func
+cpp_func
+*.o
+shape

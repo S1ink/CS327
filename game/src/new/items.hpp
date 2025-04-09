@@ -26,6 +26,7 @@ class MonDescription
 {
 public:
     static void parse(std::istream& f, std::vector<MonDescription>& descs);
+    static bool verifyHeader(std::istream& f);
 
     static std::string& Name(MonDescription& m) { return m.name; }
     static std::string& Desc(MonDescription& m) { return m.desc; }
@@ -87,6 +88,8 @@ protected:
 class ItemDescription
 {
 public:
+    static bool verifyHeader(std::istream& f);
+
     static std::string& Name(ItemDescription& i) { return i.name; }
     static std::string& Desc(ItemDescription& i) { return i.desc; }
     static RollNum& Hit(ItemDescription& i) { return i.hit; }

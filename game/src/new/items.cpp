@@ -263,6 +263,14 @@ void MonDescription::parse(std::istream& f, std::vector<MonDescription>& descs)
 }
 
 
+bool MonDescription::verifyHeader(std::istream& f)
+{
+    std::string line;
+    std::getline(f, line);
+    for(; !f.eof() && (line.back() == '\r' || line.back() == ' ' || line.back() == '\n'); line.pop_back());
+    return line == "RLG327 MONSTER DESCRIPTION 1";
+}
+
 
 void MonDescription::serialize(std::ostream& out) const
 {
@@ -324,6 +332,14 @@ void MonDescription::serialize(std::ostream& out) const
 
 
 
+
+bool ItemDescription::verifyHeader(std::istream& f)
+{
+    std::string line;
+    std::getline(f, line);
+    for(; !f.eof() && (line.back() == '\r' || line.back() == ' ' || line.back() == '\n'); line.pop_back());
+    return line == "RLG327 OBJECT DESCRIPTION 1";
+}
 
 void ItemDescription::serialize(std::ostream& out) const
 {

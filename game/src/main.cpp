@@ -232,9 +232,9 @@ static inline int main_106(int argc, char** argv)
 static inline int main_107(int argc, char** argv)
 {
     auto f = DungeonFIO::openMonDescriptions();
-    if(!f.is_open())
+    if(!f.is_open() || !MonDescription::verifyHeader(f))
     {
-        std::cout << "Monster description file does not exist!" << std::endl;
+        std::cout << "Monster description file does not exist or has incompatible format!" << std::endl;
         return 0;
     }
 
@@ -292,9 +292,9 @@ static inline int main_107(int argc, char** argv)
     // -----------------
 
     f = DungeonFIO::openObjDescriptions();
-    if(!f.is_open())
+    if(!f.is_open() || !ItemDescription::verifyHeader(f))
     {
-        std::cout << "Item description file does not exist!" << std::endl;
+        std::cout << "Item description file does not exist or has incompatible format!" << std::endl;
         return 0;
     }
 

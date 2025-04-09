@@ -1,17 +1,8 @@
-Initializes a dungeon, randomly spawns monsters, and starts a playable game (using ncurses). All controls listed in the
-1.06 specification are implemented, as well as the following:
- 1. Ctrl+C exits the program (as well as 'Q').
- 2. 'H' displays the hardness map (in color).
- 3. 'D' displays the floor weightmap (in color).
- 4. 'T' displays the terrain weightmap (in color).
- 5. 's' displays the default map, if another was being displayed.
+Parses the `$HOME/.rlg327/monster_desc.txt` and `$HOME/.rlg327/object_desc.txt` files for monster and item descriptions
+and re-serializes all descriptions to the console.
 
 **BUILD**:
     Run `make`
 
 **USAGE**:
-    Run: `./game <--load> <--save> <--nummon #>`
-*Flags*:
-    `--load`   : Loads the saved dungeon located at `$HOME/.rlg327/dungeon`. If nonexistent, exits with an error message.
-    `--save`   : Generates a new dungeon (unless the load flag is present), and saves it to `$HOME/.rlg327/dungeon`.
-    `--nummon` : Specify the number of monsters to spawn. Valid range is [0, 255] (256 overflows to 0, 0 results in an instant win).
+    Run: `./game`

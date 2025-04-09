@@ -16,6 +16,15 @@
 #include "items.hpp"
 
 
+static inline std::istream& getlineAndTrim(std::istream& in, std::string& line, char delim = '\n')
+{
+    std::getline(in, line, delim);
+    for(; !in.eof() && (line.back() == '\r' || line.back() == ' ' || line.back() == '\n'); line.pop_back());
+
+    return in;
+}
+
+
 template<typename T>
 class SequentialParser
 {
@@ -24,7 +33,7 @@ class SequentialParser
     template<typename M>
     using MemberAccessor = std::function<M&(T&)>;
     template<typename A>
-    using KeywordToken = std::pair<std::string, A>;
+    using KeywordToken = std::pair<const std::string, A>;
     template<typename A>
     using AttributeMap = std::unordered_map<std::string, A>;
 
@@ -166,7 +175,7 @@ void SequentialParser<T>::addRollableToken(
         TokenFunctor
         {
             .extractor = SequentialParser<T>::makeRollableExtractor(a),
-            .idx = this->next_token_idx++;
+            .idx = this->next_token_idx++
         };
 }
 
@@ -206,7 +215,7 @@ typename SequentialParser<T>::FunctorT SequentialParser<T>::makeParagraphExtract
         [a](std::istream& line, std::istream& stream, T& x) -> void
         {
             std::string s;
-            for(std::getline(stream, s); !stream.eof() && s != "."; std::getline(stream, s))
+            for(getlineAndTrim(stream, s); !stream.eof() && s != "."; getlineAndTrim(stream, s))
             {
                 a(x) += s += '\n';
             }
@@ -244,10 +253,10 @@ typename SequentialParser<T>::FunctorT SequentialParser<T>::makeRollableExtracto
         {
             std::string seg;
 
-            std::getline(line, seg, '+');
+            getlineAndTrim(line, seg, '+');
             a(x).base = static_cast<uint32_t>( atoi(seg.c_str()) );
 
-            std::getline(line, seg, 'd');
+            getlineAndTrim(line, seg, 'd');
             a(x).rolls = static_cast<uint16_t>( atoi(seg.c_str()) );
 
             line >> a(x).sides;
@@ -261,12 +270,12 @@ typename SequentialParser<T>::FunctorT SequentialParser<T>::makeAttributeExtract
     const AttributeMap<A>& m )
 {
     return
-        [a](std::istream& line, std::istream& stream, T& x) -> void
+        [a, m](std::istream& line, std::istream& stream, T& x) -> void
         {
             std::string seg;
             do
             {
-                std::getline(line, seg, ' ');
+                getlineAndTrim(line, seg, ' ');
                 auto search = m.find(seg);
                 if(search != m.end())
                 {
@@ -290,42 +299,42 @@ void SequentialParser<T>::parse(std::istream& in, std::vector<T>& out)
     bool in_object = false;
     std::vector<bool> token_mask;
 
-    for(std::getline(in, line); !in.eof(); std::getline(in, line))
+    for(getlineAndTrim(in, line); !in.eof(); getlineAndTrim(in, line))
     {
         if( !in_object &&
-            !this->start_object_token.compare(0, this->start_object_token.length(), line) )
+            !this->start_object_token.compare(0, this->start_object_token.length(), line, 0, this->start_object_token.length()) )
         {
-            if(!in_object)
-            {
-                out.emplace_back();
-                in_object = true;
-                token_mask.assign(this->next_token_idx, false);
-            }
+            out.emplace_back();
+            in_object = true;
+            token_mask.assign(this->next_token_idx, false);
             continue;
         }
         else
         if( in_object &&
-            !this->end_object_token.compare(0, this->end_object_token.length(), line) )
+            !this->end_object_token.compare(0, this->end_object_token.length(), line, 0, this->end_object_token.length()) )
         {
             in_object = false;
             continue;
         }
 
-        std::stringstream ss{ line };
-        std::getline(ss, line, ' ');
-
-        auto search = this->token_map.find(line);
-        if(search == this->token_map.end()) continue;
-
-        const TokenFunctor& tk = search->second;
-        if(in_object && (token_mask[tk.idx] = !token_mask[tk.idx]))
+        if(in_object)
         {
-            tk.extractor(ss, in, out.back());
-        }
-        else
-        {
-            out.pop_back();
-            in_object = false;
+            std::stringstream ss{ line };
+            getlineAndTrim(ss, line, ' ');
+
+            auto search = this->token_map.find(line);
+            if(search == this->token_map.end()) continue;
+
+            const TokenFunctor& tk = search->second;
+            if((token_mask[tk.idx] = !token_mask[tk.idx]))
+            {
+                tk.extractor(ss, in, out.back());
+            }
+            else
+            {
+                out.pop_back();
+                in_object = false;
+            }
         }
     }
 }

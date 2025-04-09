@@ -87,3 +87,7 @@
 4/6/25  7:30  PM -- Finish monster description parser
 4/6/25  8:00  PM -- Monster description serializer and verify parsing
 4/7/25  5:30  PM -- Add file i/o and test monster descriptions file reading
+4/7/25  8:30  PM -- Begin generic parser
+4/8/25  12:30 PM -- Test string/primitive parsing, add rollable parsing
+4/8/25  8:00  PM -- Add keyword parsing, handle extra whitespace (\r)
+4/8/25  9:30  PM -- Add item description configuration, verify functionality

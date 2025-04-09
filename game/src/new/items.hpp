@@ -27,6 +27,40 @@ class MonDescription
 public:
     static void parse(std::istream& f, std::vector<MonDescription>& descs);
 
+    static std::string& Name(MonDescription& m) { return m.name; }
+    static std::string& Desc(MonDescription& m) { return m.desc; }
+    static RollNum& Speed(MonDescription& m) { return m.speed; }
+    static RollNum& Health(MonDescription& m) { return m.health; }
+    static RollNum& Attack(MonDescription& m) { return m.attack; }
+    static uint16_t& Abilities(MonDescription& m) { return m.abilities; }
+    static uint8_t& Colors(MonDescription& m) { return m.colors; }
+    static uint8_t& Rarity(MonDescription& m) { return m.rarity; }
+    static char& Symbol(MonDescription& m) { return m.symbol; }
+
+    enum
+    {
+        CLR_RED = 1 << 0,
+        CLR_GREEN = 1 << 1,
+        CLR_BLUE = 1 << 2,
+        CLR_CYAN = 1 << 3,
+        CLR_YELLOW = 1 << 4,
+        CLR_MAGENTA = 1 << 5,
+        CLR_WHITE = 1 << 6,
+        CLR_BLACK =  1 << 7
+    };
+    enum
+    {
+        ABILITY_SMART = 1 << 0,
+        ABILITY_TELE = 1 << 1,
+        ABILITY_TUNNEL = 1 << 2,
+        ABILITY_ERRATIC = 1 << 3,
+        ABILITY_PASS = 1 << 4,
+        ABILITY_PICKUP = 1 << 5,
+        ABILITY_DESTROY = 1 << 6,
+        ABILITY_UNIQ = 1 << 7,
+        ABILITY_BOSS = 1 << 8,
+    };
+
 public:
     inline MonDescription() = default;
     inline ~MonDescription() = default;
@@ -47,6 +81,85 @@ protected:
     uint8_t rarity;     // between 1 and 100
 
     char symbol;
+
+};
+
+class ItemDescription
+{
+public:
+    static std::string& Name(ItemDescription& i) { return i.name; }
+    static std::string& Desc(ItemDescription& i) { return i.desc; }
+    static RollNum& Hit(ItemDescription& i) { return i.hit; }
+    static RollNum& Damage(ItemDescription& i) { return i.damage; }
+    static RollNum& Dodge(ItemDescription& i) { return i.dodge; }
+    static RollNum& Defense(ItemDescription& i) { return i.defense; }
+    static RollNum& Weight(ItemDescription& i) { return i.weight; }
+    static RollNum& Speed(ItemDescription& i) { return i.speed; }
+    static RollNum& Special(ItemDescription& i) { return i.special; }
+    static RollNum& Value(ItemDescription& i) { return i.value; }
+    static uint32_t& Types(ItemDescription& i) { return i.types; }
+    static uint8_t& Colors(ItemDescription& i) { return i.colors; }
+    static uint8_t& Rarity(ItemDescription& i) { return i.rarity; }
+    static bool& Artifact(ItemDescription& i) { return i.artifact; }
+
+    enum
+    {
+        CLR_RED = 1 << 0,
+        CLR_GREEN = 1 << 1,
+        CLR_BLUE = 1 << 2,
+        CLR_CYAN = 1 << 3,
+        CLR_YELLOW = 1 << 4,
+        CLR_MAGENTA = 1 << 5,
+        CLR_WHITE = 1 << 6,
+        CLR_BLACK =  1 << 7
+    };
+    enum
+    {
+        TYPE_WEAPON = 1 << 0,
+        TYPE_OFFHAND = 1 << 1,
+        TYPE_RANGED = 1 << 2,
+        TYPE_ARMOR = 1 << 3,
+        TYPE_HELMET = 1 << 4,
+        TYPE_CLOAK = 1 << 5,
+        TYPE_GLOVES = 1 << 6,
+        TYPE_BOOTS = 1 << 7,
+        TYPE_RING = 1 << 8,
+        TYPE_AMULET = 1 << 9,
+        TYPE_LIGHT = 1 << 10,
+        TYPE_SCROLL = 1 << 11,
+        TYPE_BOOK = 1 << 12,
+        TYPE_FLASK = 1 << 13,
+        TYPE_GOLD = 1 << 14,
+        TYPE_AMMUNITION = 1 << 15,
+        TYPE_FOOD = 1 << 16,
+        TYPE_WAND = 1 << 17,
+        TYPE_CONTAINER = 1 << 18
+    };
+
+public:
+    inline ItemDescription() = default;
+    inline ~ItemDescription() = default;
+
+public:
+    void serialize(std::ostream& out) const;
+
+protected:
+    std::string name;
+    std::string desc;
+
+    RollNum hit;
+    RollNum damage;
+    RollNum dodge;
+    RollNum defense;
+    RollNum weight;
+    RollNum speed;
+    RollNum special;
+    RollNum value;
+
+    uint32_t types;
+    uint8_t colors;
+    uint8_t rarity;
+    bool artifact;
 
 };
 

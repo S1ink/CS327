@@ -319,3 +319,79 @@ void MonDescription::serialize(std::ostream& out) const
     out << "\nRarity : " << static_cast<int>(this->rarity) << '\n';
 
 }
+
+
+
+
+
+
+void ItemDescription::serialize(std::ostream& out) const
+{
+    static const char* TYPES[] =
+    {
+        "WEAPON",
+        "OFFHAND",
+        "RANGED",
+        "ARMOR",
+        "HELMET",
+        "CLOAK",
+        "GLOVES",
+        "BOOTS",
+        "RING",
+        "AMULET",
+        "LIGHT",
+        "SCROLL",
+        "BOOK",
+        "FLASK",
+        "GOLD",
+        "AMMUNITION",
+        "FOOD",
+        "WAND",
+        "CONTAINER"
+    };
+    static const char* COLORS[] =
+    {
+        "RED",
+        "GREEN",
+        "BLUE",
+        "CYAN",
+        "YELLOW",
+        "MAGENTA",
+        "WHITE",
+        "BLACK"
+    };
+
+    out << "ItemDescription@0x" << std::hex << reinterpret_cast<uintptr_t>(this) << std::dec
+        << "\nName : " << this->name
+        << "\nDesc : \"" << this->desc;
+
+    out << "\nTypes :";
+    for(size_t i = 0; i < sizeof(TYPES) / sizeof(*TYPES); i++)
+    {
+        if(this->types >> i & 0b1)
+        {
+            out << ' ' << TYPES[i];
+        }
+    }
+
+    out << "\nColors :";
+    for(size_t i = 0; i < sizeof(COLORS) / sizeof(*COLORS); i++)
+    {
+        if(this->colors >> i & 0b1)
+        {
+            out << ' ' << COLORS[i];
+        }
+    }
+
+    out << "\nHit : "; this->hit.serialize(out);
+    out << "\nDamage : "; this->damage.serialize(out);
+    out << "\nDodge : "; this->dodge.serialize(out);
+    out << "\nDefense : "; this->defense.serialize(out);
+    out << "\nWeight : "; this->weight.serialize(out);
+    out << "\nSpeed : "; this->speed.serialize(out);
+    out << "\nSpecial : "; this->special.serialize(out);
+    out << "\nValue : "; this->value.serialize(out);
+
+    out << "\nArtifact : " << (this->artifact ? "true" : "false")
+        << "\nRarity : " << static_cast<int>(this->rarity) << '\n';
+}

@@ -232,17 +232,133 @@ static inline int main_106(int argc, char** argv)
 static inline int main_107(int argc, char** argv)
 {
     auto f = DungeonFIO::openMonDescriptions();
+    if(!f.is_open())
+    {
+        std::cout << "Monster description file does not exist!" << std::endl;
+        return 0;
+    }
+
+    SequentialParser<MonDescription> monparser;
+    monparser.addStartToken("BEGIN MONSTER");
+    monparser.addEndToken("END");
+    monparser.addStringToken("NAME", MonDescription::Name);
+    monparser.addParagraphToken("DESC", MonDescription::Desc);
+    monparser.addAttributeToken<uint8_t>(
+        "COLOR",
+        MonDescription::Colors,
+        {
+            { "RED", 1 << 0 },
+            { "GREEN", 1 << 1 },
+            { "BLUE", 1 << 2 },
+            { "CYAN", 1 << 3 },
+            { "YELLOW", 1 << 4 },
+            { "MAGENTA", 1 << 5 },
+            { "WHITE", 1 << 6 },
+            { "BLACK", 1 << 7 }
+        } );
+    monparser.addRollableToken("SPEED", MonDescription::Speed);
+    monparser.addAttributeToken<uint16_t>(
+        "ABIL",
+        MonDescription::Abilities,
+        {
+            { "SMART", 1 << 0 },
+            { "TELE", 1 << 1 },
+            { "TUNNEL", 1 << 2 },
+            { "ERRATIC", 1 << 3 },
+            { "PASS", 1 << 4 },
+            { "PICKUP", 1 << 5 },
+            { "DESTROY", 1 << 6 },
+            { "UNIQ", 1 << 7 },
+            { "BOSS", 1 << 8 },
+        } );
+    monparser.addRollableToken("HP", MonDescription::Health);
+    monparser.addRollableToken("DAM", MonDescription::Attack);
+    monparser.addPrimitiveToken<char>("SYMB", MonDescription::Symbol);
+    monparser.addPrimitiveToken<uint8_t, int>("RRTY", MonDescription::Rarity);
 
     std::vector<MonDescription> md;
-    MonDescription::parse(f, md);
+    monparser.parse(f, md);
+
+    std::cout << "----------- MONSTER DESCRIPTIONS -----------\n" << std::endl;
 
     for(const MonDescription& m : md)
     {
-        std::string mm;
-        memToStr(m, mm);
-        std::cout << "[[ " << mm << " ]]\n" << std::endl;
-
         m.serialize(std::cout);
+        std::cout << std::endl;
+    }
+
+    f.close();
+
+    // -----------------
+
+    f = DungeonFIO::openObjDescriptions();
+    if(!f.is_open())
+    {
+        std::cout << "Item description file does not exist!" << std::endl;
+        return 0;
+    }
+
+    SequentialParser<ItemDescription> itemparser;
+    itemparser.addStartToken("BEGIN OBJECT");
+    itemparser.addEndToken("END");
+    itemparser.addStringToken("NAME", ItemDescription::Name);
+    itemparser.addParagraphToken("DESC", ItemDescription::Desc);
+    itemparser.addAttributeToken<uint32_t>(
+        "TYPE",
+        ItemDescription::Types,
+        {
+            { "WEAPON", ItemDescription::TYPE_WEAPON },
+            { "OFFHAND", ItemDescription::TYPE_OFFHAND },
+            { "RANGED", ItemDescription::TYPE_RANGED },
+            { "ARMOR", ItemDescription::TYPE_ARMOR },
+            { "HELMET", ItemDescription::TYPE_HELMET },
+            { "CLOAK", ItemDescription::TYPE_CLOAK },
+            { "GLOVES", ItemDescription::TYPE_GLOVES },
+            { "BOOTS", ItemDescription::TYPE_BOOTS },
+            { "RING", ItemDescription::TYPE_RING },
+            { "AMULET", ItemDescription::TYPE_AMULET },
+            { "LIGHT", ItemDescription::TYPE_LIGHT },
+            { "SCROLL", ItemDescription::TYPE_SCROLL },
+            { "BOOK", ItemDescription::TYPE_BOOK },
+            { "FLASK", ItemDescription::TYPE_FLASK },
+            { "GOLD", ItemDescription::TYPE_GOLD },
+            { "AMMUNITION", ItemDescription::TYPE_AMMUNITION },
+            { "FOOD", ItemDescription::TYPE_FOOD },
+            { "WAND", ItemDescription::TYPE_WAND },
+            { "CONTAINER", ItemDescription::TYPE_CONTAINER },
+        } );
+    itemparser.addAttributeToken<uint8_t>(
+        "COLOR",
+        ItemDescription::Colors,
+        {
+            { "RED", 1 << 0 },
+            { "GREEN", 1 << 1 },
+            { "BLUE", 1 << 2 },
+            { "CYAN", 1 << 3 },
+            { "YELLOW", 1 << 4 },
+            { "MAGENTA", 1 << 5 },
+            { "WHITE", 1 << 6 },
+            { "BLACK", 1 << 7 }
+        } );
+    itemparser.addRollableToken("HIT", ItemDescription::Hit);
+    itemparser.addRollableToken("DAM", ItemDescription::Damage);
+    itemparser.addRollableToken("DODGE", ItemDescription::Dodge);
+    itemparser.addRollableToken("DEF", ItemDescription::Defense);
+    itemparser.addRollableToken("WEIGHT", ItemDescription::Weight);
+    itemparser.addRollableToken("SPEED", ItemDescription::Speed);
+    itemparser.addRollableToken("ATTR", ItemDescription::Special);
+    itemparser.addRollableToken("VAL", ItemDescription::Value);
+    itemparser.addAttributeToken<bool>("ART", ItemDescription::Artifact, { { "TRUE", true }, { "FALSE", false } });
+    itemparser.addPrimitiveToken<uint8_t, int>("RRTY", ItemDescription::Rarity);
+
+    std::vector<ItemDescription> id;
+    itemparser.parse(f, id);
+
+    std::cout << "----------- ITEM DESCRIPTIONS -----------\n" << std::endl;
+
+    for(const ItemDescription& i : id)
+    {
+        i.serialize(std::cout);
         std::cout << std::endl;
     }
 
@@ -251,53 +367,5 @@ static inline int main_107(int argc, char** argv)
 
 int main(int argc, char** argv)
 {
-    // return main_106(argc, argv);
-
-    struct Temp
-    {
-        int c;
-        char x;
-        std::string s;
-        std::string p;
-    };
-
-    std::stringstream io
-    {
-        "BEGIN STRUCT\n"
-        "CHAR a\n"
-        "INTEGER 8932\n"
-        "STRING Hello world its me, MOM!!!\n"
-        "PARA\n"
-        "Mom is a very nice person.\n"
-        "She makes me coffe every morning!\n"
-        "我很喜欢我的妈妈！\n"
-        ".\n"
-        "END STRUCT\n"
-        "\n"
-        "jfkldsjkl\n"
-        "BEGIN STRUCT\n"
-        "helljfeiowjfklds\n"
-        "INTEGER 67\n"
-        "CHAR Y\n"
-        "STRING Yo nice to meet you MOM!!!\n"
-        // "CHAR I\n"
-        "END STRUCT\n"
-    };
-
-    SequentialParser<Temp> p;
-    p.addStartToken("BEGIN STRUCT");
-    p.addEndToken("END STRUCT");
-    p.addPrimitiveToken<char>("CHAR", [](Temp& t) -> char& { return t.x; });
-    p.addPrimitiveToken<int>("INTEGER", [](Temp& t) -> int& { return t.c; });
-    p.addStringToken("STRING", [](Temp& t) -> std::string& { return t.s; });
-    p.addParagraphToken("PARA", [](Temp& t) -> std::string& { return t.p; });
-
-    std::vector<Temp> tx;
-    p.parse(io, tx);
-
-    for(const Temp& t : tx)
-    {
-        std::cout << t.c << " | " << t.x << " | " << t.s  << '\n' << t.p << std::endl;
-    }
-
+    return main_107(argc, argv);
 }

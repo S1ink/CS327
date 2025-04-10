@@ -5,5 +5,15 @@
 
 void print(const char* s)
 {
-    std::cout << s << std::endl;
+    std::cout << s;
+}
+
+OSTREAM* get_cout()
+{
+    return &std::cout;
+}
+
+void print_with_cout(OSTREAM* o, const char* s)
+{
+    *o << s;
 }

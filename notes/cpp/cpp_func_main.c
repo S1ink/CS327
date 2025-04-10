@@ -3,7 +3,10 @@
 
 int main(int argc, char** argv)
 {
-    _Z5printPKc("你们怎么样!");
+    print("你们怎么样!\n");
+
+    OSTREAM* o = get_cout();
+    print_with_cout(o, "在见！\n");
 
     return 0;
 }

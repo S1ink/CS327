@@ -29,3 +29,7 @@ cpp_func.c.o : cpp_func_main.c
 
 cpp_func.cpp.o : cpp_func.cpp
 	g++ cpp_func.cpp -c -o cpp_func.cpp.o
+
+
+inheritance : inheritance.cpp
+	g++ inheritance.cpp -o inheritance

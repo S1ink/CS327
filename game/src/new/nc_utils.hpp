@@ -1,22 +1,8 @@
 #pragma once
 
-#include <type_traits>
 #include <array>
 
-#include <limits.h>
-#include <stdlib.h>
-#include <stdint.h>
-#include <stdio.h>
-
-#include <unistd.h>
-#include <signal.h>
 #include <ncurses.h>
-
-#include "util/vec_geom.h"
-#include "util/math.h"
-#include "dungeon_config.h"
-#include "dungeon.h"
-#include "entity.h"
 
 
 template<NCURSES_COLOR_T GNum = 128, NCURSES_COLOR_T PairOff = 128>
@@ -170,11 +156,9 @@ protected:
 
 };
 
-// template<class Derived_T>
+
 class NCWindow : public NCInitializer
 {
-    // static_assert(std::is_base_of<NCWindow<Derived_T>, Derived_T>::value);
-
 public:
     inline NCWindow( int szy, int szx, int y, int x )
         : NCInitializer(), win{ newwin(szy, szx, y, x) }
@@ -209,153 +193,4 @@ public:
 public:
     WINDOW* const win;
 
-};
-
-
-
-class MListWindow : public NCWindow
-{
-    using WindowBaseT = NCWindow;
-
-public:
-    inline MListWindow(DungeonLevel& l)
-        : WindowBaseT(
-            MONLIST_WIN_Y_DIM,
-            MONLIST_WIN_X_DIM,
-            MONLIST_WIN_Y_OFF,
-            MONLIST_WIN_X_OFF ),
-        level{ &l },
-        prox_gradient{ MONLIST_PROXIMITY_GRADIENT }
-    {
-        this->setScrollable(true);
-    }
-    inline virtual ~MListWindow() {};
-
-public:
-    void onShow();
-    void onScrollUp();
-    void onScrollDown();
-
-    void changeLevel(DungeonLevel& l);
-
-protected:
-    void printEntry(Entity* m, int line);
-
-protected:
-    DungeonLevel* level;
-    NCGradient16<16> prox_gradient;
-
-    int scroll_amount{ 0 };
-
-};
-
-
-
-
-class MapWindow : public NCWindow
-{
-    using WindowBaseT = NCWindow;
-
-public:
-    enum
-    {
-        MAP_FOG = 0,
-        MAP_DUNGEON,
-        MAP_HARDNESS,
-        MAP_FWEIGHT,
-        MAP_TWEIGHT
-    };
-
-public:
-    inline MapWindow(DungeonLevel& l)
-        : WindowBaseT(
-            DUNGEON_MAP_WIN_Y_DIM,
-            DUNGEON_MAP_WIN_X_DIM,
-            DUNGEON_MAP_WIN_Y_OFF,
-            DUNGEON_MAP_WIN_X_OFF ),
-        level{ &l },
-        hardness_gradient{ DUNGEON_HARDNESS_GRADIENT },
-        weightmap_gradient{ DUNGEON_WEIGHTMAP_GRADIENT }
-    {
-        this->printBox();
-    }
-    inline virtual ~MapWindow() {};
-
-public:
-    void onPlayerMove(Vec2u8 a, Vec2u8 b);
-    void onMonsterMove(Vec2u8 a, Vec2u8 b, bool terrain_changed = false);
-    void onGotoMove(Vec2u8 a, Vec2u8 b);
-    void onRefresh(bool force_rewrite = false);
-
-    void changeMap(int mmode);
-    void changeLevel(DungeonLevel& l, int mmode = -1);
-
-protected:
-    void writeFogMap();
-    void writeDungeonMap();
-    void writeHardnessMap();
-    void writeWeightMap(DungeonCostMap);
-
-protected:
-    struct
-    {
-        int map_mode{ MAP_FOG }, fogless_map_mode{ MAP_DUNGEON };
-        bool needs_rewrite{ false };
-    }
-    state;
-
-    DungeonLevel* level;
-
-    NCGradient hardness_gradient, weightmap_gradient;
-
-};
-
-
-
-
-
-enum
-{
-    GWIN_NONE = 0,
-    GWIN_MAP,
-    GWIN_MLIST,
-    NUM_GWIN
-};
-
-class Game
-{
-public:
-    inline Game()
-        : level{},
-          map_win{ this->level },
-          mlist_win{ this->level }
-    {
-        zero_dungeon_level(&this->level);
-        this->state.active_win = this->state.displayed_win = GWIN_NONE;
-    }
-    inline ~Game() = default;
-
-public:
-    int run(volatile int* r);
-
-    int overwrite_changes();
-
-    int iterate_next_pc(LevelStatus& s);
-    int iterate_pc_cmd(int move_cmd, LevelStatus& s);
-    int handle_mlist_cmd(int mlist_cmd);
-    int handle_dbg_cmd(int dbg_cmd);
-
-public:
-    DungeonLevel level;
-
-    MapWindow map_win;
-    MListWindow mlist_win;
-
-    struct
-    {
-        uint8_t active_win : REQUIRED_BITS32(NUM_GWIN - 1);
-        uint8_t displayed_win : REQUIRED_BITS32(NUM_GWIN - 1);
-        bool is_goto_ctrl{ false };
-    }
-    state;
 };

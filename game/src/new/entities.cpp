@@ -1,4 +1,4 @@
-#include "items.hpp"
+#include "entities.hpp"
 
 #include <iostream>
 
@@ -9,9 +9,17 @@ void RollNum::serialize(std::ostream& out) const
     out << this->base << '+' << this->rolls << 'd' << this->sides;
 }
 
-uint32_t RollNum::roll()
+uint32_t RollNum::roll(uint32_t seed)
 {
-    return 0;
+    std::mt19937 twister{ seed };
+    std::uniform_int_distribution<uint32_t> roller{ 1, this->sides };
+
+    uint32_t x = this->base;
+    for(uint16_t r = 0; r < this->rolls; r++)
+    {
+        x += roller(twister);
+    }
+    return x;
 }
 
 

@@ -8,6 +8,7 @@
 #include <functional>
 #include <cstdint>
 #include <cmath>
+#include <random>
 
 
 struct RollNum
@@ -17,8 +18,18 @@ struct RollNum
     uint16_t rolls;
 
 public:
-    uint32_t roll();
+    uint32_t roll(uint32_t seed = std::mt19937::default_seed);
     void serialize(std::ostream& out) const;
+
+};
+
+class Entity
+{
+
+};
+
+class Item
+{
 
 };
 

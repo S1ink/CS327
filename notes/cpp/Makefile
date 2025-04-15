@@ -33,3 +33,12 @@ cpp_func.cpp.o : cpp_func.cpp
 
 inheritance : inheritance.cpp
 	g++ inheritance.cpp -o inheritance
+
+static : static.cpp static_main.cpp
+	g++ static.cpp  static_main.cpp -o static
+
+singleton : singleton.cpp
+	g++ singleton.cpp -o singleton
+
+parens_puzzle : parens_puzzle.cpp
+	g++ parens_puzzle.cpp -o parens_puzzle

@@ -12,7 +12,7 @@
 #include <signal.h>
 #include <ncurses.h>
 
-#include "util/vec_geom.h"
+#include "util/vec_geom.hpp"
 #include "util/math.h"
 #include "dungeon_config.h"
 #include "dungeon.h"

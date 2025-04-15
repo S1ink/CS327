@@ -1,9 +1,9 @@
 #include "dungeon_config.h"
-#include "dungeon.h"
+// #include "dungeon.h"e
 // #include "game.h"
-#include "new/lol.hpp"
+// #include "new/lol.hpp"
 
-#include "util/vec_geom.h"
+// #include "util/vec_geom.h"
 #include "util/debug.h"
 #include "util/math.h"
 
@@ -225,7 +225,7 @@ static inline int main_106(int argc, char** argv)
 
 
 
-#include "new/items.hpp"
+#include "new/entities.hpp"
 #include "new/generic_parse.hpp"
 #include <iostream>
 
@@ -255,7 +255,8 @@ static inline int main_107(int argc, char** argv)
             { "MAGENTA", 1 << 5 },
             { "WHITE", 1 << 6 },
             { "BLACK", 1 << 7 }
-        } );
+        },
+        true );
     monparser.addRollableToken("SPEED", MonDescription::Speed);
     monparser.addAttributeToken<uint16_t>(
         "ABIL",
@@ -339,7 +340,8 @@ static inline int main_107(int argc, char** argv)
             { "MAGENTA", 1 << 5 },
             { "WHITE", 1 << 6 },
             { "BLACK", 1 << 7 }
-        } );
+        },
+        true );
     itemparser.addRollableToken("HIT", ItemDescription::Hit);
     itemparser.addRollableToken("DAM", ItemDescription::Damage);
     itemparser.addRollableToken("DODGE", ItemDescription::Dodge);

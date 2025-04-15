@@ -13,7 +13,7 @@
 #include <vector>
 #include <cmath>
 
-#include "items.hpp"
+#include "entities.hpp"
 
 
 static inline std::istream& getlineAndTrim(std::istream& in, std::string& line, char delim = '\n')
@@ -70,7 +70,8 @@ public:
     void addAttributeToken(
         const std::string& t,
         const MemberAccessor<A>& a,
-        AttributeMap<A>&& m );
+        AttributeMap<A>&& m,
+        bool singular = false );
 
     void parse(std::istream& in, std::vector<T>& out);
 
@@ -83,7 +84,8 @@ protected:
     template<typename A>
     static FunctorT makeAttributeExtractor(
         const MemberAccessor<A>& a,
-        const AttributeMap<A>& m );
+        const AttributeMap<A>& m,
+        bool singular = false );
 
 protected:
     struct TokenFunctor
@@ -184,12 +186,13 @@ template<typename A>
 void SequentialParser<T>::addAttributeToken(
     const std::string& t,
     const MemberAccessor<A>& a,
-    AttributeMap<A>&& m )
+    AttributeMap<A>&& m,
+    bool singular )
 {
     this->token_map[t] =
         TokenFunctor
         {
-            .extractor = SequentialParser<T>::makeAttributeExtractor(a, m),
+            .extractor = SequentialParser<T>::makeAttributeExtractor(a, m, singular),
             .idx = this->next_token_idx++
         };
 }
@@ -267,10 +270,11 @@ template<typename T>
 template<typename A>
 typename SequentialParser<T>::FunctorT SequentialParser<T>::makeAttributeExtractor(
     const MemberAccessor<A>& a,
-    const AttributeMap<A>& m )
+    const AttributeMap<A>& m,
+    bool singular )
 {
     return
-        [a, m](std::istream& line, std::istream& stream, T& x) -> void
+        [a, m, singular](std::istream& line, std::istream& stream, T& x) -> void
         {
             std::string seg;
             do
@@ -280,6 +284,7 @@ typename SequentialParser<T>::FunctorT SequentialParser<T>::makeAttributeExtract
                 if(search != m.end())
                 {
                     a(x) |= search->second;
+                    if(singular) return;
                 }
             }
             while(!line.eof());

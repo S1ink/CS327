@@ -9,6 +9,7 @@
 #include <cstdint>
 #include <cmath>
 #include <random>
+#include <string_view>
 
 
 struct RollNum
@@ -25,7 +26,29 @@ public:
 
 class Entity
 {
-
+public:
+    std::string_view name, desc;
+    RollNum attack;
+    uint32_t speed, health;
+    union
+    {
+        struct
+        {
+            uint8_t is_smart : 1;
+            uint8_t is_tele : 1;
+            uint8_t can_tunnel : 1;
+            uint8_t is_erratic : 1;
+            uint8_t is_ghost : 1;
+            uint8_t can_pickup : 1;
+            uint8_t can_destroy : 1;
+            uint8_t is_unique : 1;
+            uint8_t is_boss : 1;
+            uint8_t is_pc : 1;
+        };
+        uint16_t ability_bits;
+    };
+    uint8_t color;
+    char symbol;
 };
 
 class Item

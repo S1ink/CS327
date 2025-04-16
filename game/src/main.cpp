@@ -28,6 +28,7 @@ static inline void init_sig()
 
 inline int main_108(int argc, char** argv)
 {
+    init_sig();
     GameApplication{ argc, argv, is_running }.run();
 
     return 0;

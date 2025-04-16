@@ -33,25 +33,21 @@ public:
     {}
 
 public:
-    inline void initRuntimeArgs(uint32_t seed, int nmon)
-    {
-        this->state.seed = seed;
-        this->state.nmon = nmon;
-
-        this->procedural.rgen.seed(seed);
-    }
-    inline bool initMonDescriptions(std::istream& i)
-    {
-        return MonDescription::parse(i, this->mon_desc);
-    }
-    inline bool initItemDescriptions(std::istream& i)
-    {
-        return ItemDescription::parse(i, this->item_desc);
-    }
+    void initRuntimeArgs(uint32_t seed, int nmon);
+    bool initMonDescriptions(std::istream& i);
+    bool initItemDescriptions(std::istream& i);
     bool initDungeonFile(FILE* f);
     bool initDungeonRandom();
 
     bool exportDungeonFile(FILE* f);
+
+protected:
+    inline uint32_t nextSeed()
+    {
+        return static_cast<uint32_t>(this->procedural.rgen());
+    }
+
+    bool initializeEntities();
 
 protected:
     enum
@@ -190,6 +186,8 @@ protected:
 
 
 
+
+
 class GameApplication
 {
 public:
@@ -206,6 +204,13 @@ public:
     }
 
     void run();
+
+protected:
+    inline GameApplication(const GameApplication&) = delete;
+    inline GameApplication(GameApplication&&) = delete;
+
+    void initialize(int argc, char** argv);
+    void shutdown();
 
 protected:
     class DungeonFIO
@@ -264,13 +269,6 @@ protected:
         static inline std::string obj_desc_fn;
 
     };
-
-protected:
-    inline GameApplication(const GameApplication&) = delete;
-    inline GameApplication(GameApplication&&) = delete;
-
-    void initialize(int argc, char** argv);
-    void shutdown();
 
 protected:
     GameState game;

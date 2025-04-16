@@ -39,6 +39,7 @@ struct Vec2_
 
     using VecT = Vec2_<T>;
     using ArgT = typename std::conditional<(sizeof(T) > sizeof(std::uintptr_t)), const T&, T>::type;
+    using VecArgT = typename std::conditional<(sizeof(VecT) > sizeof(std::uintptr_t)), const VecT&, VecT>::type;
 
     union
     {
@@ -50,7 +51,7 @@ struct Vec2_
     };
 
 public:
-    inline Vec2_() = default;
+    inline Vec2_() {}
     inline Vec2_(ArgT c) : x{ c }, y{ c } {}
     inline Vec2_(ArgT x, ArgT y) : x{ x }, y{ y } {}
     // inline Vec2_(const T v[2]) : x{ v[0] }, y{ v[1] } {}
@@ -187,6 +188,28 @@ public:
     inline double length() const
     {
         return std::sqrt(static_cast<double>(this->lensquared()));
+    }
+
+public:
+    template<typename G>
+    static inline VecT randomInRange(VecArgT min, VecArgT max, G& gen)
+    {
+        if constexpr(std::is_floating_point<T>::value)
+        {
+            std::uniform_real_distribution<T>
+                xdist{ min.x, max.x },
+                ydist{ min.y, max.y };
+
+            return VecT{ xdist(gen), ydist(gen) };
+        }
+        else
+        {
+            std::uniform_int_distribution<T>
+                xdist{ min.x, max.x },
+                ydist{ min.y, max.y };
+
+            return VecT{ xdist(gen), ydist(gen) };
+        }
     }
 
 };

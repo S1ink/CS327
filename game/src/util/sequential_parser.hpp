@@ -13,7 +13,7 @@
 #include <vector>
 #include <cmath>
 
-#include "entities.hpp"
+#include "random.hpp"
 
 
 static inline std::istream& getlineAndTrim(std::istream& in, std::string& line, char delim = '\n')

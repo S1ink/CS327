@@ -5,9 +5,11 @@
 #include <cstdint>
 
 #include "util/vec_geom.hpp"
-#include "util/heap.h"
-#include "util/math.h"
+#include "util/math.hpp"
+
 #include "dungeon_config.h"
+
+#include "spawning.hpp"
 
 
 class DungeonLevel
@@ -50,9 +52,9 @@ public:
         };
         struct Room
         {
-            geom::Vec2u8 tl{ 0 }, br{ 0 };
+            Vec2u8 tl{ 0, 0 }, br{ 0, 0 };
 
-            inline geom::Vec2u8 size() const { return tl - br + geom::Vec2u8{ 1 }; }
+            inline Vec2u8 size() const { return tl - br + Vec2u8{ 1 }; }
             bool collides(const Room& r) const;
         };
 
@@ -74,8 +76,26 @@ public:
     };
 
 public:
+    inline DungeonLevel() :
+        pc{ Entity::PCGenT{} }
+    {}
+
+    int loadTerrain(FILE* f);
+    int saveTerrain(FILE* f);
+    int generateTerrain(uint32_t seed);
 
 public:
     TerrainMap map;
+    DungeonCostMap tunnel_costs, terrain_costs;
+    DungeonGrid<char> visibility_map;
+
+    DungeonGrid<Entity*> entity_map;
+    DungeonGrid<Item::StackNode> items;
+
+    Entity pc;
+    std::vector<Entity> npcs;
+    std::vector<Item> items;
+
+    SeedT seed;
 
 };

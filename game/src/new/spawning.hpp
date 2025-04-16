@@ -1,63 +1,37 @@
 #pragma once
 
-#include <fstream>
-#include <sstream>
-#include <string>
-#include <vector>
 #include <unordered_map>
+#include <string_view>
 #include <functional>
 #include <cstdint>
-#include <cmath>
+#include <fstream>
+#include <sstream>
 #include <random>
-#include <string_view>
+#include <string>
+#include <vector>
+#include <cmath>
+
+#include "util/vec_geom.hpp"
+#include "util/random.hpp"
+#include "util/math.hpp"
 
 
-struct RollNum
+enum DisplayColor
 {
-    uint32_t base;
-    uint16_t sides;
-    uint16_t rolls;
-
-public:
-    uint32_t roll(uint32_t seed = std::mt19937::default_seed);
-    void serialize(std::ostream& out) const;
-
-};
-
-class Entity
-{
-public:
-    std::string_view name, desc;
-    RollNum attack;
-    uint32_t speed, health;
-    union
-    {
-        struct
-        {
-            uint8_t is_smart : 1;
-            uint8_t is_tele : 1;
-            uint8_t can_tunnel : 1;
-            uint8_t is_erratic : 1;
-            uint8_t is_ghost : 1;
-            uint8_t can_pickup : 1;
-            uint8_t can_destroy : 1;
-            uint8_t is_unique : 1;
-            uint8_t is_boss : 1;
-            uint8_t is_pc : 1;
-        };
-        uint16_t ability_bits;
-    };
-    uint8_t color;
-    char symbol;
-};
-
-class Item
-{
-
+    RED = 1 << 0,
+    GREEN = 1 << 1,
+    BLUE = 1 << 2,
+    CYAN = 1 << 3,
+    YELLOW = 1 << 4,
+    MAGENTA = 1 << 5,
+    WHITE = 1 << 6,
+    BLACK =  1 << 7
 };
 
 class MonDescription
 {
+    friend class Entity;
+
 public:
     static void parse(std::istream& f, std::vector<MonDescription>& descs);
     static bool verifyHeader(std::istream& f);
@@ -72,17 +46,6 @@ public:
     static uint8_t& Rarity(MonDescription& m) { return m.rarity; }
     static char& Symbol(MonDescription& m) { return m.symbol; }
 
-    enum
-    {
-        CLR_RED = 1 << 0,
-        CLR_GREEN = 1 << 1,
-        CLR_BLUE = 1 << 2,
-        CLR_CYAN = 1 << 3,
-        CLR_YELLOW = 1 << 4,
-        CLR_MAGENTA = 1 << 5,
-        CLR_WHITE = 1 << 6,
-        CLR_BLACK =  1 << 7
-    };
     enum
     {
         ABILITY_SMART = 1 << 0,
@@ -119,9 +82,82 @@ protected:
 
 };
 
-class ItemDescription
+class Entity
 {
 public:
+    struct PCGenT {};
+
+public:
+    Entity(PCGenT);
+    Entity(const MonDescription& md, std::mt19937& gen);
+    inline ~Entity() = default;
+
+public:
+    inline bool isAlive() const { return this->state.health > 0; }
+    inline bool isDead() const { return !this->isAlive(); }
+    inline bool isPC() const { return this->config.is_pc; }
+    inline char getChar() const { return this->config.symbol; }
+
+protected:
+    inline Entity() = default;
+    inline Entity(const Entity&) = delete;
+    Entity(Entity&&);
+
+    Entity& operator=(const Entity&) = delete;
+    Entity& operator=(Entity&&);
+
+public:
+    struct
+    {
+        std::string_view name{}, desc{};
+        RollableNum attack_damage{ {} };
+        uint32_t speed{ 0 };
+        union
+        {
+            struct
+            {
+                uint8_t is_smart : 1;
+                uint8_t is_tele : 1;
+                uint8_t can_tunnel : 1;
+                uint8_t is_erratic : 1;
+                uint8_t is_ghost : 1;
+                uint8_t can_pickup : 1;
+                uint8_t can_destroy : 1;
+                uint8_t is_unique : 1;
+                uint8_t is_boss : 1;
+                uint8_t is_pc : 1;
+            };
+            uint16_t ability_bits{ 0 };
+        };
+        uint8_t color{ 0 };
+        char symbol{ ' ' };
+
+        const MonDescription* unique_entry{ nullptr };
+    }
+    config;
+
+    struct
+    {
+        Vec2u8 pos{ 0, 0 };
+        Vec2u8 target_pos{ 0, 0 };
+
+        uint32_t health{ 0 };
+    }
+    state;
+
+};
+
+
+
+
+
+
+class ItemDescription
+{
+    friend class Item;
+
+public:
+    static void parse(std::istream& f, std::vector<ItemDescription>& descs);
     static bool verifyHeader(std::istream& f);
 
     static std::string& Name(ItemDescription& i) { return i.name; }
@@ -139,17 +175,6 @@ public:
     static uint8_t& Rarity(ItemDescription& i) { return i.rarity; }
     static bool& Artifact(ItemDescription& i) { return i.artifact; }
 
-    enum
-    {
-        CLR_RED = 1 << 0,
-        CLR_GREEN = 1 << 1,
-        CLR_BLUE = 1 << 2,
-        CLR_CYAN = 1 << 3,
-        CLR_YELLOW = 1 << 4,
-        CLR_MAGENTA = 1 << 5,
-        CLR_WHITE = 1 << 6,
-        CLR_BLACK =  1 << 7
-    };
     enum
     {
         TYPE_WEAPON = 1 << 0,
@@ -200,26 +225,54 @@ protected:
 
 };
 
-
-
-
-
-
-
-
-template<typename T>
-void memToStr(const T& x, std::string& str)
+class Item
 {
-    uintptr_t p = reinterpret_cast<uintptr_t>(&x);
-
-    str.clear();
-    str.reserve(ceil(log(p) / log(26)) + 1);
-
-    size_t i;
-    for(i = 0; p > 0; i++)
+public:
+    struct StackNode
     {
-        const uintptr_t q = p / 26;
-        str += ('a' + static_cast<char>(p - (q * 26)));
-        p = q;
-    }
-}
+        Item *item{ nullptr }, *next{ nullptr };
+    };
+
+public:
+    std::string_view name, desc;
+    RollableNum attack_damage;
+    uint32_t hit;
+    uint32_t dodge;
+    uint32_t defense;
+    uint32_t weight;
+    uint32_t speed;
+    uint32_t special;
+    uint32_t value;
+    uint32_t type;
+    uint8_t color;
+
+    ItemDescription* artifact_entry;
+
+public:
+    char getChar();
+
+};
+
+
+
+
+
+
+
+
+// template<typename T>
+// void memToStr(const T& x, std::string& str)
+// {
+//     uintptr_t p = reinterpret_cast<uintptr_t>(&x);
+
+//     str.clear();
+//     str.reserve(ceil(log(p) / log(26)) + 1);
+
+//     size_t i;
+//     for(i = 0; p > 0; i++)
+//     {
+//         const uintptr_t q = p / 26;
+//         str += ('a' + static_cast<char>(p - (q * 26)));
+//         p = q;
+//     }
+// }

@@ -4,7 +4,7 @@
 #include <cstdint>
 #include <random>
 
-#include "math.h"
+#include "math.hpp"
 
 
 namespace geom
@@ -191,7 +191,9 @@ public:
 
 };
 
-#define DEFINE_VEC2_TYPE(T, t) using Vec2##t = Vec2_<T>;
+};
+
+#define DEFINE_VEC2_TYPE(T, t) using Vec2##t = geom::Vec2_<T>;
 
 DEFINE_VEC2_TYPE(int8_t, i8)
 DEFINE_VEC2_TYPE(uint8_t, u8)
@@ -205,5 +207,3 @@ DEFINE_VEC2_TYPE(float, f)
 DEFINE_VEC2_TYPE(double, d)
 
 #undef DEFINE_VEC2_TYPE
-
-};

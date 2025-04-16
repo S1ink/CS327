@@ -1,6 +1,6 @@
 #pragma once
 
-#include <stdlib.h>
+#include <cstdlib>
 
 
 #define GENERATE_MIN_MAX_UTIL(T, L) \

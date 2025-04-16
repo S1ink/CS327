@@ -6,6 +6,7 @@
 #include <random>
 #include <string>
 #include <vector>
+#include <cstdio>
 
 #include <sys/stat.h>
 #include <unistd.h>
@@ -30,6 +31,27 @@ public:
         map_win{ this->level },
         mlist_win{ this->level }
     {}
+
+public:
+    inline void initRuntimeArgs(uint32_t seed, int nmon)
+    {
+        this->state.seed = seed;
+        this->state.nmon = nmon;
+
+        this->procedural.rgen.seed(seed);
+    }
+    inline bool initMonDescriptions(std::istream& i)
+    {
+        return MonDescription::parse(i, this->mon_desc);
+    }
+    inline bool initItemDescriptions(std::istream& i)
+    {
+        return ItemDescription::parse(i, this->item_desc);
+    }
+    bool initDungeonFile(FILE* f);
+    bool initDungeonRandom();
+
+    bool exportDungeonFile(FILE* f);
 
 protected:
     enum
@@ -152,14 +174,15 @@ protected:
         uint8_t active_win : REQUIRED_BITS32(NUM_GWIN - 1);
         uint8_t displayed_win : REQUIRED_BITS32(NUM_GWIN - 1);
         bool is_goto_ctrl{ false };
+
+        uint32_t seed;
+        int nmon;
     }
     state;
 
     struct
     {
         std::mt19937 rgen;
-
-        std::uniform_int_distribution<uint32_t> nmon_distribution{ DUNGEON_MIN_NUM_MONSTERS, DUNGEON_MAX_NUM_MONSTERS };
     }
     procedural;
 
@@ -169,6 +192,22 @@ protected:
 
 class GameApplication
 {
+public:
+    inline GameApplication(int argc, char** argv, const std::atomic<bool>& r) :
+        runtime_args
+        {
+            .load{ false },
+            .save{ false }
+        },
+        game{},
+        is_running{ r }
+    {
+        this->initialize(argc, argv);
+    }
+
+    void run();
+
+protected:
     class DungeonFIO
     {
     public:
@@ -226,21 +265,6 @@ class GameApplication
 
     };
 
-public:
-    inline GameApplication(int argc, char** argv, const std::atomic<bool>& r) :
-        runtime_args
-        {
-            .load{ 0 },
-            .save{ 0 },
-            .nmon{ 0 },
-            .seed{ 0 }
-        },
-        game{},
-        is_running{ r }
-    {
-        this->initialize(argc, argv);
-    }
-
 protected:
     inline GameApplication(const GameApplication&) = delete;
     inline GameApplication(GameApplication&&) = delete;
@@ -255,10 +279,8 @@ protected:
 
     struct
     {
-        uint8_t load : 1;
-        uint8_t save : 1;
-        uint8_t nmon;
-        uint32_t seed;
+        bool load;
+        bool save;
     }
     runtime_args;
 

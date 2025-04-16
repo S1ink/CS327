@@ -5,10 +5,11 @@
 
 void GameApplication::initialize(int argc, char** argv)
 {
-    int ret = 0;
-
+// 1. Parse args
     #define MAX_ARGN 7
-    bool nmon_arg = false, seed_arg = false;
+    int nmon = -1;
+    uint32_t seed = 0;
+    bool seed_arg = false;
     for(int n = 1; n < argc && n < MAX_ARGN; n++)
     {
         const char* arg = argv[n];
@@ -19,13 +20,12 @@ void GameApplication::initialize(int argc, char** argv)
             if(!strncmp(arg + 2, "nummon", 6))
             {
                 n++;
-                this->runtime_args.nmon = static_cast<uint8_t>(atoi(argv[n]));
-                nmon_arg = true;
+                nmon = atoi(argv[n]);
             }
             if(!strncmp(arg + 2, "seed", 4))
             {
                 n++;
-                this->runtime_args.seed = static_cast<uint32_t>(atoi(argv[n]));
+                seed = static_cast<uint32_t>(atoi(argv[n]));
                 seed_arg = true;
             }
         }
@@ -34,17 +34,28 @@ void GameApplication::initialize(int argc, char** argv)
 
     if(!seed_arg)
     {
-        this->runtime_args.seed = static_cast<uint32_t>(std::random_device{}());
+        seed = static_cast<uint32_t>(std::random_device{}());
     }
-    this->game.procedural.rgen.seed(this->runtime_args.seed);
 
-    if(nmon_arg)
+    this->game.initRuntimeArgs(seed, nmon);
+
+// 2. Load descriptions
     {
-        this->game.procedural.nmon_distribution = std::uniform_int_distribution<uint32_t>{ 1, this->runtime_args.nmon };
+        std::ifstream f = DungeonFIO::openMonDescriptions();
+        if(!f.is_open() || !this->game.initMonDescriptions(f))
+        {
+            // error
+        }
+        f.close();
+
+        f = DungeonFIO::openObjDescriptions();
+        if(!f.is_open() || !this->game.initItemDescriptions(f))
+        {
+            // error
+        }
     }
 
-    // DungeonMap* map = &d->map;
-
+// 3. Generate / load terrain
     if(this->runtime_args.load)
     {
         // PRINT_DEBUG("LOADING DUNGEON FROM '%s'\n", state->save_path);
@@ -52,36 +63,27 @@ void GameApplication::initialize(int argc, char** argv)
         FILE* f = fopen(DungeonFIO::getLevelSaveFileName().c_str(), "rb");
         if(f)
         {
-            // deserialize_dungeon_map(map, &state->pc_init, f);
+            this->game.initDungeonFile(f);
             fclose(f);
         }
         else
         {
-            fprintf(
-                stderr,
-                "ERROR: Failed to load dungeon from '%s' (file does not exist)\n",
-                DungeonFIO::getLevelSaveFileName().c_str() );
-
-            ret = -1;
+            // fprintf(
+            //     stderr,
+            //     "ERROR: Failed to load dungeon from '%s' (file does not exist)\n",
+            //     DungeonFIO::getLevelSaveFileName().c_str() );
         }
     }
     else
     {
         // PRINT_DEBUG("GENERATING DUNGEON...\n")
 
-        // generate_dungeon_map(map, 0);
-        // random_dungeon_map_floor_pos(map, state->pc_init.data);
+        this->game.initDungeonRandom();
     }
-
-    // if(!ret) init_dungeon_level(d, state->pc_init, state->nmon);
-
-    // return ret;
 }
 
 void GameApplication::shutdown()
 {
-    int ret = 0;
-
     if(this->runtime_args.save)
     {
         // PRINT_DEBUG("SAVING DUNGEON TO '%s'\n", state->save_path)
@@ -89,19 +91,15 @@ void GameApplication::shutdown()
         FILE* f = fopen(DungeonFIO::getLevelSaveFileName().c_str(), "wb");
         if(f)
         {
-            // serialize_dungeon_map(&d->map, &state->pc_init, f);
+            this->game.exportDungeonFile(f);
             fclose(f);
         }
         else
         {
-            fprintf(
-                stderr,
-                "ERROR: Failed to save dungeon to '%s'\n", 
-                DungeonFIO::getLevelSaveFileName().c_str() );
-
-            ret = -1;
+            // fprintf(
+            //     stderr,
+            //     "ERROR: Failed to save dungeon to '%s'\n", 
+            //     DungeonFIO::getLevelSaveFileName().c_str() );
         }
     }
-
-    // return ret;
 }

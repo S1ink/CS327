@@ -33,7 +33,7 @@ class MonDescription
     friend class Entity;
 
 public:
-    static void parse(std::istream& f, std::vector<MonDescription>& descs);
+    static bool parse(std::istream& f, std::vector<MonDescription>& descs);
     static bool verifyHeader(std::istream& f);
 
     static std::string& Name(MonDescription& m) { return m.name; }
@@ -157,7 +157,7 @@ class ItemDescription
     friend class Item;
 
 public:
-    static void parse(std::istream& f, std::vector<ItemDescription>& descs);
+    static bool parse(std::istream& f, std::vector<ItemDescription>& descs);
     static bool verifyHeader(std::istream& f);
 
     static std::string& Name(ItemDescription& i) { return i.name; }

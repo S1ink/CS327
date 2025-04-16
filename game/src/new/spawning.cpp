@@ -5,8 +5,10 @@
 #include "util/sequential_parser.hpp"
 
 
-static void parse(std::istream& f, std::vector<MonDescription>& descs)
+bool MonDescription::parse(std::istream& f, std::vector<MonDescription>& descs)
 {
+    if(!MonDescription::verifyHeader(f)) return false;
+
     SequentialParser<MonDescription> parser;
 
     {
@@ -50,6 +52,8 @@ static void parse(std::istream& f, std::vector<MonDescription>& descs)
     }
 
     parser.parse(f, descs);
+
+    return true;
 }
 
 bool MonDescription::verifyHeader(std::istream& f)
@@ -118,8 +122,10 @@ void MonDescription::serialize(std::ostream& out) const
 
 
 
-void ItemDescription::parse(std::istream& f, std::vector<ItemDescription>& descs)
+bool ItemDescription::parse(std::istream& f, std::vector<ItemDescription>& descs)
 {
+    if(!ItemDescription::verifyHeader(f)) return false;
+
     SequentialParser<ItemDescription> parser;
 
     {
@@ -178,6 +184,8 @@ void ItemDescription::parse(std::istream& f, std::vector<ItemDescription>& descs
     }
 
     parser.parse(f, descs);
+
+    return true;
 }
 
 bool ItemDescription::verifyHeader(std::istream& f)

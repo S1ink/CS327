@@ -1,8 +1,8 @@
 #pragma once
 
-#include <vector>
-#include <random>
 #include <cstdint>
+#include <random>
+#include <vector>
 
 #include "util/vec_geom.hpp"
 #include "util/math.hpp"
@@ -19,7 +19,8 @@ public:
     using DungeonGrid = T[DUNGEON_Y_DIM][DUNGEON_X_DIM];
     using DungeonCostMap = DungeonGrid<int32_t>;
 
-    using SeedT = uint32_t;
+    inline static std::uniform_int_distribution<uint32_t>
+        NMON_DISTRIBUTION{ DUNGEON_MIN_NUM_MONSTERS, DUNGEON_MAX_NUM_MONSTERS };
 
 public:
     struct TerrainMap
@@ -71,7 +72,7 @@ public:
         inline ~TerrainMap() = default;
 
         void reset();
-        void generate(SeedT s);
+        void generate(uint32_t s);
 
     };
 
@@ -96,6 +97,6 @@ public:
     std::vector<Entity> npcs;
     std::vector<Item> items;
 
-    SeedT seed;
+    uint32_t seed{ 0 };
 
 };

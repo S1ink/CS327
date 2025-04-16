@@ -6,6 +6,21 @@
 #include <random>
 
 
+template<typename I = uint32_t, typename G = std::mt19937>
+static inline I random_int(I min, I max, G& gen)
+{
+    std::uniform_int_distribution<I> dist{ min, max };
+    return dist(gen);
+}
+
+template<typename F = float, typename G = std::mt19937>
+static inline F random_float(F min, F max, G& gen)
+{
+    std::uniform_real_distribution<F> dist{ min, max };
+    return dist(gen);
+}
+
+
 struct RollNum
 {
     uint32_t base{ 0 };

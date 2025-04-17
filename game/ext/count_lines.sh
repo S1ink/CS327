@@ -1,1 +1,1 @@
-wc -l src/*.{c,h,cpp} src/util/*.{c,h,cpp}
+wc -l src/*.{c,h,cpp,hpp} src/*/*.{c,h,cpp,hpp}

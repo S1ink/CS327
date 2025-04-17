@@ -1,8 +1,7 @@
 #include "spawning.hpp"
 
 #include <iostream>
-
-#include <ncurses.h>
+#include <bitset>
 
 #include "util/sequential_parser.hpp"
 
@@ -81,14 +80,14 @@ void MonDescription::serialize(std::ostream& out) const
     };
     static const char* COLORS[] =
     {
+        "BLACK",
         "RED",
         "GREEN",
-        "BLUE",
-        "CYAN",
         "YELLOW",
+        "BLUE",
         "MAGENTA",
+        "CYAN",
         "WHITE",
-        "BLACK"
     };
 
     out << "MonDescription@0x" << std::hex << reinterpret_cast<uintptr_t>(this) << std::dec
@@ -223,14 +222,14 @@ void ItemDescription::serialize(std::ostream& out) const
     };
     static const char* COLORS[] =
     {
+        "BLACK",
         "RED",
         "GREEN",
-        "BLUE",
-        "CYAN",
         "YELLOW",
+        "BLUE",
         "MAGENTA",
+        "CYAN",
         "WHITE",
-        "BLACK"
     };
 
     out << "ItemDescription@0x" << std::hex << reinterpret_cast<uintptr_t>(this) << std::dec
@@ -358,6 +357,8 @@ Entity& Entity::operator=(Entity&& e)
 
 short Entity::getColor() const
 {
+    if(!this->config.color) return COLOR_WHITE;
+
     uint8_t c = this->config.color;
     for(short i = 0; i < 8 && c; i++)
     {
@@ -365,6 +366,63 @@ short Entity::getColor() const
         c >>= 1;
     }
     return COLOR_WHITE;
+}
+
+void Entity::print(std::ostream& out)
+{
+    static const char* ABILITIES[] =
+    {
+        "SMART",
+        "TELE",
+        "TUNNEL",
+        "ERRATIC",
+        "PASS",
+        "PICKUP",
+        "DESTROY",
+        "UNIQ",
+        "BOSS",
+        "PC"
+    };
+    static const char* COLORS[] =
+    {
+        "RED",
+        "GREEN",
+        "BLUE",
+        "CYAN",
+        "YELLOW",
+        "MAGENTA",
+        "WHITE",
+        "BLACK"
+    };
+
+    out << "Entity@0x" << std::hex << reinterpret_cast<uintptr_t>(this) << std::dec
+        << "\nName : " << this->config.name
+        << "\nDesc : \"" << this->config.desc
+        << "\"\nSymbol : " << this->config.symbol;
+
+    out << "\nColors :";
+    for(size_t i = 0; i < sizeof(COLORS) / sizeof(*COLORS); i++)
+    {
+        if(this->config.color >> i & 0b1)
+        {
+            out << ' ' << COLORS[i];
+        }
+    }
+
+    out << "\nSpeed : " << this->config.speed;
+    out << "\nAbilities :";
+    for(size_t i = 0; i < sizeof(ABILITIES) / sizeof(*ABILITIES); i++)
+    {
+        if(this->config.ability_bits >> i & 0b1)
+        {
+            std::cout << ' ' << ABILITIES[i];
+        }
+    }
+    out << "\nAbility bits : " << std::bitset<16>() << this->config.ability_bits << std::dec;
+
+    out << "\nHealth : " << this->state.health;
+    // out << "\nDamage : "; this->attack.serialize(out);
+    out << "\nUnique Entry : 0x" << std::hex << reinterpret_cast<uintptr_t>(this->config.unique_entry) << std::dec << '\n';
 }
 
 
@@ -443,11 +501,14 @@ char Item::getChar() const
 
 short Item::getColor() const
 {
+    if(!this->color) return COLOR_WHITE;
+
     uint8_t c = this->color;
     for(short i = 0; i < 8 && c; i++)
     {
         if(c & 0x1) return i;
         c >>= 1;
     }
+
     return COLOR_WHITE;
 }

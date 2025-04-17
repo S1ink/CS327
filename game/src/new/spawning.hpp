@@ -11,6 +11,8 @@
 #include <vector>
 #include <cmath>
 
+#include <ncurses.h>
+
 #include "util/vec_geom.hpp"
 #include "util/random.hpp"
 #include "util/math.hpp"
@@ -18,14 +20,14 @@
 
 enum DisplayColor
 {
-    RED = 1 << 0,
-    GREEN = 1 << 1,
-    BLUE = 1 << 2,
-    CYAN = 1 << 3,
-    YELLOW = 1 << 4,
-    MAGENTA = 1 << 5,
-    WHITE = 1 << 6,
-    BLACK =  1 << 7
+    BLACK =  1 << COLOR_BLACK,
+    RED = 1 << COLOR_RED,
+    GREEN = 1 << COLOR_GREEN,
+    YELLOW = 1 << COLOR_YELLOW,
+    BLUE = 1 << COLOR_BLUE,
+    MAGENTA = 1 << COLOR_MAGENTA,
+    CYAN = 1 << COLOR_CYAN,
+    WHITE = 1 << COLOR_WHITE
 };
 
 class MonDescription
@@ -101,6 +103,8 @@ public:
     inline bool isPC() const { return this->config.is_pc; }
     inline char getChar() const { return this->config.symbol; }
     short getColor() const;
+
+    void print(std::ostream&);
 
 protected:
     inline Entity() = default;
@@ -238,6 +242,8 @@ public:
 
     char getChar() const;
     short getColor() const;
+
+    void print(std::ostream&);
 
 protected:
     inline Item() = default;

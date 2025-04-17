@@ -39,15 +39,24 @@ public:
     bool initDungeonFile(FILE* f);
     bool initDungeonRandom();
 
+    void run(const std::atomic<bool>& r);
+
     bool exportDungeonFile(FILE* f);
 
 protected:
     inline uint32_t nextSeed()
     {
-        return static_cast<uint32_t>(this->procedural.rgen());
+        return static_cast<uint32_t>(this->state.rgen());
     }
 
     bool initializeEntities();
+
+    int overwrite_changes();
+
+    int iterate_next_pc();
+    int iterate_pc_cmd(int move_cmd);
+    int handle_mlist_cmd(int mlist_cmd);
+    int handle_dbg_cmd(int dbg_cmd);
 
 protected:
     enum
@@ -85,7 +94,7 @@ protected:
         void changeLevel(DungeonLevel& l);
 
     protected:
-        void printEntry(Entity* m, int line);
+        void printEntry(const Entity& m, int line);
 
     protected:
         DungeonLevel* level;
@@ -162,8 +171,8 @@ protected:
     std::vector<MonDescription> mon_desc;
     std::vector<ItemDescription> item_desc;
 
-    std::unordered_map<MonDescription*, bool> unique_availability;
-    std::unordered_map<ItemDescription*, bool> artifact_availability;
+    std::unordered_map<const MonDescription*, bool> unique_availability;
+    std::unordered_map<const ItemDescription*, bool> artifact_availability;
 
     struct
     {
@@ -173,14 +182,10 @@ protected:
 
         uint32_t seed;
         int nmon;
-    }
-    state;
 
-    struct
-    {
         std::mt19937 rgen;
     }
-    procedural;
+    state;
 
 };
 
@@ -192,16 +197,17 @@ class GameApplication
 {
 public:
     inline GameApplication(int argc, char** argv, const std::atomic<bool>& r) :
+        game{},
+        is_running{ r },
         runtime_args
         {
             .load{ false },
             .save{ false }
-        },
-        game{},
-        is_running{ r }
+        }
     {
         this->initialize(argc, argv);
     }
+    inline ~GameApplication() { this->shutdown(); }
 
     void run();
 

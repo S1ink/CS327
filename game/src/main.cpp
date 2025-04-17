@@ -1,11 +1,12 @@
 #include "new/game.hpp"
+#include "util/debug.hpp"
 
 #include <atomic>
 
 #include <signal.h>
 
 
-static std::atomic<bool> is_running{ false };
+static std::atomic<bool> is_running{ true };
 static void handle_exit(int x)
 {
     is_running = false;
@@ -29,10 +30,12 @@ static inline void init_sig()
 inline int main_108(int argc, char** argv)
 {
     init_sig();
-    GameApplication{ argc, argv, is_running }.run();
+    GameApplication g{ argc, argv, is_running };
+    g.run();
 
     return 0;
 }
+
 
 int main(int argc, char** argv)
 {

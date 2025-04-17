@@ -103,3 +103,8 @@ void GameApplication::shutdown()
         }
     }
 }
+
+void GameApplication::run()
+{
+    this->game.run(this->is_running);
+}

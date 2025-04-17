@@ -2,6 +2,8 @@
 
 #include <iostream>
 
+#include <ncurses.h>
+
 #include "util/sequential_parser.hpp"
 
 
@@ -350,4 +352,102 @@ Entity& Entity::operator=(Entity&& e)
     this->state.health = e.state.health;
 
     e.config.unique_entry = nullptr;
+
+    return *this;
+}
+
+short Entity::getColor() const
+{
+    uint8_t c = this->config.color;
+    for(short i = 0; i < 8 && c; i++)
+    {
+        if(c & 0x1) return i;
+        c >>= 1;
+    }
+    return COLOR_WHITE;
+}
+
+
+
+
+
+Item::Item(const ItemDescription& id, std::mt19937& gen) :
+    name{ id.name },
+    desc{ id.desc },
+    attack_damage{ id.damage, gen() },
+    hit{ id.hit.roll(gen) },
+    dodge{ id.dodge.roll(gen) },
+    defense{ id.defense.roll(gen) },
+    weight{ id.weight.roll(gen) },
+    speed{ id.speed.roll(gen) },
+    special{ id.special.roll(gen) },
+    value{ id.value.roll(gen) },
+    type{ id.types },
+    color{ id.colors },
+    artifact_entry{ id.artifact ? &id : nullptr }
+{}
+
+Item::Item(Item&& i) :
+    name{ std::move(i.name) },
+    desc{ std::move(i.desc) },
+    attack_damage{ std::move(i.attack_damage) },
+    hit{ i.hit },
+    dodge{ i.dodge },
+    defense{ i.defense },
+    weight{ i.weight },
+    speed{ i.speed },
+    special{ i.special },
+    value{ i.value },
+    type{ i.type },
+    color{ i.color },
+    artifact_entry{ i.artifact_entry },
+    stack_next{ i.stack_next }
+{
+    i.artifact_entry = nullptr;
+    i.stack_next = nullptr;
+}
+
+Item& Item::operator=(Item&& i)
+{
+    this->name = std::move(i.name);
+    this->desc = std::move(i.desc);
+    this->attack_damage = std::move(i.attack_damage);
+    this->hit = i.hit;
+    this->dodge = i.dodge;
+    this->defense = i.defense;
+    this->weight = i.weight;
+    this->speed = i.speed;
+    this->special = i.special;
+    this->value = i.value;
+    this->type = i.type;
+    this->color = i.color;
+    this->artifact_entry = i.artifact_entry;
+    this->stack_next = i.stack_next;
+
+    i.artifact_entry = nullptr;
+    i.stack_next = nullptr;
+
+    return *this;
+}
+
+
+char Item::getChar() const
+{
+    const char* ITEM_CHAR = "|)}[]({\\=\"_~?!$/,-%";
+    for(size_t i = 0; ITEM_CHAR[i]; i++)
+    {
+        if((this->type >> i) & 0x1) return ITEM_CHAR[i];
+    }
+    return '*';
+}
+
+short Item::getColor() const
+{
+    uint8_t c = this->color;
+    for(short i = 0; i < 8 && c; i++)
+    {
+        if(c & 0x1) return i;
+        c >>= 1;
+    }
+    return COLOR_WHITE;
 }

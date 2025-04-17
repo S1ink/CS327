@@ -118,6 +118,8 @@ public:
             keypad(stdscr, TRUE);
             start_color();
             set_escdelay(0);
+
+            for(NCURSES_COLOR_T i = 0; i < 8; i++) init_pair(i, i, COLOR_BLACK);
         }
         nwin++;
     }

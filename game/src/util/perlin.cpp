@@ -1,4 +1,4 @@
-#include "util/perlin.h"
+#include "util/perlin.hpp"
 
 #include <cstdint>
 #include <cmath>
@@ -68,10 +68,10 @@ static F perlin2_(F x, F y)
     const F u = fade<F>(x);
     const F v = fade<F>(y);
 
-    return lerp(v,  lerp(u, grad3( p[p[X] + Y],         x,      y,      0 ),
-                            grad3( p[p[X + 1] + Y],     x - 1,  y,      0 ) ),
-                    lerp(u, grad3( p[p[X] + Y + 1],     x,      y - 1,  0 ),
-                            grad3( p[p[X + 1] + Y + 1], x - 1,  y - 1,  0 ) ) );
+    return lerp(v,  lerp(u, grad3<F>( p[p[X] + Y],         x,      y,      0 ),
+                            grad3<F>( p[p[X + 1] + Y],     x - 1,  y,      0 ) ),
+                    lerp(u, grad3<F>( p[p[X] + Y + 1],     x,      y - 1,  0 ),
+                            grad3<F>( p[p[X + 1] + Y + 1], x - 1,  y - 1,  0 ) ) );
 }
 
 

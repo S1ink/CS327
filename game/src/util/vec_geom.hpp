@@ -39,7 +39,7 @@ struct Vec2_
 
     using VecT = Vec2_<T>;
     using ArgT = typename std::conditional<(sizeof(T) > sizeof(std::uintptr_t)), const T&, T>::type;
-    using VecArgT = typename std::conditional<(sizeof(VecT) > sizeof(std::uintptr_t)), const VecT&, VecT>::type;
+    // using VecArgT = typename std::conditional<(sizeof(VecT) > sizeof(std::uintptr_t)), const VecT&, VecT>::type;
 
     union
     {
@@ -192,7 +192,7 @@ public:
 
 public:
     template<typename G>
-    static inline VecT randomInRange(VecArgT min, VecArgT max, G& gen)
+    static inline VecT randomInRange(VecT min, VecT max, G& gen)
     {
         if constexpr(std::is_floating_point<T>::value)
         {

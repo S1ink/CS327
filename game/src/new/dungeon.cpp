@@ -55,7 +55,7 @@ static int terrain_map_generate_floors(DungeonLevel::TerrainMap& map, std::mt199
             (DUNGEON_X_DIM - DUNGEON_ROOM_MIN_X - 1),
             (DUNGEON_Y_DIM - DUNGEON_ROOM_MIN_Y - 1)
         },
-        r_min
+        s_min
         {
             (DUNGEON_ROOM_MIN_X - 1),
             (DUNGEON_ROOM_MIN_Y - 1)
@@ -67,7 +67,7 @@ static int terrain_map_generate_floors(DungeonLevel::TerrainMap& map, std::mt199
     {
         DungeonLevel::TerrainMap::Room& r = map.rooms[i];
         r.tl = Vec2u8::randomInRange(d_min, d_max, gen);
-        r.br = r.tl + r_min;
+        r.br = r.tl + s_min;
 
         if(i == 0)
         {
@@ -94,7 +94,7 @@ static int terrain_map_generate_floors(DungeonLevel::TerrainMap& map, std::mt199
     {
         DungeonLevel::TerrainMap::Room& r = map.rooms[rnum];
         r.tl = Vec2u8::randomInRange(d_min, d_max, gen);
-        r.br = r.tl + r_min;
+        r.br = r.tl + s_min;
 
         rnum++;
         for(size_t j = 0; j < rnum; j++)
@@ -309,6 +309,27 @@ void DungeonLevel::TerrainMap::generate(uint32_t seed)
 
 
 
+void DungeonLevel::reset()
+{
+    this->map.reset();
+
+    memset(this->visibility_map, ' ', sizeof(uint8_t) * DUNGEON_TOTAL_CELLS);
+    memset(this->entity_map, 0x0, sizeof(Entity*) * DUNGEON_TOTAL_CELLS);
+    memset(this->item_map, 0x0, sizeof(Item*) * DUNGEON_TOTAL_CELLS);
+    for(size_t y = 0; y < DUNGEON_Y_DIM; y++)
+    {
+        for(size_t x = 0; x < DUNGEON_X_DIM; x++)
+        {
+            this->tunnel_costs[y][x] = std::numeric_limits<int32_t>::max();
+            this->terrain_costs[y][x] = std::numeric_limits<int32_t>::max();
+        }
+    }
+
+    // reset pc?
+    this->npcs.clear();
+    this->items.clear();
+}
+
 int DungeonLevel::loadTerrain(FILE* f)
 {
 // marker, version, and size all unneeded for parsing
@@ -408,7 +429,7 @@ int DungeonLevel::saveTerrain(FILE* f)
 // 4. Write X and Y position of PC
     const uint8_t* pc_loc = this->pc.state.pos.data;
     // PRINT_DEBUG("Writing PC location of (%d, %d)\n", pc_pos->x, pc_pos->y);
-    fwrite(pc_loc, sizeof(*pc_loc), (sizeof(pc_loc) / sizeof(*pc_loc)), f);
+    fwrite(pc_loc, sizeof(*pc_loc), (sizeof(this->pc.state.pos.data) / sizeof(*pc_loc)), f);
 
     uint8_t *up_stair, *down_stair;
     up_stair = static_cast<uint8_t*>(malloc(sizeof(*up_stair) * this->map.num_up_stair * 2));
@@ -505,6 +526,8 @@ int DungeonLevel::saveTerrain(FILE* f)
 int DungeonLevel::generateTerrain()
 {
     this->map.generate(this->rgen());
+
+    return 0;
 }
 
 
@@ -540,4 +563,46 @@ int DungeonLevel::updateCosts(bool both_or_only_terrain)
     }
 
     return 0;
+}
+
+int DungeonLevel::copyVisCells()
+{
+    for(size_t i = 0; i < 21; i++)
+    {
+        const auto v = VIS_OFFSETS[i];
+        const int8_t y = static_cast<int8_t>(this->pc.state.pos.y) + v[0];
+        const int8_t x = static_cast<int8_t>(this->pc.state.pos.x) + v[1];
+
+        if(y >= 0 && y < DUNGEON_Y_DIM && x >= 0 && x < DUNGEON_X_DIM)
+        {
+            this->visibility_map[y][x] = this->map.terrain[y][x].getChar();
+        }
+    }
+
+    return 0;
+}
+
+void DungeonLevel::writeChar(WINDOW* win, Vec2u8 loc)
+{
+    Entity* e = DungeonLevel::accessGridElem(this->entity_map, loc);
+    if(e)
+    {
+        const short c = e->getColor();
+        wattron(win, COLOR_PAIR(c));
+        mvwaddch(win, loc.y, loc.x, e->getChar());
+        wattroff(win, COLOR_PAIR(c));
+        return;
+    }
+
+    Item* i = DungeonLevel::accessGridElem(this->item_map, loc);
+    if(i)
+    {
+        const short c = i->getColor();
+        wattron(win, COLOR_PAIR(c));
+        mvwaddch(win, loc.y, loc.x, i->getChar());
+        wattroff(win, COLOR_PAIR(c));
+        return;
+    }
+
+    mvwaddch(win, loc.y, loc.x, DungeonLevel::accessGridElem(this->map.terrain, loc).getChar());
 }

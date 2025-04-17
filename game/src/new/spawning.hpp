@@ -90,21 +90,23 @@ public:
 public:
     Entity(PCGenT);
     Entity(const MonDescription& md, std::mt19937& gen);
+    Entity(Entity&&);
     inline ~Entity() = default;
+
+    Entity& operator=(Entity&&);
 
 public:
     inline bool isAlive() const { return this->state.health > 0; }
     inline bool isDead() const { return !this->isAlive(); }
     inline bool isPC() const { return this->config.is_pc; }
     inline char getChar() const { return this->config.symbol; }
+    short getColor() const;
 
 protected:
     inline Entity() = default;
     inline Entity(const Entity&) = delete;
-    Entity(Entity&&);
 
     Entity& operator=(const Entity&) = delete;
-    Entity& operator=(Entity&&);
 
 public:
     struct
@@ -228,28 +230,43 @@ protected:
 class Item
 {
 public:
+    Item(const ItemDescription& id, std::mt19937& gen);
+    Item(Item&&);
+    inline ~Item() = default;
+
+    Item& operator=(Item&&);
+
+    char getChar() const;
+    short getColor() const;
+
+protected:
+    inline Item() = default;
+    inline Item(const Item&) = delete;
+
+    Item& operator=(const Item&) = delete;
+
+public:
     struct StackNode
     {
-        Item *item{ nullptr }, *next{ nullptr };
+        Item* item{ nullptr };
+        StackNode* next{ nullptr };
     };
 
 public:
-    std::string_view name, desc;
-    RollableNum attack_damage;
-    uint32_t hit;
-    uint32_t dodge;
-    uint32_t defense;
-    uint32_t weight;
-    uint32_t speed;
-    uint32_t special;
-    uint32_t value;
-    uint32_t type;
-    uint8_t color;
+    std::string_view name{}, desc{};
+    RollableNum attack_damage{ {} };
+    uint32_t hit{ 0 };
+    uint32_t dodge{ 0 };
+    uint32_t defense{ 0 };
+    uint32_t weight{ 0 };
+    uint32_t speed{ 0 };
+    uint32_t special{ 0 };
+    uint32_t value{ 0 };
+    uint32_t type{ 0 };
+    uint8_t color{ 0 };
 
-    ItemDescription* artifact_entry;
-
-public:
-    char getChar();
+    const ItemDescription* artifact_entry{ nullptr };
+    Item* stack_next{ nullptr };
 
 };
 

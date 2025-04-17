@@ -10,7 +10,7 @@ CC := gcc
 CXX := g++
 
 CFLAGS := -Wall -Werror -funroll-loops -Isrc
-CXXFLAGS := -Wall -Werror -funroll-loops -Isrc
+CXXFLAGS := -std=c++17 -lstdc++ -Wall -Werror -Wno-narrowing -funroll-loops -Isrc
 LDFLAGS := -lm -lncurses
 
 SRC_DIR := src
@@ -31,6 +31,7 @@ endif
 
 BIN := game
 SRCS := $(call rwildcard,$(SRC_DIR)/,*.cpp *.c)
+# SRCS := src/main.cpp src/new/items.cpp
 OBJS := $(SRCS:$(SRC_DIR)/%=$(OBJ_DIR)/%.o)
 HEADERS := $(call rwildcard,$(SRC_DIR)/,*.h *.hpp)
 OBJ_DIRS := $(sort $(dir $(OBJS)))
@@ -41,7 +42,7 @@ all: $(BIN)
 
 $(BIN): $(OBJS)
 	@echo Linking $@
-	@$(CC) -o $@ $^ $(LDFLAGS)
+	@$(CXX) -o $@ $^ $(LDFLAGS)
 
 -include $(OBJS:.o=.d)
 

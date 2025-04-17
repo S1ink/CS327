@@ -1,10 +1,13 @@
-Initializes a dungeon, randomly spawns monsters, and starts a playable game (using ncurses). All controls listed in the
-1.05 specification are implemented, as well as the following:
+Parses monster and item description files, initializes a dungeon, randomly spawns monsters,
+and starts a playable game (using ncurses). All controls listed in the 1.08 specification are implemented,
+as well as the following:
  1. Ctrl+C exits the program (as well as 'Q').
  2. 'H' displays the hardness map (in color).
  3. 'D' displays the floor weightmap (in color).
  4. 'T' displays the terrain weightmap (in color).
  5. 's' displays the default map, if another was being displayed.
+
+**PLEASE NOTE:** Monster AI is currently broken due to the fact that most of the code was rewritten.
 
 **BUILD**:
     Run `make`

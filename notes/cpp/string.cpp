@@ -1,7 +1,13 @@
 #include "string.h"
 
 #include <stdlib.h>
+#include <exception>    // std::exception exports abstract method const char* what() (must implement)
 
+
+// exceptions "unwind" when uncaught --> runtime catches all unhandled exceptions when they reach main()
+// *anything* can be used as an exception
+// C --> __FUNCTION__ to get function name
+// C++ -> __FUNCTION__ can be ambiguous so need to use __PRETTY_FUNCTION__ (entire function signature)
 
 string2::string2()
 {
@@ -10,18 +16,27 @@ string2::string2()
 
 string2::string2(const char* s)
 {
-    this->str = strdup(s);
+    if( !(this->str = strdup(s)) )
+    {
+        throw __PRETTY_FUNCTION__;
+    }
 }
 
 string2::string2(const string2& s)
 {
-    this->str = strdup(s.str);
+    if( !(this->str = strdup(s.str)) )
+    {
+        throw __PRETTY_FUNCTION__;
+    }
 }
 
 string2::string2(string2&& s)
 {
     this->str = s.str;
-    s.str = static_cast<char*>(calloc(1, 1));
+    if( !(s.str = static_cast<char*>(calloc(1, 1))) )
+    {
+        throw __PRETTY_FUNCTION__;
+    }
 }
 
 string2::~string2()
@@ -33,14 +48,20 @@ string2::~string2()
 string2& string2::operator = (const string2& s)
 {
     free(this->str);
-    this->str = strdup(s.str);
+    if( !(this->str = strdup(s.str)) )
+    {
+        throw __PRETTY_FUNCTION__;
+    }
 
     return *this;
 }
 string2& string2::operator = (const char* str)
 {
     free(this->str);
-    this->str = strdup(str);
+    if( !(this->str = strdup(str)) )
+    {
+        throw __PRETTY_FUNCTION__;
+    }
 
     return *this;
 }
@@ -56,10 +77,16 @@ string2& string2::operator += (const string2& s)
     const size_t l = this->length();
 
     char* x = static_cast<char*>(realloc(this->str, l + s.length() + 1));
-    if(!x) {} // error!
+    if(!x)
+    {
+        throw __PRETTY_FUNCTION__;
+    }
 
     this->str = x;
-    strcpy(this->str + l, s.str);
+    if( !(strcpy(this->str + l, s.str)) )
+    {
+        throw __PRETTY_FUNCTION__;
+    }
 
     return *this;
 }
@@ -82,8 +109,14 @@ string2 string2::operator + (const string2& s) const
     string2 x{};
     free(x.str);
 
-    x.str = static_cast<char*>(malloc(this->length() + s.length() + 1));
-    strcpy(stpcpy(x.str, this->str), s.str);
+    if( !(x.str = static_cast<char*>(malloc(this->length() + s.length() + 1))) )
+    {
+        throw __PRETTY_FUNCTION__;
+    }
+    if( !(strcpy(stpcpy(x.str, this->str), s.str)) )
+    {
+        throw __PRETTY_FUNCTION__;
+    }
 
     return x;
 }
@@ -94,8 +127,14 @@ string2 string2::operator + (const char* str) const
     string2 x{};
     free(x.str);
 
-    x.str = static_cast<char*>(malloc(this->length() + strlen(str) + 1));
-    strcpy(stpcpy(x.str, this->str), str);
+    if( !(x.str = static_cast<char*>(malloc(this->length() + strlen(str) + 1))) )
+    {
+        throw __PRETTY_FUNCTION__;
+    }
+    if( !(strcpy(stpcpy(x.str, this->str), str)) )
+    {
+        throw __PRETTY_FUNCTION__;
+    }
 
     return x;
 }
@@ -134,7 +173,10 @@ std::ostream& operator<<(std::ostream& o, const string2& s)
 std::istream& operator>>(std::istream& i, string2& s)
 {
     free(s.str);
-    s.str = static_cast<char*>(malloc(80));
+    if( !(s.str = static_cast<char*>(malloc(80))) )
+    {
+        throw __PRETTY_FUNCTION__;
+    }
 
     return i.getline(s.str, s.length(), '\n');
 }
@@ -154,9 +196,37 @@ int main(int argc, char** argv)
 
     std::cout << x << std::endl;
 
-    x = "foo";
+    // x = "foo";
+
+    x[6] = 'E';
+    x[7] = 'a';
+    x[8] = 'r';
+    x[9] = 'l';
+    x[10] = '!';
 
     std::cout << x << std::endl;
+
+    try
+    {
+        // throw 1;
+        std::cout << x[11] << std::endl;
+    }
+    catch(char* e)
+    {
+        std::cout << "took the char* option" << std::endl;
+    }
+    catch(int e)
+    {
+        std::cout << e << std::endl;
+    }
+    catch(const char* e)
+    {
+        std::cout << "Failed to access index 11 in function " << e << std::endl;
+    }
+    catch(...)
+    {
+        std::cout << "Foo" << std::endl;
+    }
 
     return 0;
 }

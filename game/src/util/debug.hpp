@@ -1,5 +1,7 @@
 #pragma once
 
+#include <fstream>
+
 #include <stdio.h>
 #include <stdint.h>
 #include <sys/time.h>
@@ -9,12 +11,23 @@
 #endif
 
 #if ENABLE_DEBUG_PRINTS && 0
-    #define PRINT_DEBUG(...) printf(__VA_ARGS__); fflush(stdout);
+    #define PRINT_DEBUG(...) fprintf(stderr, __VA_ARGS__); fflush(stdout);
     #define IF_DEBUG(x) x
 #else
     #define PRINT_DEBUG(...)
     #define IF_DEBUG(...)
 #endif
+
+
+class FileDebug
+{
+public:
+    static std::ofstream& get() { return of; }
+
+protected:
+    inline static std::ofstream of{ "debug.txt" };
+
+};
 
 
 static inline uint32_t us_seed()

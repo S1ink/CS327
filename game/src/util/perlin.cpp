@@ -1,7 +1,7 @@
-#include "util/perlin.h"
+#include "util/perlin.hpp"
 
-#include <stdint.h>
-#include <math.h>
+#include <cstdint>
+#include <cmath>
 
 /* Based on Java example by Ken Perlin:
  * https://cs.nyu.edu/~perlin/noise/ */
@@ -35,73 +35,45 @@ static uint8_t
         49,192,214, 31,181,199,106,157,184, 84,204,176,115,121,50,45,127, 4,150,254,
         138,236,205,93,222,114,67,29,24,72,243,141,128,195,78,66,215,61,156,180 };
 
-double fade(double t)
+template<typename F>
+static F fade(F t)
 {
     return t * t * t * (t * (t * 6 - 15) + 10);
 }
-double lerp(double t, double a, double b)
+template<typename F>
+static F lerp(F t, F a, F b)
 {
     return a + t * (b - a);
 }
-double grad3(int32_t hash, double x, double y, double z)
+template<typename F>
+static F grad3(int32_t hash, F x, F y, F z)
 {
     int32_t h = hash & 0xF;
-    double
+    F
         u = (h < 8) ? x : y,
         v = (h < 4) ? y : (h == 0xC || h == 0xE) ? x : z;
     return ((h & 0x1) == 0 ? u : -u) + ((h & 0x2) == 0 ? v : -v);
 }
 
-double perlin2d(double x, double y)
+template<typename F>
+static F perlin2_(F x, F y)
 {
-    const double x_floor = floor(x);
-    const double y_floor = floor(y);
+    const F x_floor = std::floor(x);
+    const F y_floor = std::floor(y);
 
     const int64_t X = (int64_t)x_floor & 0xFF;
     const int64_t Y = (int64_t)y_floor & 0xFF;
     x -= x_floor;
     y -= y_floor;
-    const double u = fade(x);
-    const double v = fade(y);
+    const F u = fade<F>(x);
+    const F v = fade<F>(y);
 
-    return lerp(v,  lerp(u, grad3( p[p[X] + Y],         x,      y,      0 ),
-                            grad3( p[p[X + 1] + Y],     x - 1,  y,      0 ) ),
-                    lerp(u, grad3( p[p[X] + Y + 1],     x,      y - 1,  0 ),
-                            grad3( p[p[X + 1] + Y + 1], x - 1,  y - 1,  0 ) ) );
+    return lerp(v,  lerp(u, grad3<F>( p[p[X] + Y],         x,      y,      0 ),
+                            grad3<F>( p[p[X + 1] + Y],     x - 1,  y,      0 ) ),
+                    lerp(u, grad3<F>( p[p[X] + Y + 1],     x,      y - 1,  0 ),
+                            grad3<F>( p[p[X + 1] + Y + 1], x - 1,  y - 1,  0 ) ) );
 }
 
 
-float fade_f(float t)
-{
-    return t * t * t * (t * (t * 6 - 15) + 10);
-}
-float lerp_f(float t, float a, float b)
-{
-    return a + t * (b - a);
-}
-float grad3_f(int32_t hash, float x, float y, float z)
-{
-    int32_t h = hash & 0xF;
-    float
-        u = (h < 8) ? x : y,
-        v = (h < 4) ? y : (h == 0xC || h == 0xE) ? x : z;
-    return ((h & 0x1) == 0 ? u : -u) + ((h & 0x2) == 0 ? v : -v);
-}
-
-float perlin2f(float x, float y)
-{
-    const float x_floor = floorf(x);
-    const float y_floor = floorf(y);
-
-    const int64_t X = (int64_t)x_floor & 0xFF;
-    const int64_t Y = (int64_t)y_floor & 0xFF;
-    x -= x_floor;
-    y -= y_floor;
-    const float u = fade_f(x);
-    const float v = fade_f(y);
-
-    return lerp_f(v, lerp_f(u,  grad3_f( p[p[X] + Y],         x,      y,      0 ),
-                                grad3_f( p[p[X + 1] + Y],     x - 1,  y,      0 ) ),
-                     lerp_f(u,  grad3_f( p[p[X] + Y + 1],     x,      y - 1,  0 ),
-                                grad3_f( p[p[X + 1] + Y + 1], x - 1,  y - 1,  0 ) ) );
-}
+float perlin2f(float x, float y) { return perlin2_<float>(x, y); }
+double perlin2d(double x, double y) { return perlin2_<double>(x, y); }

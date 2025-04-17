@@ -42,3 +42,6 @@ singleton : singleton.cpp
 
 parens_puzzle : parens_puzzle.cpp
 	g++ parens_puzzle.cpp -o parens_puzzle
+
+algorithms : algorithms.cpp
+	g++ algorithms.cpp -o algorithms

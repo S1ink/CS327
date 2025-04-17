@@ -1,0 +1,11 @@
+#include <string>
+#include <ifstream>
+#include <sstream>
+
+-> std::ifstream::peek()
+-> std::ifstream::get()
+-> std::ifstream::getline()
+-> std::getline()
+-> std::ifstream::operator>>()
+
+-> std::stringstream

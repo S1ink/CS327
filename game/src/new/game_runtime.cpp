@@ -1,25 +1,25 @@
-#include "lol.hpp"
+#include "game.hpp"
+
+#include "util/debug.hpp"
 
 
-
-void MListWindow::onShow()
+void GameState::MListWindow::onShow()
 {
     this->prox_gradient.applyForeground(COLOR_BLACK);
 
     werase(this->win);
     this->scroll_amount = 0;
 
-    size_t line = 0;
-    size_t mon = 0;
-    Entity* m = this->level->entity_alloc + 1;
-    for(;mon < this->level->num_monsters && line < DUNGEON_Y_DIM - 2; m++)
+    size_t alive_i = 0;
+    for( auto m = this->level->npcs.begin();
+        m != this->level->npcs.end() && alive_i < (DUNGEON_Y_DIM - 2);
+        m++ )
     {
-        if(m->hn)
+        if(m->state.health > 0)
         {
-            this->printEntry(m, line);
+            this->printEntry(*m, alive_i);
 
-            mon++;
-            line++;
+            alive_i++;
         }
     }
 
@@ -28,26 +28,26 @@ void MListWindow::onShow()
     // NC_PRINT("%d monster(s) remain.", this->level->num_monsters);
 }
 
-void MListWindow::onScrollUp()
+void GameState::MListWindow::onScrollUp()
 {
-    if((int)this->level->num_monsters - this->scroll_amount > (DUNGEON_Y_DIM - 2))
+    if((int)this->level->npcs_remaining - this->scroll_amount > (DUNGEON_Y_DIM - 2))
     {
         this->scroll_amount += 1;
         wscrl(this->win, 1);
 
         const int target_mnum = DUNGEON_Y_DIM - 3 + this->scroll_amount;
-        Entity* m = this->level->entity_alloc + 1;
-        for(int mon = 0; !m->hn || mon < target_mnum; m++)
+        auto m = this->level->npcs.begin();
+        for(int mon = 0; m->state.health <= 0 || mon < target_mnum; m++)
         {
-            if(m->hn) mon++;
+            if(m->state.health) mon++;
         }
 
-        this->printEntry(m, DUNGEON_Y_DIM - 3);
+        this->printEntry(*m, DUNGEON_Y_DIM - 3);
         this->refresh();
     }
 }
 
-void MListWindow::onScrollDown()
+void GameState::MListWindow::onScrollDown()
 {
     if(this->scroll_amount > 0)
     {
@@ -55,27 +55,27 @@ void MListWindow::onScrollDown()
         wscrl(this->win, -1);
 
         const int target_mnum = this->scroll_amount;
-        Entity* m = this->level->entity_alloc + 1;
-        for(int mon = 0; !m->hn || mon < target_mnum; m++)
+        auto m = this->level->npcs.begin();
+        for(int mon = 0; !m->state.health || mon < target_mnum; m++)
         {
-            if(m->hn) mon++;
+            if(m->state.health) mon++;
         }
 
-        this->printEntry(m, 0);
+        this->printEntry(*m, 0);
         this->refresh();
     }
 }
 
-void MListWindow::changeLevel(DungeonLevel& l)
+void GameState::MListWindow::changeLevel(DungeonLevel& l)
 {
     this->level = &l;
 }
 
-void MListWindow::printEntry(Entity* m, int line)
+void GameState::MListWindow::printEntry(const Entity& m, int line)
 {
     const int
-        dx = (int)this->level->pc->pos.x - (int)m->pos.x,
-        dy = (int)this->level->pc->pos.y - (int)m->pos.y;
+        dx = (int)this->level->pc.state.pos.x - (int)m.state.pos.x,
+        dy = (int)this->level->pc.state.pos.y - (int)m.state.pos.y;
         // ds = m->md.tunneling ? this->level->terrain_costs[m->pos.y][m->pos.x] : this->level->tunnel_costs[m->pos.y][m->pos.x];
 
     wmove(this->win, line, 0);
@@ -86,8 +86,8 @@ void MListWindow::printEntry(Entity* m, int line)
     //     wattron(this->win, COLOR_PAIR(COLOR_RED));
     // }
 
-    mvwprintw( this->win, line, 0, "[0x%c] : %d %s, %d %s",
-        ("0123456789ABCDEF")[m->md.stats],
+    mvwprintw( this->win, line, 0, "[%s] : %d %s, %d %s",
+        m.config.name.data(),
         abs(dx),
         dx > 0 ? "West" : "East",
         abs(dy),
@@ -103,7 +103,7 @@ void MListWindow::printEntry(Entity* m, int line)
 
 
 
-void MapWindow::onPlayerMove(Vec2u8 a, Vec2u8 b)
+void GameState::MapWindow::onPlayerMove(Vec2u8 a, Vec2u8 b)
 {
     switch(this->state.map_mode)
     {
@@ -116,8 +116,8 @@ void MapWindow::onPlayerMove(Vec2u8 a, Vec2u8 b)
         case MAP_DUNGEON :
         case MAP_HARDNESS :
         {
-            mvwaddch(this->win, a.y, a.x, get_terrain_char(this->level->map.terrain[a.y][a.x]));
-            mvwaddch(this->win, b.y, b.x, get_entity_char(this->level->entities[b.y][b.x]));
+            this->level->writeChar(this->win, a);
+            this->level->writeChar(this->win, b);
             break;
         }
         case MAP_FWEIGHT :
@@ -128,7 +128,7 @@ void MapWindow::onPlayerMove(Vec2u8 a, Vec2u8 b)
         }
     }
 }
-void MapWindow::onMonsterMove(Vec2u8 a, Vec2u8 b, bool terrain_changed)
+void GameState::MapWindow::onMonsterMove(Vec2u8 a, Vec2u8 b, bool terrain_changed)
 {
     switch(this->state.map_mode)
     {
@@ -140,8 +140,8 @@ void MapWindow::onMonsterMove(Vec2u8 a, Vec2u8 b, bool terrain_changed)
         case MAP_DUNGEON :
         case MAP_HARDNESS :
         {
-            mvwaddch(this->win, a.y, a.x, get_terrain_char(this->level->map.terrain[a.y][a.x]));
-            mvwaddch(this->win, b.y, b.x, get_entity_char(this->level->entities[b.y][b.x]));
+            this->level->writeChar(this->win, a);
+            this->level->writeChar(this->win, b);
             break;
         }
         case MAP_FWEIGHT :
@@ -152,26 +152,20 @@ void MapWindow::onMonsterMove(Vec2u8 a, Vec2u8 b, bool terrain_changed)
         }
     }
 }
-void MapWindow::onGotoMove(Vec2u8 a, Vec2u8 b)
+void GameState::MapWindow::onGotoMove(Vec2u8 a, Vec2u8 b)
 {
     switch(this->state.map_mode)
     {
         case MAP_FOG :
         {
-            mvwaddch(this->win, a.y, a.x, this->level->fog_map[a.y][a.x]);
+            mvwaddch(this->win, a.y, a.x, this->level->visibility_map[a.y][a.x]);   // TODO: doesn't handle items/monsters in current range
             mvwaddch(this->win, b.y, b.x, '*');
             break;
         }
         case MAP_DUNGEON :
         case MAP_HARDNESS :
         {
-            mvwaddch(
-                this->win,
-                a.y,
-                a.x,
-                get_cell_char(
-                    this->level->map.terrain[a.y][a.x],
-                    this->level->entities[b.y][b.x] ) );
+            this->level->writeChar(this->win, a);
             mvwaddch(this->win, b.y, b.x, '*');
             break;
         }
@@ -179,7 +173,7 @@ void MapWindow::onGotoMove(Vec2u8 a, Vec2u8 b)
     }
 }
 
-void MapWindow::onRefresh(bool force_rewrite)
+void GameState::MapWindow::onRefresh(bool force_rewrite)
 {
     switch(this->state.map_mode)
     {
@@ -227,7 +221,7 @@ void MapWindow::onRefresh(bool force_rewrite)
     this->refresh();
 }
 
-void MapWindow::changeMap(int mmode)
+void GameState::MapWindow::changeMap(int mmode)
 {
     if(this->state.map_mode == MAP_FOG && mmode == MAP_FOG)
     {
@@ -262,7 +256,7 @@ void MapWindow::changeMap(int mmode)
     }
 }
 
-void MapWindow::changeLevel(DungeonLevel& l, int mmode)
+void GameState::MapWindow::changeLevel(DungeonLevel& l, int mmode)
 {
     this->level = &l;
 
@@ -277,52 +271,53 @@ void MapWindow::changeLevel(DungeonLevel& l, int mmode)
 }
 
 
-void MapWindow::writeFogMap()
+void GameState::MapWindow::writeFogMap()
 {
     for(uint32_t y = 1; y < DUNGEON_Y_DIM - 1; y++)
     {
-        mvwaddnstr(this->win, y, 1, this->level->fog_map[y] + 1, DUNGEON_X_DIM - 2);
+        mvwaddnstr(this->win, y, 1, this->level->visibility_map[y] + 1, DUNGEON_X_DIM - 2);
     }
-    if(this->level->pc)
-    {
+    // if(this->level->pc)
+    // {
         for(size_t i = 0; i < 21; i++)
         {
-            const auto v = VIS_OFFSETS[i];
-            const int8_t y = static_cast<int8_t>(this->level->pc->pos.y) + v[0];
-            const int8_t x = static_cast<int8_t>(this->level->pc->pos.x) + v[1];
+            const auto v = DungeonLevel::VIS_OFFSETS[i];
+            const int8_t y = static_cast<int8_t>(this->level->pc.state.pos.y) + v[0];
+            const int8_t x = static_cast<int8_t>(this->level->pc.state.pos.x) + v[1];
 
             if( (y >= 0 && y < DUNGEON_Y_DIM && x >= 0 && x < DUNGEON_X_DIM) &&
-                (this->level->entities[y][x]) )
+                (this->level->entity_map[y][x] || this->level->item_map[y][x]) )
             {
-                mvwaddch(this->win, y, x, get_entity_char(this->level->entities[y][x]));
+                this->level->writeChar(this->win, {x, y});
             }
         }
-    }
+    // }
 }
-void MapWindow::writeDungeonMap()
+void GameState::MapWindow::writeDungeonMap()
 {
-    char row[DUNGEON_X_DIM - 2];
+    // char row[DUNGEON_X_DIM - 2];
     for(uint32_t y = 1; y < (DUNGEON_Y_DIM - 1); y++)
     {
         for(uint32_t x = 1; x < (DUNGEON_X_DIM - 1); x++)
         {
-            row[x - 1] = get_cell_char(
-                            this->level->map.terrain[y][x],
-                            this->level->entities[y][x] );
+            this->level->writeChar(this->win, {x, y});
+            // row[x - 1] = get_cell_char(
+            //                 this->level->map.terrain[y][x],
+            //                 this->level->entities[y][x] );
         }
-        mvwaddnstr(this->win, y, 1, row, DUNGEON_X_DIM - 2);
+        // mvwaddnstr(this->win, y, 1, row, DUNGEON_X_DIM - 2);
     }
 }
-void MapWindow::writeHardnessMap()
+void GameState::MapWindow::writeHardnessMap()
 {
     for(uint32_t y = 1; y < (DUNGEON_Y_DIM - 1); y++)
     {
         for(uint32_t x = 1; x < (DUNGEON_X_DIM - 1); x++)
         {
-            CellTerrain t = this->level->map.terrain[y][x];
+            DungeonLevel::TerrainMap::Cell t = this->level->map.terrain[y][x];
             if(t.type)
             {
-                mvwaddch(this->win, y, x, get_cell_char(t, this->level->entities[y][x]));
+                this->level->writeChar(this->win, {x, y});
             }
             else
             {
@@ -336,14 +331,14 @@ void MapWindow::writeHardnessMap()
         }
     }
 }
-void MapWindow::writeWeightMap(DungeonCostMap weights)
+void GameState::MapWindow::writeWeightMap(DungeonLevel::DungeonCostMap weights)
 {
     for(uint32_t y = 1; y < (DUNGEON_Y_DIM - 1); y++)
     {
         for(uint32_t x = 1; x < (DUNGEON_X_DIM - 1); x++)
         {
             const int32_t w = weights[y][x];
-            if(w == INT_MAX)
+            if(w == std::numeric_limits<int32_t>::max())
             {
                 mvwaddch(this->win, y, x, ' ');
             }
@@ -384,8 +379,10 @@ int handle_entity_move(DungeonLevel* d, Entity* e, uint8_t x, uint8_t y, bool is
 /* -------------------------------------------------------------------- */
 
 
-static int nc_print_win_lose(LevelStatus s, volatile int* r)
+static int nc_print_win_lose(int s, const std::atomic<bool>& r)
 {
+    if(!s) return 0;
+
     char lose[] =
         "                                                                                \n"
         "                                                                                \n"
@@ -450,12 +447,12 @@ static int nc_print_win_lose(LevelStatus s, volatile int* r)
     init_pair(8, COLOR_WHITE, 8);
     attron(COLOR_PAIR(8));
 
-    if(s.has_lost)
+    if(s < 0)
     {
         mvaddstr(0, 0, lose);
 
         uint8_t p = 0;
-        for(; p <= 100 && *r; p = MIN_CACHED(p + RANDOM_IN_RANGE(MIN_PERCENT_CHUNK, MAX_PERCENT_CHUNK), 100))
+        for(; p <= 100 && r; p = MIN_CACHED(p + RANDOM_IN_RANGE(MIN_PERCENT_CHUNK, MAX_PERCENT_CHUNK), 100))
         {
             uint8_t px = (p * LOADING_BAR_LEN) / 100;
             for(int i = LOADING_BAR_START_IDX; i <= LOADING_BAR_START_IDX + px; i++)
@@ -482,7 +479,7 @@ static int nc_print_win_lose(LevelStatus s, volatile int* r)
     {
         mvaddstr(0, 0, win);
         refresh();
-        if(*r)
+        if(r)
         {
             usleep(1000000);
             attron(WA_BLINK);
@@ -711,7 +708,7 @@ static inline InputCommand decode_input_command(int in)
 }
 
 
-int Game::overwrite_changes()
+int GameState::overwrite_changes()
 {
     if(this->state.active_win != this->state.displayed_win)
     {
@@ -728,39 +725,40 @@ int Game::overwrite_changes()
     return 0;
 }
 
-int Game::iterate_next_pc(LevelStatus& s)
+int GameState::iterate_next_pc()
 {
-    Heap* q = &this->level.entity_q;
+    // Heap* q = &this->level.entity_q;
     Entity* e;
-
-    s.data = 0;
+    int s;
     do
     {
-        e = static_cast<Entity*>(heap_remove_min(q));
-        if(e->hn)   // null heap node means the entity has perished
+        // e = static_cast<Entity*>(heap_remove_min(q));
+        DungeonLevel::EntityQueueNode qn = this->level.entity_queue.top();
+        this->level.entity_queue.pop();
+        e = qn.e;
+        if(e->state.health > 0)
         {
-            e->next_turn += e->speed;
-            e->hn = heap_insert(q, e);
+            qn.next_turn += e->config.speed;
+            this->level.entity_queue.push(qn);
 
-            if(!e->is_pc)
+            if(!e->config.is_pc)
             {
-                Vec2u8 pre;
-                vec2u8_copy(&pre, &e->pos);
-                if(iterate_monster(&this->level, e))
+                Vec2u8 pre = e->state.pos;
+                if(this->level.iterateNPC(*e))
                 {
-                    this->map_win.onMonsterMove(pre, e->pos);
+                    this->map_win.onMonsterMove(pre, e->state.pos);
                 }
             }
         }
     }
-    while(!(s = get_dungeon_level_status(&this->level)).data && !e->is_pc);
+    while(!(s = this->level.getWinLose()) && (!e || !e->config.is_pc));
 
     this->map_win.onRefresh(true);
 
-    return s.data;
+    return s;
 }
 
-int Game::iterate_pc_cmd(int move_cmd, LevelStatus& s)
+int GameState::iterate_pc_cmd(int move_cmd)
 {
     static const int8_t off[] = {
         0, -1,
@@ -773,8 +771,8 @@ int Game::iterate_pc_cmd(int move_cmd, LevelStatus& s)
        +1, +1
    };
 
-    Entity* pc = this->level.pc;
-    const CellTerrain t = this->level.map.terrain[pc->pos.y][pc->pos.x];
+    Entity& pc = this->level.pc;
+    const DungeonLevel::TerrainMap::Cell t = this->level.map.terrain[pc.state.pos.y][pc.state.pos.x];
     switch(move_cmd)
     {
         case MOVE_CMD_U:
@@ -787,28 +785,23 @@ int Game::iterate_pc_cmd(int move_cmd, LevelStatus& s)
         case MOVE_CMD_DR:
         {
             Vec2u8 from;
-            const int8_t
-                dx = off[(move_cmd - MOVE_CMD_U) * 2 + 0],
-                dy = off[(move_cmd - MOVE_CMD_U) * 2 + 1];
+            const Vec2i8 d{
+                off[(move_cmd - MOVE_CMD_U) * 2 + 0],
+                off[(move_cmd - MOVE_CMD_U) * 2 + 1] };
 
             if(this->state.is_goto_ctrl)
             {
-                vec2u8_copy(&from, &pc->md.pc_rem_pos);
-                pc->md.pc_rem_pos.x = static_cast<uint8_t>(static_cast<int8_t>(pc->md.pc_rem_pos.x) + dx),
-                pc->md.pc_rem_pos.y = static_cast<uint8_t>(static_cast<int8_t>(pc->md.pc_rem_pos.y) + dy);
+                from = pc.state.target_pos;
+                pc.state.target_pos += d;
 
-                this->map_win.onGotoMove(from, pc->md.pc_rem_pos);
+                this->map_win.onGotoMove(from, pc.state.target_pos);
             }
             else
             {
-                vec2u8_copy(&from, &pc->pos);
-                if( handle_entity_move(
-                        &this->level,
-                        pc,
-                        static_cast<uint8_t>(static_cast<int8_t>(pc->pos.x) + dx),
-                        static_cast<uint8_t>(static_cast<int8_t>(pc->pos.y) + dy), false ) )
+                from = pc.state.pos;
+                if( this->level.handlePCMove(static_cast<Vec2i8>(pc.state.pos) + d, false) )
                 {
-                    this->map_win.onPlayerMove(from, pc->pos);
+                    this->map_win.onPlayerMove(from, pc.state.pos);
                 }
             }
 
@@ -821,11 +814,7 @@ int Game::iterate_pc_cmd(int move_cmd, LevelStatus& s)
             {
                 Vec2u8 pc_pos;
 
-                destruct_dungeon_level(&this->level);
-                zero_dungeon_level(&this->level);
-                generate_dungeon_map(&this->level.map, 0);
-                random_dungeon_map_floor_pos(&this->level.map, pc_pos.data);
-                init_dungeon_level(&this->level, pc_pos, RANDOM_IN_RANGE(DUNGEON_MIN_NUM_MONSTERS, DUNGEON_MAX_NUM_MONSTERS));
+                this->initDungeonRandom();  // TODO: handle unique item resets
 
                 this->map_win.changeLevel(this->level);
                 this->mlist_win.changeLevel(this->level);
@@ -836,18 +825,17 @@ int Game::iterate_pc_cmd(int move_cmd, LevelStatus& s)
         {
             if(this->state.is_goto_ctrl)
             {
-                Vec2u8 from;
-                vec2u8_copy(&from, &pc->pos);
-                if( handle_entity_move( &this->level, pc, pc->md.pc_rem_pos.x, pc->md.pc_rem_pos.y, true ) )
+                Vec2u8 from = pc.state.pos;
+                if( this->level.handlePCMove(pc.state.target_pos, true) )
                 {
-                    this->map_win.onPlayerMove(from, pc->pos);
+                    this->map_win.onPlayerMove(from, pc.state.pos);
                 }
                 this->state.is_goto_ctrl = false;
             }
             else
             {
-                vec2u8_copy(&pc->md.pc_rem_pos, &pc->pos);
-                this->map_win.onGotoMove(pc->pos, pc->md.pc_rem_pos);
+                pc.state.target_pos = pc.state.pos;
+                this->map_win.onGotoMove(pc.state.pos, pc.state.target_pos);
                 this->state.is_goto_ctrl = true;
             }
             break;
@@ -856,13 +844,10 @@ int Game::iterate_pc_cmd(int move_cmd, LevelStatus& s)
         {
             if(this->state.is_goto_ctrl)
             {
-                Vec2u8 r;
-                random_dungeon_map_floor_pos(&this->level.map, r.data);
-                Vec2u8 from;
-                vec2u8_copy(&from, &pc->pos);
-                if( handle_entity_move( &this->level, pc, r.x, r.y, true ) )
+                Vec2u8 from = pc.state.pos;
+                if( this->level.handlePCMove(this->level.map.randomRoomFloorPos(this->state.rgen), true) )
                 {
-                    this->map_win.onPlayerMove(from, pc->pos);
+                    this->map_win.onPlayerMove(from, pc.state.pos);
                 }
                 this->state.is_goto_ctrl = false;
             }
@@ -874,10 +859,10 @@ int Game::iterate_pc_cmd(int move_cmd, LevelStatus& s)
 
     this->map_win.onRefresh(!this->state.is_goto_ctrl);
 
-    return (s = get_dungeon_level_status(&this->level)).data;
+    return this->level.getWinLose();
 }
 
-int Game::handle_mlist_cmd(int mlist_cmd)
+int GameState::handle_mlist_cmd(int mlist_cmd)
 {
     const int is_currently_mlist = (this->state.active_win == GWIN_MLIST);
     switch(mlist_cmd)
@@ -886,7 +871,7 @@ int Game::handle_mlist_cmd(int mlist_cmd)
         {
             this->state.active_win = GWIN_MLIST;
             this->mlist_win.onShow();
-            NC_PRINT("%d monster(s) remain.", this->level.num_monsters);
+            // NC_PRINT("%d monster(s) remain.", this->level.npcs_remaining);
             break;
         }
         case MLIST_CMD_HIDE:
@@ -912,7 +897,7 @@ int Game::handle_mlist_cmd(int mlist_cmd)
     return 0;
 }
 
-int Game::handle_dbg_cmd(int dbg_cmd)
+int GameState::handle_dbg_cmd(int dbg_cmd)
 {
     if(this->state.active_win == GWIN_MAP)
     {
@@ -934,9 +919,197 @@ int Game::handle_dbg_cmd(int dbg_cmd)
 }
 
 
-int Game::run(volatile int* r)
+
+
+
+// GAMESTATE PUBLIC INTERFACE -----------------------------------------------------------------------------------
+
+void GameState::initRuntimeArgs(uint32_t seed, int nmon)
 {
-    LevelStatus status;
+    this->state.seed = seed;
+    this->state.nmon = nmon;
+
+    this->state.rgen.seed(seed);
+}
+
+bool GameState::initMonDescriptions(std::istream& i)
+{
+    return MonDescription::parse(i, this->mon_desc);
+}
+
+bool GameState::initItemDescriptions(std::istream& i)
+{
+    return ItemDescription::parse(i, this->item_desc);
+}
+
+bool GameState::initDungeonFile(FILE* f)
+{
+    this->level.setSeed(this->nextSeed());
+    int r = this->level.loadTerrain(f);
+    this->initializeEntities();
+
+    return static_cast<bool>(r);
+}
+
+bool GameState::initDungeonRandom()
+{
+    this->level.setSeed(this->nextSeed());
+    int r = this->level.generateTerrain();
+    this->initializeEntities();
+
+    return static_cast<bool>(r);
+}
+
+bool GameState::exportDungeonFile(FILE* f)
+{
+    return !this->level.saveTerrain(f);
+}
+
+bool GameState::initializeEntities()
+{
+    #define PC_POS this->level.pc.state.pos
+    #define TERRAIN_MAP this->level.map
+    #define ENTITY_MAP this->level.entity_map
+    #define ITEM_MAP this->level.item_map
+
+// 1. generate monsters ---------------------------------------------------------------------
+    if(this->state.nmon < 0)
+    {
+        this->level.npcs_remaining = random_int(DUNGEON_MIN_NUM_MONSTERS, DUNGEON_MAX_NUM_MONSTERS, this->state.rgen);
+    }
+    else
+    {
+        this->state.rgen.discard(1);
+        this->level.npcs_remaining = static_cast<size_t>(this->state.nmon);
+    }
+
+    std::uniform_int_distribution<size_t>
+        mon_desc_idx_distribution{ 0, this->mon_desc.size() - 1 };
+    std::uniform_int_distribution<uint8_t>
+        rarity_required_distribution{ 0, 99 };
+
+    for(size_t i = 0; i < this->level.npcs_remaining;)
+    {
+        MonDescription& mdesc = this->mon_desc[mon_desc_idx_distribution(this->state.rgen)];
+
+        auto search = this->unique_availability.find(&mdesc);
+        if(search != this->unique_availability.end() && !search->second) continue;
+
+        const uint8_t rr = rarity_required_distribution(this->state.rgen);
+        if(MonDescription::Rarity(mdesc) <= rr) continue;
+
+        this->level.npcs.emplace_back(std::cref(mdesc), std::ref(this->state.rgen));
+
+        if(this->level.npcs.back().config.is_unique)
+        {
+            this->unique_availability[&mdesc] = false;
+        }
+
+        i++;
+    }
+
+// 2. assign entity floor positions -------------------------------------------------------
+    if(PC_POS == Vec2u8{ 0, 0 })
+    {
+        this->level.pc.state.pos = TERRAIN_MAP.randomRoomFloorPos(this->state.rgen);
+    }
+    else
+    {
+        this->state.rgen.discard(2);
+    }
+    DungeonLevel::accessGridElem(ENTITY_MAP, PC_POS) = &this->level.pc;
+
+    std::uniform_int_distribution<uint32_t>
+        spawn_off_distribution{ 30, 150 };
+
+    uint8_t x = PC_POS.x, y = PC_POS.y;
+    for(size_t m = 0; m < this->level.npcs_remaining; m++)
+    {
+        size_t attempts = 0;
+        for( uint32_t trav = spawn_off_distribution(this->state.rgen);
+            trav > 0 && attempts < DUNGEON_TOTAL_CELLS;
+            attempts++ )
+        {
+            // TODO: skip checking border cells
+            x++;
+            y += (x / DUNGEON_X_DIM);
+            x %= DUNGEON_X_DIM;
+            y %= DUNGEON_Y_DIM;
+            trav -= (TERRAIN_MAP.terrain[y][x].type && !ENTITY_MAP[y][x]);
+        }
+
+        ENTITY_MAP[y][x] = &this->level.npcs[m];
+
+        // PRINT_DEBUG( "Initialized monster {%d, %d, (%d, %d), %#x}\n",
+        //     me->speed, me->priority, x, y, me->md.stats );
+    }
+
+// 3. generate items
+    size_t num_items = random_int(DUNGEON_MIN_NUM_ITEMS, DUNGEON_MAX_NUM_ITEMS, this->state.rgen);
+    std::uniform_int_distribution<size_t>
+        item_desc_idx_distribution{ 0, this->item_desc.size() - 1 };
+
+    for(size_t i = 0; i < num_items;)
+    {
+        ItemDescription& idesc = this->item_desc[item_desc_idx_distribution(this->state.rgen)];
+
+        auto search = this->artifact_availability.find(&idesc);
+        if(search != this->artifact_availability.end() && !search->second) continue;
+
+        const uint8_t rr = rarity_required_distribution(this->state.rgen);
+        if(ItemDescription::Rarity(idesc) <= rr) continue;
+
+        this->level.items.emplace_back(idesc, this->state.rgen);
+
+        if(this->level.npcs.back().config.is_unique)
+        {
+            this->artifact_availability[&idesc] = false;
+        }
+
+        i++;
+    }
+
+// 4. assign item floor positions
+    for(size_t i = 0; i < num_items; i++)
+    {
+        size_t attempts = 0;
+        for( uint32_t trav = spawn_off_distribution(this->state.rgen);
+            trav > 0 && attempts < DUNGEON_TOTAL_CELLS;
+            attempts++ )
+        {
+            // TODO: skip checking border cells
+            x++;
+            y += (x / DUNGEON_X_DIM);
+            x %= DUNGEON_X_DIM;
+            y %= DUNGEON_Y_DIM;
+            trav -= (TERRAIN_MAP.terrain[y][x].type && !ITEM_MAP[y][x]);
+        }
+
+        ITEM_MAP[y][x] = &this->level.items[i];
+
+        // PRINT_DEBUG( "Initialized monster {%d, %d, (%d, %d), %#x}\n",
+        //     me->speed, me->priority, x, y, me->md.stats );
+    }
+
+// 5. add entities to priority queue
+    this->level.entity_queue.emplace( &this->level.pc, 0, 0 );
+    for(size_t i = 0; i < this->level.npcs.size(); i++)
+    {
+        this->level.entity_queue.emplace( &this->level.npcs[i], 0, static_cast<uint8_t>(i + 1) );
+    }
+
+// 6. update traversal costmaps
+    this->level.updateCosts(true);
+
+// 7. update visibility maps
+    this->level.copyVisCells();
+
+    return true;
+}
+
+void GameState::run(const std::atomic<bool>& r)
+{
+    int status;
     InputCommand ic = zeroed_input();
     int c;
 
@@ -945,14 +1118,18 @@ int Game::run(volatile int* r)
 
     NC_PRINT("Welcome to the dungeon. Good luck! :)");
 
-    for(ic.move_cmd = MOVE_CMD_SKIP, status.data = 0; !status.data && *r;)
+    for(ic.move_cmd = MOVE_CMD_SKIP, status = 0; !status && r;)
     {
         const int is_currently_map = (this->state.active_win == GWIN_MAP);
 
         this->overwrite_changes();
-        if(is_currently_map && ic.move_cmd && !this->state.is_goto_ctrl && this->iterate_next_pc(status)) break;  // game done when iterate_next_pc() returns non-zero
+        if( is_currently_map &&
+            ic.move_cmd &&
+            !this->state.is_goto_ctrl &&
+            this->iterate_next_pc() ) break;  // game done when iterate_next_pc() returns non-zero
 
         ic = decode_input_command((c = getch()));
+
 
         if(ic.exit)
         {
@@ -960,7 +1137,7 @@ int Game::run(volatile int* r)
         }
         else if(ic.move_cmd && is_currently_map)
         {
-            this->iterate_pc_cmd(ic.move_cmd, status);
+            status = this->iterate_pc_cmd(ic.move_cmd);
         }
         else if(ic.mlist_cmd)
         {
@@ -976,11 +1153,9 @@ int Game::run(volatile int* r)
         }
     }
 
-    if(status.data)
+    if(status)
     {
         nc_print_win_lose(status, r);
-        if(*r) getch();
+        if(r) getch();
     }
-
-    return 0;
 }

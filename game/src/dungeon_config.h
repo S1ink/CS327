@@ -27,6 +27,13 @@
 #define DUNGEON_MAX_NUM_ROOMS 9
 #endif
 
+#ifndef DUNGEON_MIN_NUM_EACH_STAIR
+#define DUNGEON_MIN_NUM_EACH_STAIR 1
+#endif
+#ifndef DUNGEON_MAX_NUM_EACH_STAIR
+#define DUNGEON_MAX_NUM_EACH_STAIR 3
+#endif
+
 #ifndef DUNGEON_PERLIN_SCALE_X
 #define DUNGEON_PERLIN_SCALE_X 0.15f
 #endif
@@ -37,18 +44,33 @@
 #ifndef DUNGEON_MIN_NUM_MONSTERS
 #define DUNGEON_MIN_NUM_MONSTERS 1
 #endif
-
 #ifndef DUNGEON_MAX_NUM_MONSTERS
 #define DUNGEON_MAX_NUM_MONSTERS 16
 #endif
 
+#ifndef DUNGEON_MIN_NUM_ITEMS
+#define DUNGEON_MIN_NUM_ITEMS 10
+#endif
+#ifndef DUNGEON_MAX_NUM_ITEMS
+#define DUNGEON_MAX_NUM_ITEMS 25
+#endif
+
 #ifndef DUNGEON_FILE_NAME
-#define DUNGEON_FILE_NAME "/dungeon"
+#define DUNGEON_FILE_NAME "dungeon"
+#endif
+
+#ifndef MONSTER_DESC_FILE_NAME
+#define MOSNTER_DESC_FILE_NAME "monster_desc.txt"
+#endif
+
+#ifndef OBJECT_DESC_FILE_NAME
+#define OBJECT_DESC_FILE_NAME "object_desc.txt"
 #endif
 
 
 
 
+#define DUNGEON_TOTAL_CELLS     (DUNGEON_X_DIM * DUNGEON_Y_DIM)
 
 #define DUNGEON_MAP_WIN_X_DIM   DUNGEON_X_DIM
 #define DUNGEON_MAP_WIN_Y_DIM   DUNGEON_Y_DIM

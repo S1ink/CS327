@@ -1,0 +1,1020 @@
+Entity@0x7ffe21e0ab40
+Name : Its you lol
+Desc : "An unlikely hero."
+Symbol : @
+Speed : 10
+Health : 100
+Attack : 8+6d2
+Unique Entry : 0x0
+Colors : WHITE
+Color bits : 0b10000000
+Abilities :
+Ability bits : 0b0000001000000000
+
+Entity@0x55b0a4afc490
+Name : C++ Program
+Desc : "Does in one line what it take 200 lines to do in C, but what's taking so
+long?"
+Symbol : C
+Speed : 2
+Health : 717
+Attack : 100+9d9
+Unique Entry : 0x0
+Colors : BLACK
+Color bits : 0b00000001
+Abilities : SMART TELE TUNNEL
+Ability bits : 0b0000000000000111
+
+Entity@0x55b0a4b068f0
+Name : Slimer
+Desc : "Better call Venkman.  He's covered with ectoplasm, and he wants to eat all
+your food."
+Symbol : G
+Speed : 8
+Health : 23
+Attack : 0+2d1
+Unique Entry : 0x55b0a4b02850
+Colors : GREEN
+Color bits : 0b00000100
+Abilities : TELE ERRATIC PASS UNIQ
+Ability bits : 0b0000000010011010
+
+Entity@0x55b0a4b0a470
+Name : River Crab
+Desc : "It's a fresh-water crustacean that just wants everybody to get along."
+Symbol : c
+Speed : 40
+Health : 200
+Attack : 0+1d0
+Unique Entry : 0x0
+Colors : RED
+Color bits : 0b00000010
+Abilities : SMART TELE PICKUP
+Ability bits : 0b0000000000100011
+
+Entity@0x55b0a4b0b840
+Name : C++ Program
+Desc : "Does in one line what it take 200 lines to do in C, but what's taking so
+long?"
+Symbol : C
+Speed : 2
+Health : 715
+Attack : 100+9d9
+Unique Entry : 0x0
+Colors : BLACK
+Color bits : 0b00000001
+Abilities : SMART TELE TUNNEL
+Ability bits : 0b0000000000000111
+
+Entity@0x55b0a4b11b60
+Name : Software Bug
+Desc : "The TA says it crashes whenever it runs, but it works fine on *your*
+computer.  It's probably a hardware problem.  It's really, really, really
+annoying."
+Symbol : z
+Speed : 30
+Health : 100000
+Attack : 0+1d0
+Unique Entry : 0x0
+Colors : RED
+Color bits : 0b00000010
+Abilities : SMART TELE
+Ability bits : 0b0000000000000011
+
+Entity@0x55b0a4b12f30
+Name : Overhead Projector
+Desc : "Some really old skool tech that might go over your head.  It's kind of like
+Powerpoint, but without computers.  You've probably never seen one before
+(unless you 1) are old; or 2) have taken a music class).  If you get attacked
+by one of these, make sure to block high.
+
+                                       >
+                                        \
+                                         |
+                                     |---|
+                                     |___|
+"
+Symbol : P
+Speed : 5
+Health : 10
+Attack : 1+1d0
+Unique Entry : 0x0
+Colors : YELLOW
+Color bits : 0b00001000
+Abilities : ERRATIC
+Ability bits : 0b0000000000001000
+
+Entity@0x55b0a4b14300
+Name : C Program
+Desc : "It may require a few extra lines of code, but damn is it fast!"
+Symbol : C
+Speed : 28
+Health : 58
+Attack : 5+6d1
+Unique Entry : 0x0
+Colors : GREEN
+Color bits : 0b00000100
+Abilities : SMART
+Ability bits : 0b0000000000000001
+
+Entity@0x55b0a4b156d0
+Name : Junior Barbarian
+Desc : "This is a junior barbarian.  He--or is it she?  You can't tell for sure--
+looks like... it should still be in barbarian school.  The barbarians are
+putting them in the dungeons young these days.  It's wearing dirty, tattered
+cloth armor and wielding a wooden sword.  You have a hard time feeling
+intimidated."
+Symbol : p
+Speed : 10
+Health : 15
+Attack : 0+4d1
+Unique Entry : 0x0
+Colors : YELLOW
+Color bits : 0b00001000
+Abilities : SMART
+Ability bits : 0b0000000000000001
+
+Entity@0x55b0a4b20930
+Name : Software Bug
+Desc : "The TA says it crashes whenever it runs, but it works fine on *your*
+computer.  It's probably a hardware problem.  It's really, really, really
+annoying."
+Symbol : z
+Speed : 30
+Health : 100000
+Attack : 0+1d0
+Unique Entry : 0x0
+Colors : RED
+Color bits : 0b00000010
+Abilities : SMART TELE
+Ability bits : 0b0000000000000011
+
+Entity@0x55b0a4b21d00
+Name : C Program
+Desc : "It may require a few extra lines of code, but damn is it fast!"
+Symbol : C
+Speed : 32
+Health : 64
+Attack : 5+6d1
+Unique Entry : 0x0
+Colors : GREEN
+Color bits : 0b00000100
+Abilities : SMART
+Ability bits : 0b0000000000000001
+
+Item@0x55b0a4afc490
+Name : a Wicked Lasers(R) Torch
+Desc : "From the makers of the world's most refined lasers, comes the ultimate in
+handheld flashlights. The Flashtorch is a compact, portable searchlight that
+is capable of producing an incredible 4100 lumens of intense white light. Use
+this power to guide your way home, light a fire, or even fry an egg!
+Hit : 0
+Dodge : 0
+Defense : 0
+Weight : 3
+Speed : 0
+Special : 13
+Value : 199
+Artifact Entry : 0x0
+Types : LIGHT
+Type bits : 0000010000000000
+Colors : BLACK
+Color bits : 00000001
+
+Item@0x55b0a4b06910
+Name : the Aegis
+Desc : "A very high-quality shield. Nobody knows what it looks like, except for
+maybe--now--you, but you're not telling. The back side is inscribed with the
+words: "If found, please return to Zeus, Mount Olympus".
+Hit : 0
+Dodge : 30
+Defense : 43
+Weight : 3
+Speed : 274666563
+Special : 0
+Value : 17000
+Artifact Entry : 0x0x55b0a4b04d80
+Types : OFFHAND
+Type bits : 0000000000000010
+Colors : YELLOW
+Color bits : 00001000
+
+Item@0x55b0a4b0a4f0
+Name : a NERF(R) dagger
+Desc : "This is a totally wicked looking dagger. It's got awesome barbs on the back
+of the blade, a compass on the hilt, and myriad other embelishments that
+serve no functional purpose. You could totally be a deadly assassin with a
+sweet blade like this. Since it's so light, it won't encumber you. It's
+made out of polyurethane foam.
+Hit : 0
+Dodge : 10
+Defense : 0
+Weight : 1
+Speed : 73067597
+Special : 0
+Value : 14
+Artifact Entry : 0x0
+Types : WEAPON
+Type bits : 0000000000000001
+Colors : MAGENTA
+Color bits : 00100000
+
+Item@0x55b0a4b0b8e0
+Name : a prom dress
+Desc : "This dress is totes fab! It's off-the-shoulder with an A-line waste, sequins,
+and lavender chiffon. It fits tight to mid-calf and you totally can't take
+full steps in it, but who cares? You'll be the hit of the party as long as
+Shirley doesn't show up wearing the same thing again.
+Hit : 4
+Dodge : 0
+Defense : 0
+Weight : 3
+Speed : 4294967291
+Special : 0
+Value : 449
+Artifact Entry : 0x0
+Types : ARMOR
+Type bits : 0000000000001000
+Colors : MAGENTA
+Color bits : 00100000
+
+Item@0x55b0a4b2f780
+Name : a chainmail coif
+Desc : "A heavy chainmail head covering.
+Hit : 0
+Dodge : 0
+Defense : 17
+Weight : 8
+Speed : 3046909882
+Special : 0
+Value : 58
+Artifact Entry : 0x0
+Types : HELMET
+Type bits : 0000000000010000
+Colors : BLACK
+Color bits : 00000001
+
+Item@0x55b0a4b30b70
+Name : a cloak of invisibility
+Desc : "One of the Deathly Hallows, this cloak grants the wearer invisibility. Last
+know to be the property of the Boy Who Lived.
+Hit : 0
+Dodge : 38
+Defense : 0
+Weight : 1
+Speed : 3892053050
+Special : 0
+Value : 12825
+Artifact Entry : 0x0
+Types : CLOAK
+Type bits : 0000000000100000
+Colors : CYAN
+Color bits : 01000000
+
+Item@0x55b0a4b31f60
+Name : a chainmail coif
+Desc : "A heavy chainmail head covering.
+Hit : 0
+Dodge : 0
+Defense : 15
+Weight : 8
+Speed : 356703206
+Special : 0
+Value : 53
+Artifact Entry : 0x0
+Types : HELMET
+Type bits : 0000000000010000
+Colors : BLACK
+Color bits : 00000001
+
+Item@0x55b0a4b33350
+Name : a torch
+Desc : "A short wooden stick topped with an oil-soaked cloth, perfect for lighting
+your way through the dungeon.
+Hit : 0
+Dodge : 0
+Defense : 0
+Weight : 4
+Speed : 0
+Special : 5
+Value : 1
+Artifact Entry : 0x0
+Types : LIGHT
+Type bits : 0000010000000000
+Colors : BLACK
+Color bits : 00000001
+
+Item@0x55b0a4b3e6d0
+Name : a Wicked Lasers(R) Torch
+Desc : "From the makers of the world's most refined lasers, comes the ultimate in
+handheld flashlights. The Flashtorch is a compact, portable searchlight that
+is capable of producing an incredible 4100 lumens of intense white light. Use
+this power to guide your way home, light a fire, or even fry an egg!
+Hit : 0
+Dodge : 0
+Defense : 0
+Weight : 2
+Speed : 0
+Special : 17
+Value : 199
+Artifact Entry : 0x0
+Types : LIGHT
+Type bits : 0000010000000000
+Colors : BLACK
+Color bits : 00000001
+
+Item@0x55b0a4b3fac0
+Name : a NERF(R) dagger
+Desc : "This is a totally wicked looking dagger. It's got awesome barbs on the back
+of the blade, a compass on the hilt, and myriad other embelishments that
+serve no functional purpose. You could totally be a deadly assassin with a
+sweet blade like this. Since it's so light, it won't encumber you. It's
+made out of polyurethane foam.
+Hit : 0
+Dodge : 10
+Defense : 0
+Weight : 1
+Speed : 2853272212
+Special : 0
+Value : 14
+Artifact Entry : 0x0
+Types : WEAPON
+Type bits : 0000000000000001
+Colors : MAGENTA
+Color bits : 00100000
+
+Item@0x55b0a4b40eb0
+Name : a chainmail coif
+Desc : "A heavy chainmail head covering.
+Hit : 0
+Dodge : 0
+Defense : 18
+Weight : 8
+Speed : 3209965324
+Special : 0
+Value : 55
+Artifact Entry : 0x0
+Types : HELMET
+Type bits : 0000000000010000
+Colors : BLACK
+Color bits : 00000001
+
+Item@0x55b0a4b422a0
+Name : a prom dress
+Desc : "This dress is totes fab! It's off-the-shoulder with an A-line waste, sequins,
+and lavender chiffon. It fits tight to mid-calf and you totally can't take
+full steps in it, but who cares? You'll be the hit of the party as long as
+Shirley doesn't show up wearing the same thing again.
+Hit : 3
+Dodge : 0
+Defense : 0
+Weight : 2
+Speed : 4294967291
+Special : 0
+Value : 449
+Artifact Entry : 0x0
+Types : ARMOR
+Type bits : 0000000000001000
+Colors : MAGENTA
+Color bits : 00100000
+
+Item@0x55b0a4b43690
+Name : a cloak of invisibility
+Desc : "One of the Deathly Hallows, this cloak grants the wearer invisibility. Last
+know to be the property of the Boy Who Lived.
+Hit : 0
+Dodge : 40
+Defense : 0
+Weight : 1
+Speed : 4269826972
+Special : 0
+Value : 11527
+Artifact Entry : 0x0
+Types : CLOAK
+Type bits : 0000000000100000
+Colors : CYAN
+Color bits : 01000000
+
+Item@0x55b0a4b44a80
+Name : a prom dress
+Desc : "This dress is totes fab! It's off-the-shoulder with an A-line waste, sequins,
+and lavender chiffon. It fits tight to mid-calf and you totally can't take
+full steps in it, but who cares? You'll be the hit of the party as long as
+Shirley doesn't show up wearing the same thing again.
+Hit : 3
+Dodge : 0
+Defense : 0
+Weight : 3
+Speed : 4294967291
+Special : 0
+Value : 449
+Artifact Entry : 0x0
+Types : ARMOR
+Type bits : 0000000000001000
+Colors : MAGENTA
+Color bits : 00100000
+
+Item@0x55b0a4b45e70
+Name : a cloak of invisibility
+Desc : "One of the Deathly Hallows, this cloak grants the wearer invisibility. Last
+know to be the property of the Boy Who Lived.
+Hit : 0
+Dodge : 38
+Defense : 0
+Weight : 1
+Speed : 3658296577
+Special : 0
+Value : 12280
+Artifact Entry : 0x0
+Types : CLOAK
+Type bits : 0000000000100000
+Colors : CYAN
+Color bits : 01000000
+
+Item@0x55b0a4b47260
+Name : a chainmail coif
+Desc : "A heavy chainmail head covering.
+Hit : 0
+Dodge : 0
+Defense : 17
+Weight : 8
+Speed : 1031567352
+Special : 0
+Value : 60
+Artifact Entry : 0x0
+Types : HELMET
+Type bits : 0000000000010000
+Colors : BLACK
+Color bits : 00000001
+
+Popped node with entity : 0x7ffe21e0ab40, next turn : 0, priority : 0
+	Entity is PC.
+Popped node with entity : 0x55b0a4b16ab0, next turn : 0, priority : 1
+	SM : 1, TE : 1, TN : 1, ER : 0
+	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
+	NPC attempting to move to : (+, )
+	Entity has been iterated.
+Entity 0x0x55b0a4b16ab0 moved from (,, ) to (+, )
+Popped node with entity : 0x55b0a4b17e80, next turn : 0, priority : 2
+	SM : 0, TE : 1, TN : 0, ER : 1
+	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
+	NPC attempting to move to : (, 	)
+	Entity has been iterated.
+Entity 0x0x55b0a4b17e80 moved from (, 	) to (, 	)
+Popped node with entity : 0x55b0a4b19250, next turn : 0, priority : 3
+	SM : 1, TE : 1, TN : 0, ER : 0
+	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
+	NPC attempting to move to : (%, )
+	Entity has been iterated.
+Entity 0x0x55b0a4b19250 moved from (&, ) to (%, )
+Popped node with entity : 0x55b0a4b1a620, next turn : 0, priority : 4
+	SM : 1, TE : 1, TN : 1, ER : 0
+	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
+	NPC attempting to move to : (, )
+	Entity has been iterated.
+Entity 0x0x55b0a4b1a620 moved from (, ) to (, )
+Popped node with entity : 0x55b0a4b1b9f0, next turn : 0, priority : 5
+	SM : 1, TE : 1, TN : 0, ER : 0
+	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
+	NPC attempting to move to : (., )
+	Entity has been iterated.
+Entity 0x0x55b0a4b1b9f0 moved from (/, ) to (., )
+Popped node with entity : 0x55b0a4b1cdc0, next turn : 0, priority : 6
+	SM : 0, TE : 0, TN : 0, ER : 1
+	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
+	Entity has been iterated.
+Entity 0x0x55b0a4b1cdc0 moved from (
+, ) to (
+, )
+Popped node with entity : 0x55b0a4b1e190, next turn : 0, priority : 7
+	SM : 1, TE : 0, TN : 0, ER : 0
+	flags.can_see_pc : 0, flags.computed_can_see_pc : 1
+	Erroneous bits you dumbass
+	No entity movement occurred.
+Popped node with entity : 0x55b0a4b1f560, next turn : 0, priority : 8
+	SM : 1, TE : 0, TN : 0, ER : 0
+	flags.can_see_pc : 0, flags.computed_can_see_pc : 1
+	Erroneous bits you dumbass
+	No entity movement occurred.
+Popped node with entity : 0x55b0a4b20930, next turn : 0, priority : 9
+	SM : 1, TE : 1, TN : 0, ER : 0
+	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
+	NPC attempting to move to : (, )
+	Entity has been iterated.
+Entity 0x0x55b0a4b20930 moved from (, ) to (, )
+Popped node with entity : 0x55b0a4b21d00, next turn : 0, priority : 10
+	SM : 1, TE : 0, TN : 0, ER : 0
+	flags.can_see_pc : 1, flags.computed_can_see_pc : 1
+	NPC attempting to move to : (, )
+	Entity has been iterated.
+Entity 0x0x55b0a4b21d00 moved from (, ) to (, )
+Popped node with entity : 0x55b0a4b16ab0, next turn : 2, priority : 1
+	SM : 1, TE : 1, TN : 1, ER : 0
+	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
+	NPC attempting to move to : (*, )
+	Entity has been iterated.
+Entity 0x0x55b0a4b16ab0 moved from (+, ) to (*, )
+Popped node with entity : 0x55b0a4b1a620, next turn : 2, priority : 4
+	SM : 1, TE : 1, TN : 1, ER : 0
+	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
+	NPC attempting to move to : (, )
+	Entity has been iterated.
+Entity 0x0x55b0a4b1a620 moved from (, ) to (, )
+Popped node with entity : 0x55b0a4b16ab0, next turn : 4, priority : 1
+	SM : 1, TE : 1, TN : 1, ER : 0
+	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
+	NPC attempting to move to : (), )
+	Entity has been iterated.
+Entity 0x0x55b0a4b16ab0 moved from (*, ) to (), )
+Popped node with entity : 0x55b0a4b1a620, next turn : 4, priority : 4
+	SM : 1, TE : 1, TN : 1, ER : 0
+	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
+	NPC attempting to move to : (, )
+	Entity has been iterated.
+Entity 0x0x55b0a4b1a620 moved from (, ) to (, )
+Popped node with entity : 0x55b0a4b1cdc0, next turn : 5, priority : 6
+	SM : 0, TE : 0, TN : 0, ER : 1
+	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
+	Entity has been iterated.
+Entity 0x0x55b0a4b1cdc0 moved from (
+, ) to (
+, )
+Popped node with entity : 0x55b0a4b16ab0, next turn : 6, priority : 1
+	SM : 1, TE : 1, TN : 1, ER : 0
+	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
+	NPC attempting to move to : ((, )
+	Entity has been iterated.
+Entity 0x0x55b0a4b16ab0 moved from (), ) to ((, )
+Popped node with entity : 0x55b0a4b1a620, next turn : 6, priority : 4
+	SM : 1, TE : 1, TN : 1, ER : 0
+	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
+	NPC attempting to move to : (, 
+)
+	Entity has been iterated.
+Entity 0x0x55b0a4b1a620 moved from (, ) to (, 
+)
+Popped node with entity : 0x55b0a4b16ab0, next turn : 8, priority : 1
+	SM : 1, TE : 1, TN : 1, ER : 0
+	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
+	NPC attempting to move to : (', )
+	Entity has been iterated.
+Entity 0x0x55b0a4b16ab0 moved from ((, ) to (', )
+Popped node with entity : 0x55b0a4b17e80, next turn : 8, priority : 2
+	SM : 0, TE : 1, TN : 0, ER : 1
+	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
+	NPC attempting to move to : (, 	)
+	Entity has been iterated.
+Entity 0x0x55b0a4b17e80 moved from (, 	) to (, 	)
+Popped node with entity : 0x55b0a4b1a620, next turn : 8, priority : 4
+	SM : 1, TE : 1, TN : 1, ER : 0
+	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
+	NPC attempting to move to : (, 	)
+	Entity has been iterated.
+Entity 0x0x55b0a4b1a620 moved from (, 
+) to (, 	)
+Popped node with entity : 0x7ffe21e0ab40, next turn : 10, priority : 0
+	Entity is PC.
+Popped node with entity : 0x55b0a4b16ab0, next turn : 10, priority : 1
+	SM : 1, TE : 1, TN : 1, ER : 0
+	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
+	NPC attempting to move to : (&, )
+	Entity has been iterated.
+Entity 0x0x55b0a4b16ab0 moved from (', ) to (&, )
+Popped node with entity : 0x55b0a4b1a620, next turn : 10, priority : 4
+	SM : 1, TE : 1, TN : 1, ER : 0
+	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
+	NPC attempting to move to : (, )
+	Entity has been iterated.
+Entity 0x0x55b0a4b1a620 moved from (, 	) to (, )
+Popped node with entity : 0x55b0a4b1cdc0, next turn : 10, priority : 6
+	SM : 0, TE : 0, TN : 0, ER : 1
+	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
+	Entity has been iterated.
+Entity 0x0x55b0a4b1cdc0 moved from (
+, ) to (, )
+Popped node with entity : 0x55b0a4b1f560, next turn : 10, priority : 8
+	SM : 1, TE : 0, TN : 0, ER : 0
+	flags.can_see_pc : 0, flags.computed_can_see_pc : 1
+	Erroneous bits you dumbass
+	No entity movement occurred.
+Popped node with entity : 0x55b0a4b16ab0, next turn : 12, priority : 1
+	SM : 1, TE : 1, TN : 1, ER : 0
+	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
+	NPC attempting to move to : (%, )
+	Entity has been iterated.
+Entity 0x0x55b0a4b16ab0 moved from (&, ) to (%, )
+Popped node with entity : 0x55b0a4b1a620, next turn : 12, priority : 4
+	SM : 1, TE : 1, TN : 1, ER : 0
+	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
+	NPC attempting to move to : (, )
+	Entity has been iterated.
+Entity 0x0x55b0a4b1a620 moved from (, ) to (, )
+Popped node with entity : 0x55b0a4b16ab0, next turn : 14, priority : 1
+	SM : 1, TE : 1, TN : 1, ER : 0
+	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
+	NPC attempting to move to : ($, )
+	Entity has been iterated.
+Entity 0x0x55b0a4b16ab0 moved from (%, ) to ($, )
+Popped node with entity : 0x55b0a4b1a620, next turn : 14, priority : 4
+	SM : 1, TE : 1, TN : 1, ER : 0
+	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
+	NPC attempting to move to : (, )
+	Entity has been iterated.
+Entity 0x0x55b0a4b1a620 moved from (, ) to (, )
+Popped node with entity : 0x55b0a4b1cdc0, next turn : 15, priority : 6
+	SM : 0, TE : 0, TN : 0, ER : 1
+	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
+	Entity has been iterated.
+Entity 0x0x55b0a4b1cdc0 moved from (, ) to (, )
+Popped node with entity : 0x55b0a4b16ab0, next turn : 16, priority : 1
+	SM : 1, TE : 1, TN : 1, ER : 0
+	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
+	NPC attempting to move to : (#, )
+	Entity has been iterated.
+Entity 0x0x55b0a4b16ab0 moved from ($, ) to (#, )
+Popped node with entity : 0x55b0a4b17e80, next turn : 16, priority : 2
+	SM : 0, TE : 1, TN : 0, ER : 1
+	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
+	Entity has been iterated.
+Entity 0x0x55b0a4b17e80 moved from (, 	) to (, 	)
+Popped node with entity : 0x55b0a4b1a620, next turn : 16, priority : 4
+	SM : 1, TE : 1, TN : 1, ER : 0
+	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
+	NPC attempting to move to : (, )
+	Entity has been iterated.
+Entity 0x0x55b0a4b1a620 moved from (, ) to (, )
+Popped node with entity : 0x55b0a4b16ab0, next turn : 18, priority : 1
+	SM : 1, TE : 1, TN : 1, ER : 0
+	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
+	NPC attempting to move to : (", )
+	Entity has been iterated.
+Entity 0x0x55b0a4b16ab0 moved from (#, ) to (", )
+Popped node with entity : 0x55b0a4b1a620, next turn : 18, priority : 4
+	SM : 1, TE : 1, TN : 1, ER : 0
+	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
+	NPC attempting to move to : (, )
+	Entity has been iterated.
+Entity 0x0x55b0a4b1a620 moved from (, ) to (, )
+Popped node with entity : 0x7ffe21e0ab40, next turn : 20, priority : 0
+	Entity is PC.
+Popped node with entity : 0x55b0a4b16ab0, next turn : 20, priority : 1
+	SM : 1, TE : 1, TN : 1, ER : 0
+	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
+	NPC attempting to move to : (!, )
+	Entity has been iterated.
+Entity 0x0x55b0a4b16ab0 moved from (", ) to (!, )
+Popped node with entity : 0x55b0a4b1a620, next turn : 20, priority : 4
+Popped node with entity : 0x55b0a4b1cdc0, next turn : 20, priority : 6
+	SM : 0, TE : 0, TN : 0, ER : 1
+	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
+	Entity has been iterated.
+Entity 0x0x55b0a4b1cdc0 moved from (, ) to (, )
+Popped node with entity : 0x55b0a4b1f560, next turn : 20, priority : 8
+	SM : 1, TE : 0, TN : 0, ER : 0
+	flags.can_see_pc : 0, flags.computed_can_see_pc : 1
+	Erroneous bits you dumbass
+	No entity movement occurred.
+Popped node with entity : 0x55b0a4b16ab0, next turn : 22, priority : 1
+	SM : 1, TE : 1, TN : 1, ER : 0
+	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
+	NPC attempting to move to : ( , )
+	Entity has been iterated.
+Entity 0x0x55b0a4b16ab0 moved from (!, ) to ( , )
+Popped node with entity : 0x55b0a4b16ab0, next turn : 24, priority : 1
+	SM : 1, TE : 1, TN : 1, ER : 0
+	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
+	NPC attempting to move to : (, )
+	Entity has been iterated.
+Entity 0x0x55b0a4b16ab0 moved from ( , ) to (, )
+Popped node with entity : 0x55b0a4b17e80, next turn : 24, priority : 2
+	SM : 0, TE : 1, TN : 0, ER : 1
+	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
+	NPC attempting to move to : (, 	)
+	Entity has been iterated.
+Entity 0x0x55b0a4b17e80 moved from (, 	) to (, 	)
+Popped node with entity : 0x55b0a4b1cdc0, next turn : 25, priority : 6
+	SM : 0, TE : 0, TN : 0, ER : 1
+	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
+	Entity has been iterated.
+Entity 0x0x55b0a4b1cdc0 moved from (, ) to (, )
+Popped node with entity : 0x55b0a4b16ab0, next turn : 26, priority : 1
+	SM : 1, TE : 1, TN : 1, ER : 0
+	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
+	NPC attempting to move to : (, )
+	Entity has been iterated.
+Entity 0x0x55b0a4b16ab0 moved from (, ) to (, )
+Popped node with entity : 0x55b0a4b16ab0, next turn : 28, priority : 1
+	SM : 1, TE : 1, TN : 1, ER : 0
+	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
+	NPC attempting to move to : (, )
+	Entity has been iterated.
+Entity 0x0x55b0a4b16ab0 moved from (, ) to (, )
+Popped node with entity : 0x55b0a4b1e190, next turn : 28, priority : 7
+	SM : 1, TE : 0, TN : 0, ER : 0
+	flags.can_see_pc : 0, flags.computed_can_see_pc : 1
+	Erroneous bits you dumbass
+	No entity movement occurred.
+Popped node with entity : 0x7ffe21e0ab40, next turn : 30, priority : 0
+	Entity is PC.
+Popped node with entity : 0x55b0a4b16ab0, next turn : 30, priority : 1
+	SM : 1, TE : 1, TN : 1, ER : 0
+	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
+	NPC attempting to move to : (, )
+	Entity has been iterated.
+Entity 0x0x55b0a4b16ab0 moved from (, ) to (, )
+Popped node with entity : 0x55b0a4b1b9f0, next turn : 30, priority : 5
+	SM : 1, TE : 1, TN : 0, ER : 0
+	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
+	NPC attempting to move to : (-, )
+	Entity has been iterated.
+Entity 0x0x55b0a4b1b9f0 moved from (., ) to (-, )
+Popped node with entity : 0x55b0a4b1cdc0, next turn : 30, priority : 6
+	SM : 0, TE : 0, TN : 0, ER : 1
+	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
+	NPC attempting to move to : (
+, )
+	Entity has been iterated.
+Entity 0x0x55b0a4b1cdc0 moved from (, ) to (
+, )
+Popped node with entity : 0x55b0a4b1f560, next turn : 30, priority : 8
+	SM : 1, TE : 0, TN : 0, ER : 0
+	flags.can_see_pc : 0, flags.computed_can_see_pc : 1
+	Erroneous bits you dumbass
+	No entity movement occurred.
+Popped node with entity : 0x55b0a4b20930, next turn : 30, priority : 9
+	SM : 1, TE : 1, TN : 0, ER : 0
+	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
+	NPC attempting to move to : (, )
+	Entity has been iterated.
+Entity 0x0x55b0a4b20930 moved from (, ) to (, )
+Popped node with entity : 0x55b0a4b16ab0, next turn : 32, priority : 1
+	SM : 1, TE : 1, TN : 1, ER : 0
+	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
+	NPC attempting to move to : (, )
+	Entity has been iterated.
+Entity 0x0x55b0a4b16ab0 moved from (, ) to (, )
+Popped node with entity : 0x55b0a4b17e80, next turn : 32, priority : 2
+	SM : 0, TE : 1, TN : 0, ER : 1
+	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
+	Entity has been iterated.
+Entity 0x0x55b0a4b17e80 moved from (, 	) to (, 	)
+Popped node with entity : 0x55b0a4b21d00, next turn : 32, priority : 10
+	SM : 1, TE : 0, TN : 0, ER : 0
+	flags.can_see_pc : 1, flags.computed_can_see_pc : 1
+	NPC attempting to move to : (, )
+	Entity has been iterated.
+Entity 0x0x55b0a4b21d00 moved from (, ) to (, )
+Popped node with entity : 0x55b0a4b16ab0, next turn : 34, priority : 1
+	SM : 1, TE : 1, TN : 1, ER : 0
+	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
+	NPC attempting to move to : (, )
+	Entity has been iterated.
+Entity 0x0x55b0a4b16ab0 moved from (, ) to (, )
+Popped node with entity : 0x55b0a4b1cdc0, next turn : 35, priority : 6
+	SM : 0, TE : 0, TN : 0, ER : 1
+	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
+	NPC attempting to move to : (	, )
+	Entity has been iterated.
+Entity 0x0x55b0a4b1cdc0 moved from (
+, ) to (	, )
+Popped node with entity : 0x55b0a4b16ab0, next turn : 36, priority : 1
+	SM : 1, TE : 1, TN : 1, ER : 0
+	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
+	NPC attempting to move to : (, )
+	Entity has been iterated.
+Entity 0x0x55b0a4b16ab0 moved from (, ) to (, )
+Popped node with entity : 0x55b0a4b16ab0, next turn : 38, priority : 1
+	SM : 1, TE : 1, TN : 1, ER : 0
+	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
+	NPC attempting to move to : (, )
+	Entity has been iterated.
+Entity 0x0x55b0a4b16ab0 moved from (, ) to (, )
+Popped node with entity : 0x7ffe21e0ab40, next turn : 40, priority : 0
+	Entity is PC.
+Popped node with entity : 0x55b0a4b16ab0, next turn : 40, priority : 1
+	SM : 1, TE : 1, TN : 1, ER : 0
+	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
+	NPC attempting to move to : (, )
+	Entity has been iterated.
+Entity 0x0x55b0a4b16ab0 moved from (, ) to (, )
+Popped node with entity : 0x55b0a4b17e80, next turn : 40, priority : 2
+	SM : 0, TE : 1, TN : 0, ER : 1
+	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
+	NPC attempting to move to : (, 	)
+	Entity has been iterated.
+Entity 0x0x55b0a4b17e80 moved from (, 	) to (, 	)
+Popped node with entity : 0x55b0a4b19250, next turn : 40, priority : 3
+	SM : 1, TE : 1, TN : 0, ER : 0
+	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
+	NPC attempting to move to : ($, )
+	Entity has been iterated.
+Entity 0x0x55b0a4b19250 moved from (%, ) to ($, )
+Popped node with entity : 0x55b0a4b1cdc0, next turn : 40, priority : 6
+	SM : 0, TE : 0, TN : 0, ER : 1
+	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
+	Entity has been iterated.
+Entity 0x0x55b0a4b1cdc0 moved from (	, ) to (
+, )
+Popped node with entity : 0x55b0a4b1f560, next turn : 40, priority : 8
+	SM : 1, TE : 0, TN : 0, ER : 0
+	flags.can_see_pc : 0, flags.computed_can_see_pc : 1
+	Erroneous bits you dumbass
+	No entity movement occurred.
+Popped node with entity : 0x55b0a4b16ab0, next turn : 42, priority : 1
+	SM : 1, TE : 1, TN : 1, ER : 0
+	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
+	NPC attempting to move to : (, )
+	Entity has been iterated.
+Entity 0x0x55b0a4b16ab0 moved from (, ) to (, )
+Popped node with entity : 0x55b0a4b16ab0, next turn : 44, priority : 1
+	SM : 1, TE : 1, TN : 1, ER : 0
+	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
+	NPC attempting to move to : (, )
+	Entity has been iterated.
+Entity 0x0x55b0a4b16ab0 moved from (, ) to (, )
+Popped node with entity : 0x55b0a4b1cdc0, next turn : 45, priority : 6
+	SM : 0, TE : 0, TN : 0, ER : 1
+	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
+	Entity has been iterated.
+Entity 0x0x55b0a4b1cdc0 moved from (
+, ) to (
+, )
+Popped node with entity : 0x55b0a4b16ab0, next turn : 46, priority : 1
+	SM : 1, TE : 1, TN : 1, ER : 0
+	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
+	NPC attempting to move to : (, )
+	Entity has been iterated.
+Entity 0x0x55b0a4b16ab0 moved from (, ) to (, )
+Popped node with entity : 0x55b0a4b16ab0, next turn : 48, priority : 1
+	SM : 1, TE : 1, TN : 1, ER : 0
+	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
+	NPC attempting to move to : (, )
+	Entity has been iterated.
+Entity 0x0x55b0a4b16ab0 moved from (, ) to (, )
+Popped node with entity : 0x55b0a4b17e80, next turn : 48, priority : 2
+	SM : 0, TE : 1, TN : 0, ER : 1
+	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
+	NPC attempting to move to : (, 	)
+	Entity has been iterated.
+Entity 0x0x55b0a4b17e80 moved from (, 	) to (, 	)
+Popped node with entity : 0x7ffe21e0ab40, next turn : 50, priority : 0
+	Entity is PC.
+Popped node with entity : 0x55b0a4b16ab0, next turn : 50, priority : 1
+	SM : 1, TE : 1, TN : 1, ER : 0
+	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
+	NPC attempting to move to : (, )
+	Entity has been iterated.
+Entity 0x0x55b0a4b16ab0 moved from (, ) to (, )
+Popped node with entity : 0x55b0a4b1cdc0, next turn : 50, priority : 6
+	SM : 0, TE : 0, TN : 0, ER : 1
+	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
+	Entity has been iterated.
+Entity 0x0x55b0a4b1cdc0 moved from (
+, ) to (, )
+Popped node with entity : 0x55b0a4b1f560, next turn : 50, priority : 8
+	SM : 1, TE : 0, TN : 0, ER : 0
+	flags.can_see_pc : 0, flags.computed_can_see_pc : 1
+	Erroneous bits you dumbass
+	No entity movement occurred.
+Popped node with entity : 0x55b0a4b16ab0, next turn : 52, priority : 1
+	SM : 1, TE : 1, TN : 1, ER : 0
+	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
+	NPC attempting to move to : (, )
+	Entity has been iterated.
+Entity 0x0x55b0a4b16ab0 moved from (, ) to (, )
+Popped node with entity : 0x55b0a4b16ab0, next turn : 54, priority : 1
+	SM : 1, TE : 1, TN : 1, ER : 0
+	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
+	NPC attempting to move to : (, )
+	Entity has been iterated.
+Entity 0x0x55b0a4b16ab0 moved from (, ) to (, )
+Popped node with entity : 0x55b0a4b1cdc0, next turn : 55, priority : 6
+	SM : 0, TE : 0, TN : 0, ER : 1
+	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
+	NPC attempting to move to : (
+, )
+	Entity has been iterated.
+Entity 0x0x55b0a4b1cdc0 moved from (, ) to (
+, )
+Popped node with entity : 0x55b0a4b16ab0, next turn : 56, priority : 1
+	SM : 1, TE : 1, TN : 1, ER : 0
+	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
+	NPC attempting to move to : (, )
+	Entity has been iterated.
+Entity 0x0x55b0a4b16ab0 moved from (, ) to (, )
+Popped node with entity : 0x55b0a4b17e80, next turn : 56, priority : 2
+	SM : 0, TE : 1, TN : 0, ER : 1
+	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
+	No entity movement occurred.
+Popped node with entity : 0x55b0a4b1e190, next turn : 56, priority : 7
+	SM : 1, TE : 0, TN : 0, ER : 0
+	flags.can_see_pc : 0, flags.computed_can_see_pc : 1
+	Erroneous bits you dumbass
+	No entity movement occurred.
+Popped node with entity : 0x55b0a4b16ab0, next turn : 58, priority : 1
+	SM : 1, TE : 1, TN : 1, ER : 0
+	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
+	NPC attempting to move to : (, )
+	Entity has been iterated.
+Entity 0x0x55b0a4b16ab0 moved from (, ) to (, )
+Popped node with entity : 0x7ffe21e0ab40, next turn : 60, priority : 0
+	Entity is PC.
+Popped node with entity : 0x55b0a4b16ab0, next turn : 60, priority : 1
+	SM : 1, TE : 1, TN : 1, ER : 0
+	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
+	NPC attempting to move to : (, )
+	Entity has been iterated.
+Entity 0x0x55b0a4b16ab0 moved from (, ) to (, )
+Popped node with entity : 0x55b0a4b1b9f0, next turn : 60, priority : 5
+	SM : 1, TE : 1, TN : 0, ER : 0
+	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
+	NPC attempting to move to : (,, )
+	Entity has been iterated.
+Entity 0x0x55b0a4b1b9f0 moved from (-, ) to (,, )
+Popped node with entity : 0x55b0a4b1cdc0, next turn : 60, priority : 6
+	SM : 0, TE : 0, TN : 0, ER : 1
+	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
+	NPC attempting to move to : (	, )
+	Entity has been iterated.
+Entity 0x0x55b0a4b1cdc0 moved from (
+, ) to (	, )
+Popped node with entity : 0x55b0a4b1f560, next turn : 60, priority : 8
+	SM : 1, TE : 0, TN : 0, ER : 0
+	flags.can_see_pc : 0, flags.computed_can_see_pc : 1
+	Erroneous bits you dumbass
+	No entity movement occurred.
+Popped node with entity : 0x55b0a4b20930, next turn : 60, priority : 9
+	SM : 1, TE : 1, TN : 0, ER : 0
+	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
+	NPC attempting to move to : (, )
+	Entity has been iterated.
+Entity 0x0x55b0a4b20930 moved from (, ) to (, )
+Popped node with entity : 0x55b0a4b16ab0, next turn : 62, priority : 1
+	SM : 1, TE : 1, TN : 1, ER : 0
+	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
+	NPC attempting to move to : (, )
+	Entity has been iterated.
+Entity 0x0x55b0a4b16ab0 moved from (, ) to (, )
+Popped node with entity : 0x55b0a4b16ab0, next turn : 64, priority : 1
+	SM : 1, TE : 1, TN : 1, ER : 0
+	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
+	NPC attempting to move to : (, )
+	Entity has been iterated.
+Entity 0x0x55b0a4b16ab0 moved from (, ) to (, )
+Popped node with entity : 0x55b0a4b17e80, next turn : 64, priority : 2
+	SM : 0, TE : 1, TN : 0, ER : 1
+	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
+	No entity movement occurred.
+Popped node with entity : 0x55b0a4b21d00, next turn : 64, priority : 10
+	SM : 1, TE : 0, TN : 0, ER : 0
+	flags.can_see_pc : 1, flags.computed_can_see_pc : 1
+	NPC attempting to move to : (, )
+	Entity has been iterated.
+Entity 0x0x55b0a4b21d00 moved from (, ) to (, )
+Popped node with entity : 0x55b0a4b1cdc0, next turn : 65, priority : 6
+	SM : 0, TE : 0, TN : 0, ER : 1
+	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
+	Entity has been iterated.
+Entity 0x0x55b0a4b1cdc0 moved from (	, ) to (
+, )
+Popped node with entity : 0x55b0a4b16ab0, next turn : 66, priority : 1
+	SM : 1, TE : 1, TN : 1, ER : 0
+	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
+	NPC attempting to move to : (
+, )
+	Entity has been iterated.
+Entity 0x0x55b0a4b16ab0 moved from (, ) to (
+, )
+Popped node with entity : 0x55b0a4b16ab0, next turn : 68, priority : 1
+	SM : 1, TE : 1, TN : 1, ER : 0
+	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
+	NPC attempting to move to : (	, )
+	Entity has been iterated.
+Entity 0x0x55b0a4b16ab0 moved from (
+, ) to (	, )
+Popped node with entity : 0x7ffe21e0ab40, next turn : 70, priority : 0
+	Entity is PC.
+Popped node with entity : 0x55b0a4b16ab0, next turn : 70, priority : 1
+	SM : 1, TE : 1, TN : 1, ER : 0
+	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
+	NPC attempting to move to : (, )
+	Entity has been iterated.
+Entity 0x0x55b0a4b16ab0 moved from (	, ) to (, )
+Popped node with entity : 0x55b0a4b1cdc0, next turn : 70, priority : 6
+	SM : 0, TE : 0, TN : 0, ER : 1
+	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
+	NPC attempting to move to : (	, )
+	Entity has been iterated.
+Entity 0x0x55b0a4b1cdc0 moved from (
+, ) to (	, )
+Popped node with entity : 0x55b0a4b1f560, next turn : 70, priority : 8
+	SM : 1, TE : 0, TN : 0, ER : 0
+	flags.can_see_pc : 0, flags.computed_can_see_pc : 1
+	Erroneous bits you dumbass
+	No entity movement occurred.
+Popped node with entity : 0x55b0a4b16ab0, next turn : 72, priority : 1
+	SM : 1, TE : 1, TN : 1, ER : 0
+	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
+	NPC attempting to move to : (, )
+	Entity has been iterated.
+Entity 0x0x55b0a4b16ab0 moved from (, ) to (, )

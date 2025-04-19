@@ -736,6 +736,9 @@ int GameState::iterate_next_pc()
         DungeonLevel::EntityQueueNode qn = this->level.entity_queue.top();
         this->level.entity_queue.pop();
         e = qn.e;
+        // FileDebug::get() << "Popped node with entity : " << std::hex << e << std::dec
+        //     << ", next turn : " << qn.next_turn
+        //     << ", priority : " << (int)qn.priority << std::endl;
         if(e->state.health > 0)
         {
             qn.next_turn += e->config.speed;
@@ -746,9 +749,24 @@ int GameState::iterate_next_pc()
                 Vec2u8 pre = e->state.pos;
                 if(this->level.iterateNPC(*e))
                 {
+                    // FileDebug::get() << "\tEntity has been iterated.\n";
+
                     this->map_win.onMonsterMove(pre, e->state.pos);
+
+                    // FileDebug::get() << "Entity 0x"
+                    //     << std::hex << e << std::dec
+                    //     << " moved from (" << pre.x << ", " << pre.y
+                    //     << ") to (" << e->state.pos.x << ", " << e->state.pos.y << ")\n";
                 }
+                // else
+                // {
+                //     FileDebug::get() << "\tNo entity movement occurred.\n";
+                // }
             }
+            // else
+            // {
+            //     FileDebug::get() << "\tEntity is PC.\n";
+            // }
         }
     }
     while(!(s = this->level.getWinLose()) && (!e || !e->config.is_pc));
@@ -972,6 +990,9 @@ bool GameState::initializeEntities()
     #define ENTITY_MAP this->level.entity_map
     #define ITEM_MAP this->level.item_map
 
+     this->level.pc.print(FileDebug::get());
+     FileDebug::get() << "\n\n";
+
 // 1. generate monsters ---------------------------------------------------------------------
     if(this->state.nmon < 0)
     {
@@ -1004,6 +1025,9 @@ bool GameState::initializeEntities()
         {
             this->unique_availability[&mdesc] = false;
         }
+
+        this->level.npcs.back().print(FileDebug::get());
+        FileDebug::get() << "\n\n";
 
         i++;
     }
@@ -1038,6 +1062,7 @@ bool GameState::initializeEntities()
             trav -= (TERRAIN_MAP.terrain[y][x].type && !ENTITY_MAP[y][x]);
         }
 
+        this->level.npcs[m].state.pos.assign(x, y);
         ENTITY_MAP[y][x] = &this->level.npcs[m];
 
         // PRINT_DEBUG( "Initialized monster {%d, %d, (%d, %d), %#x}\n",
@@ -1061,10 +1086,13 @@ bool GameState::initializeEntities()
 
         this->level.items.emplace_back(idesc, this->state.rgen);
 
-        if(this->level.npcs.back().config.is_unique)
+        if(ItemDescription::Artifact(idesc))
         {
             this->artifact_availability[&idesc] = false;
         }
+
+        this->level.items.back().print(FileDebug::get());
+        FileDebug::get() << "\n\n";
 
         i++;
     }
@@ -1126,7 +1154,7 @@ void GameState::run(const std::atomic<bool>& r)
         if( is_currently_map &&
             ic.move_cmd &&
             !this->state.is_goto_ctrl &&
-            this->iterate_next_pc() ) break;  // game done when iterate_next_pc() returns non-zero
+            (status = this->iterate_next_pc()) ) break;  // game done when iterate_next_pc() returns non-zero
 
         ic = decode_input_command((c = getch()));
 

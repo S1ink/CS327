@@ -216,6 +216,12 @@ int DungeonLevel::handlePCMove(Vec2u8 to, bool is_goto)
 // returns 0 if no movement occurred, otherwise returns the result of move_random() or handle_entity_move()
 int DungeonLevel::iterateNPC(Entity& e)
 {
+    // FileDebug::get()
+    //     << "\tSM : " << (int)e.config.is_smart
+    //     << ", TE : " << (int)e.config.is_tele
+    //     << ", TN : " << (int)e.config.can_tunnel
+    //     << ", ER : " << (int)e.config.is_erratic << '\n';
+
     struct
     {
         uint8_t can_see_pc : 1;
@@ -258,10 +264,13 @@ int DungeonLevel::iterateNPC(Entity& e)
         flags.computed_can_see_pc = 0;
     }
 
+    // FileDebug::get() << "\tflags.can_see_pc : " << (int)flags.can_see_pc
+    //     << ", flags.computed_can_see_pc : " << (int)flags.computed_can_see_pc << '\n';
+
     const int r = rand();
-    if(e.config.is_erratic && (r & 1))
+    if(e.config.is_erratic && (r & 0x1))
     {
-        PRINT_DEBUG("(%#x) : Moving erraticly.\n", e->md.stats);
+        // PRINT_DEBUG("(%#x) : Moving erraticly.\n", e->md.stats);
         return move_random(*this, e, (r >> 1));
     }
     else
@@ -313,21 +322,17 @@ int DungeonLevel::iterateNPC(Entity& e)
             {
                 if(e.config.is_smart && e.state.target_pos != Vec2u8{ 0, 0 })
                 {
-                    Vec2u
-                        a = e.state.pos,
-                        b = e.state.target_pos;
-
                     if(e.config.can_tunnel)
                     {
                         // PRINT_DEBUG("(%#x) : Moving towards the PC's last known location (%d, %d) using the optimal TUNNELING path.\n",
                         //     e->md.stats, e->md.pc_rem_pos.x, e->md.pc_rem_pos.y );
-                        dungeon_dijkstra_terrain_path(this->map, a, b, &move_pos, pathing_export_vec2u8);
+                        dungeon_dijkstra_terrain_path(this->map, e.state.pos, e.state.target_pos, &move_pos, pathing_export_vec2u8);
                     }
                     else
                     {
                         // PRINT_DEBUG("(%#x) : Moving towards the PC's last known location (%d, %d) using the optimal FLOOR path.\n",
                         //     e->md.stats, e->md.pc_rem_pos.x, e->md.pc_rem_pos.y );
-                        dungeon_dijkstra_floor_path(this->map, a, b, &move_pos, pathing_export_vec2u8);
+                        dungeon_dijkstra_floor_path(this->map,  e.state.pos, e.state.target_pos, &move_pos, pathing_export_vec2u8);
                     }
                 }
                 else
@@ -339,6 +344,8 @@ int DungeonLevel::iterateNPC(Entity& e)
             }
         }
     }
+
+    // FileDebug::get() << "\tNPC attempting to move to : (" << move_pos.x << ", " << move_pos.y << ")\n";
 
     // PRINT_DEBUG("MOVING TO: (%d, %d)\n", move_pos.x, move_pos.y);
     return handle_entity_move(*this, e, move_pos);

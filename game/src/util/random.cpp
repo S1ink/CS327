@@ -46,3 +46,9 @@ inline uint32_t RollableNum::rollArg(RollNumArgT n)
     for(uint32_t r = 0; r < n.rolls; r++) x += dist(this->generator);
     return x;
 }
+
+
+std::ostream& operator<<(std::ostream& out, const RollableNum& rn)
+{
+    return out << rn.base << '+' << rn.distribution.b() << 'd' << rn.rolls;
+}

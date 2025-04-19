@@ -51,6 +51,8 @@ struct RollableNum
 {
     using RollNumArgT = std::conditional<(sizeof(RollNum) > sizeof(std::uintptr_t)), const RollNum&, RollNum>::type;
 
+    friend std::ostream& operator<<(std::ostream&, const RollableNum&);
+
 public:
     inline RollableNum(RollNumArgT n, uint32_t seed = std::mt19937::default_seed) :
         base{ n.base }, rolls{ n.rolls }, distribution{ 1, n.sides }, generator{ seed }

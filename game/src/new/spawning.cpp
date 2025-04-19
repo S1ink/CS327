@@ -6,6 +6,53 @@
 #include "util/sequential_parser.hpp"
 
 
+static constexpr char const* MDESC_ABILITY_STRINGS[] =
+{
+    "SMART",
+    "TELE",
+    "TUNNEL",
+    "ERRATIC",
+    "PASS",
+    "PICKUP",
+    "DESTROY",
+    "UNIQ",
+    "BOSS"
+};
+static constexpr char const* IDESC_TYPE_STRINGS[] =
+{
+    "WEAPON",
+    "OFFHAND",
+    "RANGED",
+    "ARMOR",
+    "HELMET",
+    "CLOAK",
+    "GLOVES",
+    "BOOTS",
+    "RING",
+    "AMULET",
+    "LIGHT",
+    "SCROLL",
+    "BOOK",
+    "FLASK",
+    "GOLD",
+    "AMMUNITION",
+    "FOOD",
+    "WAND",
+    "CONTAINER"
+};
+static constexpr char const* COLOR_STRINGS[] =
+{
+    "BLACK",
+    "RED",
+    "GREEN",
+    "YELLOW",
+    "BLUE",
+    "MAGENTA",
+    "CYAN",
+    "WHITE",
+};
+
+
 bool MonDescription::parse(std::istream& f, std::vector<MonDescription>& descs)
 {
     if(!MonDescription::verifyHeader(f)) return false;
@@ -66,51 +113,27 @@ bool MonDescription::verifyHeader(std::istream& f)
 
 void MonDescription::serialize(std::ostream& out) const
 {
-    static const char* ABILITIES[] =
-    {
-        "SMART",
-        "TELE",
-        "TUNNEL",
-        "ERRATIC",
-        "PASS",
-        "PICKUP",
-        "DESTROY",
-        "UNIQ",
-        "BOSS"
-    };
-    static const char* COLORS[] =
-    {
-        "BLACK",
-        "RED",
-        "GREEN",
-        "YELLOW",
-        "BLUE",
-        "MAGENTA",
-        "CYAN",
-        "WHITE",
-    };
-
     out << "MonDescription@0x" << std::hex << reinterpret_cast<uintptr_t>(this) << std::dec
         << "\nName : " << this->name
         << "\nDesc : \"" << this->desc
         << "\"\nSymbol : " << this->symbol;
 
     out << "\nColors :";
-    for(size_t i = 0; i < sizeof(COLORS) / sizeof(*COLORS); i++)
+    for(size_t i = 0; i < sizeof(COLOR_STRINGS) / sizeof(*COLOR_STRINGS); i++)
     {
         if(this->colors >> i & 0b1)
         {
-            out << ' ' << COLORS[i];
+            out << ' ' << COLOR_STRINGS[i];
         }
     }
 
     out << "\nSpeed : "; this->speed.serialize(out);
     out << "\nAbilities :";
-    for(size_t i = 0; i < sizeof(ABILITIES) / sizeof(*ABILITIES); i++)
+    for(size_t i = 0; i < sizeof(MDESC_ABILITY_STRINGS) / sizeof(*MDESC_ABILITY_STRINGS); i++)
     {
         if(this->abilities >> i & 0b1)
         {
-            std::cout << ' ' << ABILITIES[i];
+            std::cout << ' ' << MDESC_ABILITY_STRINGS[i];
         }
     }
 
@@ -198,59 +221,25 @@ bool ItemDescription::verifyHeader(std::istream& f)
 
 void ItemDescription::serialize(std::ostream& out) const
 {
-    static const char* TYPES[] =
-    {
-        "WEAPON",
-        "OFFHAND",
-        "RANGED",
-        "ARMOR",
-        "HELMET",
-        "CLOAK",
-        "GLOVES",
-        "BOOTS",
-        "RING",
-        "AMULET",
-        "LIGHT",
-        "SCROLL",
-        "BOOK",
-        "FLASK",
-        "GOLD",
-        "AMMUNITION",
-        "FOOD",
-        "WAND",
-        "CONTAINER"
-    };
-    static const char* COLORS[] =
-    {
-        "BLACK",
-        "RED",
-        "GREEN",
-        "YELLOW",
-        "BLUE",
-        "MAGENTA",
-        "CYAN",
-        "WHITE",
-    };
-
     out << "ItemDescription@0x" << std::hex << reinterpret_cast<uintptr_t>(this) << std::dec
         << "\nName : " << this->name
         << "\nDesc : \"" << this->desc;
 
     out << "\nTypes :";
-    for(size_t i = 0; i < sizeof(TYPES) / sizeof(*TYPES); i++)
+    for(size_t i = 0; i < sizeof(IDESC_TYPE_STRINGS) / sizeof(*IDESC_TYPE_STRINGS); i++)
     {
         if(this->types >> i & 0b1)
         {
-            out << ' ' << TYPES[i];
+            out << ' ' << IDESC_TYPE_STRINGS[i];
         }
     }
 
     out << "\nColors :";
-    for(size_t i = 0; i < sizeof(COLORS) / sizeof(*COLORS); i++)
+    for(size_t i = 0; i < sizeof(COLOR_STRINGS) / sizeof(*COLOR_STRINGS); i++)
     {
         if(this->colors >> i & 0b1)
         {
-            out << ' ' << COLORS[i];
+            out << ' ' << COLOR_STRINGS[i];
         }
     }
 
@@ -282,7 +271,7 @@ Entity::Entity(Entity::PCGenT x) :
         .name{ "Its you lol" },
         .desc{ "An unlikely hero." },
         .attack_damage{ { .base{ 8 }, .sides{ 6 }, .rolls{ 2 } }, std::random_device{}() },
-        .speed{ 100 },
+        .speed{ 10 },
         .ability_bits{ 0 },
         .color{ DisplayColor::WHITE },
         .symbol{ '@' },
@@ -312,7 +301,17 @@ Entity::Entity(const MonDescription& md, std::mt19937& gen) :
     {
         .health{ md.health.roll(gen()) }
     }
-{}
+{
+    // this->config.is_smart = (md.abilities & MonDescription::ABILITY_SMART);
+    // this->config.is_tele = (md.abilities & MonDescription::ABILITY_TELE);
+    // this->config.can_tunnel = (md.abilities & MonDescription::ABILITY_TUNNEL);
+    // this->config.is_erratic = (md.abilities & MonDescription::ABILITY_ERRATIC);
+    // this->config.is_ghost = (md.abilities & MonDescription::ABILITY_PASS);
+    // this->config.can_pickup = (md.abilities & MonDescription::ABILITY_PICKUP);
+    // this->config.can_destroy = (md.abilities & MonDescription::ABILITY_DESTROY);
+    // this->config.is_unique = (md.abilities & MonDescription::ABILITY_UNIQ);
+    // this->config.is_boss = (md.abilities & MonDescription::ABILITY_BOSS);
+}
 
 Entity::Entity(Entity&& e) :
     config
@@ -370,59 +369,34 @@ short Entity::getColor() const
 
 void Entity::print(std::ostream& out)
 {
-    static const char* ABILITIES[] =
-    {
-        "SMART",
-        "TELE",
-        "TUNNEL",
-        "ERRATIC",
-        "PASS",
-        "PICKUP",
-        "DESTROY",
-        "UNIQ",
-        "BOSS",
-        "PC"
-    };
-    static const char* COLORS[] =
-    {
-        "RED",
-        "GREEN",
-        "BLUE",
-        "CYAN",
-        "YELLOW",
-        "MAGENTA",
-        "WHITE",
-        "BLACK"
-    };
-
     out << "Entity@0x" << std::hex << reinterpret_cast<uintptr_t>(this) << std::dec
         << "\nName : " << this->config.name
         << "\nDesc : \"" << this->config.desc
-        << "\"\nSymbol : " << this->config.symbol;
+        << "\"\nSymbol : " << this->config.symbol
+        << "\nSpeed : " << this->config.speed
+        << "\nHealth : " << this->state.health
+        << "\nAttack : " << this->config.attack_damage
+        << "\nUnique Entry : 0x" << std::hex << reinterpret_cast<uintptr_t>(this->config.unique_entry) << std::dec;
 
     out << "\nColors :";
-    for(size_t i = 0; i < sizeof(COLORS) / sizeof(*COLORS); i++)
+    for(size_t i = 0; i < sizeof(COLOR_STRINGS) / sizeof(*COLOR_STRINGS); i++)
     {
         if(this->config.color >> i & 0b1)
         {
-            out << ' ' << COLORS[i];
+            out << ' ' << COLOR_STRINGS[i];
         }
     }
+    out << "\nColor bits : 0b" << std::bitset<8>{ this->config.color };
 
-    out << "\nSpeed : " << this->config.speed;
     out << "\nAbilities :";
-    for(size_t i = 0; i < sizeof(ABILITIES) / sizeof(*ABILITIES); i++)
+    for(size_t i = 0; i < sizeof(MDESC_ABILITY_STRINGS) / sizeof(*MDESC_ABILITY_STRINGS); i++)
     {
-        if(this->config.ability_bits >> i & 0b1)
+        if((this->config.ability_bits >> i) & 0b1)
         {
-            std::cout << ' ' << ABILITIES[i];
+            out << ' ' << MDESC_ABILITY_STRINGS[i];
         }
     }
-    out << "\nAbility bits : " << std::bitset<16>() << this->config.ability_bits << std::dec;
-
-    out << "\nHealth : " << this->state.health;
-    // out << "\nDamage : "; this->attack.serialize(out);
-    out << "\nUnique Entry : 0x" << std::hex << reinterpret_cast<uintptr_t>(this->config.unique_entry) << std::dec << '\n';
+    out << "\nAbility bits : 0b" << std::bitset<16>{ this->config.ability_bits };
 }
 
 
@@ -511,4 +485,39 @@ short Item::getColor() const
     }
 
     return COLOR_WHITE;
+}
+
+void Item::print(std::ostream& out)
+{
+    out << "Item@0x" << std::hex << reinterpret_cast<uintptr_t>(this) << std::dec
+        << "\nName : " << this->name
+        << "\nDesc : \"" << this->desc
+        << "\nHit : " << this->hit
+        << "\nDodge : " << this->dodge
+        << "\nDefense : " << this->defense
+        << "\nWeight : " << this->weight
+        << "\nSpeed : " << this->speed
+        << "\nSpecial : " << this->special
+        << "\nValue : " << this->value
+        << "\nArtifact Entry : 0x" << std::hex << this->artifact_entry << std::dec;
+
+    out << "\nTypes :";
+    for(size_t i = 0; i < sizeof(IDESC_TYPE_STRINGS) / sizeof(*IDESC_TYPE_STRINGS); i++)
+    {
+        if(this->type >> i & 0b1)
+        {
+            out << ' ' << IDESC_TYPE_STRINGS[i];
+        }
+    }
+    out << "\nType bits : " << std::bitset<16>{ this->type };
+
+    out << "\nColors :";
+    for(size_t i = 0; i < sizeof(COLOR_STRINGS) / sizeof(*COLOR_STRINGS); i++)
+    {
+        if(this->color >> i & 0b1)
+        {
+            out << ' ' << COLOR_STRINGS[i];
+        }
+    }
+    out << "\nColor bits : " << std::bitset<8>{ this->color };
 }

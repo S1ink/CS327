@@ -61,6 +61,7 @@ public:
         { 2, 0 },
         { 2, 1 },
     };
+    static inline constexpr uint8_t VIS_RADSQ = 5;
 
 public:
     struct TerrainMap

@@ -1,8 +1,8 @@
-Entity@0x7ffe21e0ab40
+Entity@0x7ffcea337ed0
 Name : Its you lol
 Desc : "An unlikely hero."
 Symbol : @
-Speed : 10
+Speed : 25
 Health : 100
 Attack : 8+6d2
 Unique Entry : 0x0
@@ -11,35 +11,531 @@ Color bits : 0b10000000
 Abilities :
 Ability bits : 0b0000001000000000
 
-Entity@0x55b0a4afc490
-Name : C++ Program
-Desc : "Does in one line what it take 200 lines to do in C, but what's taking so
-long?"
-Symbol : C
-Speed : 2
-Health : 717
-Attack : 100+9d9
-Unique Entry : 0x0
-Colors : BLACK
-Color bits : 0b00000001
-Abilities : SMART TELE TUNNEL
-Ability bits : 0b0000000000000111
+Entity@0x55becfc62720
+Name : Tsukino Usagi
+Desc : "In our world, she's the youma!  Tsukini kawatte oshioki yo, Sailor Moon!"
+Symbol : p
+Speed : 10
+Health : 100
+Attack : 0+5d3
+Unique Entry : 0x55becfc68a20
+Colors : BLUE
+Color bits : 0b00010000
+Abilities : TELE ERRATIC UNIQ
+Ability bits : 0b0000000010001010
 
-Entity@0x55b0a4b068f0
-Name : Slimer
-Desc : "Better call Venkman.  He's covered with ectoplasm, and he wants to eat all
-your food."
+Entity@0x55becfc6cb80
+Name : Casper the Friendly Ghost
+Desc : "Casper, the friendly ghost,
+The friendliest ghost you know.
+Though grown-ups might
+Look at him with fright,
+The children all love him so.
+
+He always says hello,
+and he's really glad to meetcha.
+Wherever he may go,
+He's kind to every living creature.
+
+Grown-ups don't understand
+Why children love him the most.
+But kids all know
+That he loves them so,
+Casper the friendly ghost."
 Symbol : G
-Speed : 8
-Health : 23
+Speed : 9
+Health : 22
 Attack : 0+2d1
-Unique Entry : 0x55b0a4b02850
+Unique Entry : 0x55becfc68a80
+Colors : CYAN
+Color bits : 0b01000000
+Abilities : TELE PASS UNIQ
+Ability bits : 0b0000000010010010
+
+Entity@0x55becfc70700
+Name : C Program
+Desc : "It may require a few extra lines of code, but damn is it fast!"
+Symbol : C
+Speed : 31
+Health : 70
+Attack : 5+6d1
+Unique Entry : 0x0
 Colors : GREEN
 Color bits : 0b00000100
-Abilities : TELE ERRATIC PASS UNIQ
-Ability bits : 0b0000000010011010
+Abilities : SMART
+Ability bits : 0b0000000000000001
 
-Entity@0x55b0a4b0a470
+Item@0x55becfc62720
+Name : a torch
+Desc : "A short wooden stick topped with an oil-soaked cloth, perfect for lighting
+your way through the dungeon.
+Hit : 0
+Dodge : 0
+Defense : 0
+Weight : 3
+Speed : 0
+Special : 7
+Value : 3
+Artifact Entry : 0x0
+Types : LIGHT
+Type bits : 0000010000000000
+Colors : BLACK
+Color bits : 00000001
+
+Item@0x55becfc742a0
+Name : a NERF(R) dagger
+Desc : "This is a totally wicked looking dagger. It's got awesome barbs on the back
+of the blade, a compass on the hilt, and myriad other embelishments that
+serve no functional purpose. You could totally be a deadly assassin with a
+sweet blade like this. Since it's so light, it won't encumber you. It's
+made out of polyurethane foam.
+Hit : 0
+Dodge : 10
+Defense : 0
+Weight : 1
+Speed : 236501139
+Special : 0
+Value : 11
+Artifact Entry : 0x0
+Types : WEAPON
+Type bits : 0000000000000001
+Colors : MAGENTA
+Color bits : 00100000
+
+Item@0x55becfc77e80
+Name : a NERF(R) dagger
+Desc : "This is a totally wicked looking dagger. It's got awesome barbs on the back
+of the blade, a compass on the hilt, and myriad other embelishments that
+serve no functional purpose. You could totally be a deadly assassin with a
+sweet blade like this. Since it's so light, it won't encumber you. It's
+made out of polyurethane foam.
+Hit : 0
+Dodge : 10
+Defense : 0
+Weight : 1
+Speed : 3237344674
+Special : 0
+Value : 14
+Artifact Entry : 0x0
+Types : WEAPON
+Type bits : 0000000000000001
+Colors : MAGENTA
+Color bits : 00100000
+
+Item@0x55becfc79270
+Name : a chainmail coif
+Desc : "A heavy chainmail head covering.
+Hit : 0
+Dodge : 0
+Defense : 19
+Weight : 8
+Speed : 620527503
+Special : 0
+Value : 51
+Artifact Entry : 0x0
+Types : HELMET
+Type bits : 0000000000010000
+Colors : BLACK
+Color bits : 00000001
+
+Item@0x55becfc7f630
+Name : a NERF(R) dagger
+Desc : "This is a totally wicked looking dagger. It's got awesome barbs on the back
+of the blade, a compass on the hilt, and myriad other embelishments that
+serve no functional purpose. You could totally be a deadly assassin with a
+sweet blade like this. Since it's so light, it won't encumber you. It's
+made out of polyurethane foam.
+Hit : 0
+Dodge : 10
+Defense : 0
+Weight : 1
+Speed : 2491656457
+Special : 0
+Value : 13
+Artifact Entry : 0x0
+Types : WEAPON
+Type bits : 0000000000000001
+Colors : MAGENTA
+Color bits : 00100000
+
+Item@0x55becfc80a20
+Name : a prom dress
+Desc : "This dress is totes fab! It's off-the-shoulder with an A-line waste, sequins,
+and lavender chiffon. It fits tight to mid-calf and you totally can't take
+full steps in it, but who cares? You'll be the hit of the party as long as
+Shirley doesn't show up wearing the same thing again.
+Hit : 4
+Dodge : 0
+Defense : 0
+Weight : 3
+Speed : 4294967291
+Special : 0
+Value : 449
+Artifact Entry : 0x0
+Types : ARMOR
+Type bits : 0000000000001000
+Colors : MAGENTA
+Color bits : 00100000
+
+Item@0x55becfc81e10
+Name : a cloak of invisibility
+Desc : "One of the Deathly Hallows, this cloak grants the wearer invisibility. Last
+know to be the property of the Boy Who Lived.
+Hit : 0
+Dodge : 37
+Defense : 0
+Weight : 1
+Speed : 3838147806
+Special : 0
+Value : 12616
+Artifact Entry : 0x0
+Types : CLOAK
+Type bits : 0000000000100000
+Colors : CYAN
+Color bits : 01000000
+
+Item@0x55becfc83200
+Name : a chainmail coif
+Desc : "A heavy chainmail head covering.
+Hit : 0
+Dodge : 0
+Defense : 13
+Weight : 8
+Speed : 1254482565
+Special : 0
+Value : 62
+Artifact Entry : 0x0
+Types : HELMET
+Type bits : 0000000000010000
+Colors : BLACK
+Color bits : 00000001
+
+Item@0x55becfc8e580
+Name : a torch
+Desc : "A short wooden stick topped with an oil-soaked cloth, perfect for lighting
+your way through the dungeon.
+Hit : 0
+Dodge : 0
+Defense : 0
+Weight : 3
+Speed : 0
+Special : 9
+Value : 2
+Artifact Entry : 0x0
+Types : LIGHT
+Type bits : 0000010000000000
+Colors : BLACK
+Color bits : 00000001
+
+Item@0x55becfc8f970
+Name : a NERF(R) dagger
+Desc : "This is a totally wicked looking dagger. It's got awesome barbs on the back
+of the blade, a compass on the hilt, and myriad other embelishments that
+serve no functional purpose. You could totally be a deadly assassin with a
+sweet blade like this. Since it's so light, it won't encumber you. It's
+made out of polyurethane foam.
+Hit : 0
+Dodge : 10
+Defense : 0
+Weight : 1
+Speed : 1271040252
+Special : 0
+Value : 15
+Artifact Entry : 0x0
+Types : WEAPON
+Type bits : 0000000000000001
+Colors : MAGENTA
+Color bits : 00100000
+
+Item@0x55becfc90d60
+Name : a NERF(R) dagger
+Desc : "This is a totally wicked looking dagger. It's got awesome barbs on the back
+of the blade, a compass on the hilt, and myriad other embelishments that
+serve no functional purpose. You could totally be a deadly assassin with a
+sweet blade like this. Since it's so light, it won't encumber you. It's
+made out of polyurethane foam.
+Hit : 0
+Dodge : 10
+Defense : 0
+Weight : 1
+Speed : 2673832280
+Special : 0
+Value : 13
+Artifact Entry : 0x0
+Types : WEAPON
+Type bits : 0000000000000001
+Colors : MAGENTA
+Color bits : 00100000
+
+Item@0x55becfc92150
+Name : a NERF(R) dagger
+Desc : "This is a totally wicked looking dagger. It's got awesome barbs on the back
+of the blade, a compass on the hilt, and myriad other embelishments that
+serve no functional purpose. You could totally be a deadly assassin with a
+sweet blade like this. Since it's so light, it won't encumber you. It's
+made out of polyurethane foam.
+Hit : 0
+Dodge : 10
+Defense : 0
+Weight : 1
+Speed : 815218249
+Special : 0
+Value : 11
+Artifact Entry : 0x0
+Types : WEAPON
+Type bits : 0000000000000001
+Colors : MAGENTA
+Color bits : 00100000
+
+Item@0x55becfc93540
+Name : a Wicked Lasers(R) Torch
+Desc : "From the makers of the world's most refined lasers, comes the ultimate in
+handheld flashlights. The Flashtorch is a compact, portable searchlight that
+is capable of producing an incredible 4100 lumens of intense white light. Use
+this power to guide your way home, light a fire, or even fry an egg!
+Hit : 0
+Dodge : 0
+Defense : 0
+Weight : 2
+Speed : 0
+Special : 10
+Value : 199
+Artifact Entry : 0x0
+Types : LIGHT
+Type bits : 0000010000000000
+Colors : BLACK
+Color bits : 00000001
+
+Item@0x55becfc94930
+Name : a torch
+Desc : "A short wooden stick topped with an oil-soaked cloth, perfect for lighting
+your way through the dungeon.
+Hit : 0
+Dodge : 0
+Defense : 0
+Weight : 3
+Speed : 0
+Special : 6
+Value : 3
+Artifact Entry : 0x0
+Types : LIGHT
+Type bits : 0000010000000000
+Colors : BLACK
+Color bits : 00000001
+
+Item@0x55becfc95d20
+Name : a torch
+Desc : "A short wooden stick topped with an oil-soaked cloth, perfect for lighting
+your way through the dungeon.
+Hit : 0
+Dodge : 0
+Defense : 0
+Weight : 3
+Speed : 0
+Special : 6
+Value : 3
+Artifact Entry : 0x0
+Types : LIGHT
+Type bits : 0000010000000000
+Colors : BLACK
+Color bits : 00000001
+
+Item@0x55becfc97110
+Name : a NERF(R) dagger
+Desc : "This is a totally wicked looking dagger. It's got awesome barbs on the back
+of the blade, a compass on the hilt, and myriad other embelishments that
+serve no functional purpose. You could totally be a deadly assassin with a
+sweet blade like this. Since it's so light, it won't encumber you. It's
+made out of polyurethane foam.
+Hit : 0
+Dodge : 10
+Defense : 0
+Weight : 1
+Speed : 1080846832
+Special : 0
+Value : 13
+Artifact Entry : 0x0
+Types : WEAPON
+Type bits : 0000000000000001
+Colors : MAGENTA
+Color bits : 00100000
+
+Item@0x7f14d283cf10
+Name : a NERF(R) dagger
+Desc : "This is a totally wicked looking dagger. It's got awesome barbs on the back
+of the blade, a compass on the hilt, and myriad other embelishments that
+serve no functional purpose. You could totally be a deadly assassin with a
+sweet blade like this. Since it's so light, it won't encumber you. It's
+made out of polyurethane foam.
+Hit : 0
+Dodge : 10
+Defense : 0
+Weight : 1
+Speed : 1980893972
+Special : 0
+Value : 10
+Artifact Entry : 0x0
+Types : WEAPON
+Type bits : 0000000000000001
+Colors : MAGENTA
+Color bits : 00100000
+
+Item@0x7f14d283e300
+Name : a NERF(R) dagger
+Desc : "This is a totally wicked looking dagger. It's got awesome barbs on the back
+of the blade, a compass on the hilt, and myriad other embelishments that
+serve no functional purpose. You could totally be a deadly assassin with a
+sweet blade like this. Since it's so light, it won't encumber you. It's
+made out of polyurethane foam.
+Hit : 0
+Dodge : 10
+Defense : 0
+Weight : 1
+Speed : 2430481341
+Special : 0
+Value : 11
+Artifact Entry : 0x0
+Types : WEAPON
+Type bits : 0000000000000001
+Colors : MAGENTA
+Color bits : 00100000
+
+Item@0x7f14d283f6f0
+Name : a torch
+Desc : "A short wooden stick topped with an oil-soaked cloth, perfect for lighting
+your way through the dungeon.
+Hit : 0
+Dodge : 0
+Defense : 0
+Weight : 4
+Speed : 0
+Special : 6
+Value : 3
+Artifact Entry : 0x0
+Types : LIGHT
+Type bits : 0000010000000000
+Colors : BLACK
+Color bits : 00000001
+
+Item@0x7f14d2840ae0
+Name : a torch
+Desc : "A short wooden stick topped with an oil-soaked cloth, perfect for lighting
+your way through the dungeon.
+Hit : 0
+Dodge : 0
+Defense : 0
+Weight : 3
+Speed : 0
+Special : 6
+Value : 3
+Artifact Entry : 0x0
+Types : LIGHT
+Type bits : 0000010000000000
+Colors : BLACK
+Color bits : 00000001
+
+Item@0x7f14d2841ed0
+Name : a prom dress
+Desc : "This dress is totes fab! It's off-the-shoulder with an A-line waste, sequins,
+and lavender chiffon. It fits tight to mid-calf and you totally can't take
+full steps in it, but who cares? You'll be the hit of the party as long as
+Shirley doesn't show up wearing the same thing again.
+Hit : 3
+Dodge : 0
+Defense : 0
+Weight : 3
+Speed : 4294967291
+Special : 0
+Value : 449
+Artifact Entry : 0x0
+Types : ARMOR
+Type bits : 0000000000001000
+Colors : MAGENTA
+Color bits : 00100000
+
+Item@0x7f14d28432c0
+Name : a chainmail coif
+Desc : "A heavy chainmail head covering.
+Hit : 0
+Dodge : 0
+Defense : 18
+Weight : 8
+Speed : 1594363567
+Special : 0
+Value : 59
+Artifact Entry : 0x0
+Types : HELMET
+Type bits : 0000000000010000
+Colors : BLACK
+Color bits : 00000001
+
+Item@0x7f14d28446b0
+Name : the Aegis
+Desc : "A very high-quality shield. Nobody knows what it looks like, except for
+maybe--now--you, but you're not telling. The back side is inscribed with the
+words: "If found, please return to Zeus, Mount Olympus".
+Hit : 0
+Dodge : 31
+Defense : 33
+Weight : 3
+Speed : 1027181411
+Special : 0
+Value : 17000
+Artifact Entry : 0x0x55becfc6b010
+Types : OFFHAND
+Type bits : 0000000000000010
+Colors : YELLOW
+Color bits : 00001000
+
+Item@0x7f14d2845aa0
+Name : a chainmail coif
+Desc : "A heavy chainmail head covering.
+Hit : 0
+Dodge : 0
+Defense : 20
+Weight : 8
+Speed : 4112058935
+Special : 0
+Value : 62
+Artifact Entry : 0x0
+Types : HELMET
+Type bits : 0000000000010000
+Colors : BLACK
+Color bits : 00000001
+
+Item@0x7f14d2846e90
+Name : a prom dress
+Desc : "This dress is totes fab! It's off-the-shoulder with an A-line waste, sequins,
+and lavender chiffon. It fits tight to mid-calf and you totally can't take
+full steps in it, but who cares? You'll be the hit of the party as long as
+Shirley doesn't show up wearing the same thing again.
+Hit : 2
+Dodge : 0
+Defense : 0
+Weight : 4
+Speed : 4294967291
+Special : 0
+Value : 449
+Artifact Entry : 0x0
+Types : ARMOR
+Type bits : 0000000000001000
+Colors : MAGENTA
+Color bits : 00100000
+
+Entity@0x7ffcea337ed0
+Name : Its you lol
+Desc : "An unlikely hero."
+Symbol : @
+Speed : 25
+Health : 100
+Attack : 8+6d2
+Unique Entry : 0x0
+Colors : WHITE
+Color bits : 0b10000000
+Abilities :
+Ability bits : 0b0000001000000000
+
+Entity@0x55becfc6df60
 Name : River Crab
 Desc : "It's a fresh-water crustacean that just wants everybody to get along."
 Symbol : c
@@ -52,36 +548,64 @@ Color bits : 0b00000010
 Abilities : SMART TELE PICKUP
 Ability bits : 0b0000000000100011
 
-Entity@0x55b0a4b0b840
-Name : C++ Program
-Desc : "Does in one line what it take 200 lines to do in C, but what's taking so
-long?"
-Symbol : C
-Speed : 2
-Health : 715
-Attack : 100+9d9
+Entity@0x55becfc6f330
+Name : Slime
+Desc : "Eww...  It's slimy."
+Symbol : s
+Speed : 8
+Health : 20
+Attack : 0+4d1
 Unique Entry : 0x0
-Colors : BLACK
-Color bits : 0b00000001
-Abilities : SMART TELE TUNNEL
-Ability bits : 0b0000000000000111
+Colors : GREEN
+Color bits : 0b00000100
+Abilities : TUNNEL ERRATIC
+Ability bits : 0b0000000000001100
 
-Entity@0x55b0a4b11b60
-Name : Software Bug
-Desc : "The TA says it crashes whenever it runs, but it works fine on *your*
-computer.  It's probably a hardware problem.  It's really, really, really
-annoying."
-Symbol : z
-Speed : 30
-Health : 100000
-Attack : 0+1d0
+Entity@0x55becfc70700
+Name : Rory Gilmore
+Desc : "All decked out in a brand new Chilton uniform, she talks faster than anybody
+you've ever known.  She's dual-wielding Proust's "Rememberance of Things
+Past" and a half-empty coffee cup; you'd better watch out or she'll hit you
+with a litany of cultural references from which you'll never recover."
+Symbol : p
+Speed : 50
+Health : 18
+Attack : 0+2d1
+Unique Entry : 0x55becfc689c0
+Colors : MAGENTA
+Color bits : 0b00100000
+Abilities : SMART ERRATIC UNIQ
+Ability bits : 0b0000000010001001
+
+Entity@0x55becfc71ad0
+Name : Slimer
+Desc : "Better call Venkman.  He's covered with ectoplasm, and he wants to eat all
+your food."
+Symbol : G
+Speed : 8
+Health : 20
+Attack : 0+2d1
+Unique Entry : 0x55becfc68ae0
+Colors : GREEN
+Color bits : 0b00000100
+Abilities : TELE ERRATIC PASS UNIQ
+Ability bits : 0b0000000010011010
+
+Entity@0x55becfc77df0
+Name : Grass Mud Horse
+Desc : "This desert-dwelling alpaca relative somehow made it into the dungeon.  Be
+careful!  It packs a powerful punch!"
+Symbol : h
+Speed : 15
+Health : 200
+Attack : 10000+1000d10
 Unique Entry : 0x0
-Colors : RED
-Color bits : 0b00000010
-Abilities : SMART TELE
-Ability bits : 0b0000000000000011
+Colors : YELLOW
+Color bits : 0b00001000
+Abilities : TELE ERRATIC DESTROY
+Ability bits : 0b0000000001001010
 
-Entity@0x55b0a4b12f30
+Entity@0x55becfc791c0
 Name : Overhead Projector
 Desc : "Some really old skool tech that might go over your head.  It's kind of like
 Powerpoint, but without computers.  You've probably never seen one before
@@ -104,20 +628,7 @@ Color bits : 0b00001000
 Abilities : ERRATIC
 Ability bits : 0b0000000000001000
 
-Entity@0x55b0a4b14300
-Name : C Program
-Desc : "It may require a few extra lines of code, but damn is it fast!"
-Symbol : C
-Speed : 28
-Health : 58
-Attack : 5+6d1
-Unique Entry : 0x0
-Colors : GREEN
-Color bits : 0b00000100
-Abilities : SMART
-Ability bits : 0b0000000000000001
-
-Entity@0x55b0a4b156d0
+Entity@0x55becfc7a590
 Name : Junior Barbarian
 Desc : "This is a junior barbarian.  He--or is it she?  You can't tell for sure--
 looks like... it should still be in barbarian school.  The barbarians are
@@ -126,7 +637,7 @@ cloth armor and wielding a wooden sword.  You have a hard time feeling
 intimidated."
 Symbol : p
 Speed : 10
-Health : 15
+Health : 16
 Attack : 0+4d1
 Unique Entry : 0x0
 Colors : YELLOW
@@ -134,27 +645,61 @@ Color bits : 0b00001000
 Abilities : SMART
 Ability bits : 0b0000000000000001
 
-Entity@0x55b0a4b20930
-Name : Software Bug
-Desc : "The TA says it crashes whenever it runs, but it works fine on *your*
-computer.  It's probably a hardware problem.  It's really, really, really
-annoying."
-Symbol : z
-Speed : 30
-Health : 100000
-Attack : 0+1d0
+Entity@0x55becfc7b960
+Name : Slime
+Desc : "Eww...  It's slimy."
+Symbol : s
+Speed : 9
+Health : 20
+Attack : 0+4d1
 Unique Entry : 0x0
-Colors : RED
-Color bits : 0b00000010
-Abilities : SMART TELE
-Ability bits : 0b0000000000000011
+Colors : GREEN
+Color bits : 0b00000100
+Abilities : TUNNEL ERRATIC
+Ability bits : 0b0000000000001100
 
-Entity@0x55b0a4b21d00
+Entity@0x55becfc8ebb0
+Name : David Bowie
+Desc : "He was the human equivalent of a Google search, a portal through which you
+could step into an amazing, very different wider world. He flooded plain
+everyday reality with extraordinary, unexpected information, processing the
+details through a buoyant, mobile mind and made intellectual discovery seem
+incredibly glamorous.
+                       - Joe Coscarelli in the New York Times"
+Symbol : p
+Speed : 19
+Health : 219
+Attack : 9+8d3
+Unique Entry : 0x55becfc68b40
+Colors : WHITE
+Color bits : 0b10000000
+Abilities : SMART ERRATIC PICKUP UNIQ
+Ability bits : 0b0000000010101001
+
+Entity@0x55becfc8ff80
+Name : Amazon Lich Queen
+Desc : "She was a powerful Amazon warrior in life.  Death at the hands of the undead
+hordes was followed by her resurrection through dark, necromantic arts.  Her
+power in life didn't approach her undead glory.  Clad in night-black robes
+that don't move in the wind, her incorporeal form commands the power of death
+over life.  You may just be her next victim.  You fear for your soul as you
+quake before her malevolent majesty."
+Symbol : p
+Speed : 25
+Health : 3981
+Attack : 30+9d5
+Unique Entry : 0x0
+Colors : BLACK
+Color bits : 0b00000001
+Abilities : SMART PASS
+Ability bits : 0b0000000000010001
+
+Entity@0x55becfc91350
 Name : C Program
 Desc : "It may require a few extra lines of code, but damn is it fast!"
 Symbol : C
-Speed : 32
-Health : 64
+Speed : 35
+Health : 76
 Attack : 5+6d1
 Unique Entry : 0x0
 Colors : GREEN
@@ -162,44 +707,39 @@ Color bits : 0b00000100
 Abilities : SMART
 Ability bits : 0b0000000000000001
 
-Item@0x55b0a4afc490
-Name : a Wicked Lasers(R) Torch
-Desc : "From the makers of the world's most refined lasers, comes the ultimate in
-handheld flashlights. The Flashtorch is a compact, portable searchlight that
-is capable of producing an incredible 4100 lumens of intense white light. Use
-this power to guide your way home, light a fire, or even fry an egg!
+Item@0x7f14d2829010
+Name : a chainmail coif
+Desc : "A heavy chainmail head covering.
 Hit : 0
 Dodge : 0
-Defense : 0
-Weight : 3
-Speed : 0
-Special : 13
-Value : 199
+Defense : 21
+Weight : 8
+Speed : 3099848259
+Special : 0
+Value : 66
 Artifact Entry : 0x0
-Types : LIGHT
-Type bits : 0000010000000000
+Types : HELMET
+Type bits : 0000000000010000
 Colors : BLACK
 Color bits : 00000001
 
-Item@0x55b0a4b06910
-Name : the Aegis
-Desc : "A very high-quality shield. Nobody knows what it looks like, except for
-maybe--now--you, but you're not telling. The back side is inscribed with the
-words: "If found, please return to Zeus, Mount Olympus".
+Item@0x7f14d282a400
+Name : a chainmail coif
+Desc : "A heavy chainmail head covering.
 Hit : 0
-Dodge : 30
-Defense : 43
-Weight : 3
-Speed : 274666563
+Dodge : 0
+Defense : 16
+Weight : 8
+Speed : 3876145609
 Special : 0
-Value : 17000
-Artifact Entry : 0x0x55b0a4b04d80
-Types : OFFHAND
-Type bits : 0000000000000010
-Colors : YELLOW
-Color bits : 00001000
+Value : 62
+Artifact Entry : 0x0
+Types : HELMET
+Type bits : 0000000000010000
+Colors : BLACK
+Color bits : 00000001
 
-Item@0x55b0a4b0a4f0
+Item@0x7f14d282b7f0
 Name : a NERF(R) dagger
 Desc : "This is a totally wicked looking dagger. It's got awesome barbs on the back
 of the blade, a compass on the hilt, and myriad other embelishments that
@@ -210,16 +750,96 @@ Hit : 0
 Dodge : 10
 Defense : 0
 Weight : 1
-Speed : 73067597
+Speed : 3029382933
 Special : 0
-Value : 14
+Value : 12
 Artifact Entry : 0x0
 Types : WEAPON
 Type bits : 0000000000000001
 Colors : MAGENTA
 Color bits : 00100000
 
-Item@0x55b0a4b0b8e0
+Item@0x7f14d282cbe0
+Name : a NERF(R) dagger
+Desc : "This is a totally wicked looking dagger. It's got awesome barbs on the back
+of the blade, a compass on the hilt, and myriad other embelishments that
+serve no functional purpose. You could totally be a deadly assassin with a
+sweet blade like this. Since it's so light, it won't encumber you. It's
+made out of polyurethane foam.
+Hit : 0
+Dodge : 10
+Defense : 0
+Weight : 1
+Speed : 476093107
+Special : 0
+Value : 11
+Artifact Entry : 0x0
+Types : WEAPON
+Type bits : 0000000000000001
+Colors : MAGENTA
+Color bits : 00100000
+
+Item@0x7f14d282dfd0
+Name : a NERF(R) dagger
+Desc : "This is a totally wicked looking dagger. It's got awesome barbs on the back
+of the blade, a compass on the hilt, and myriad other embelishments that
+serve no functional purpose. You could totally be a deadly assassin with a
+sweet blade like this. Since it's so light, it won't encumber you. It's
+made out of polyurethane foam.
+Hit : 0
+Dodge : 10
+Defense : 0
+Weight : 1
+Speed : 1048498644
+Special : 0
+Value : 10
+Artifact Entry : 0x0
+Types : WEAPON
+Type bits : 0000000000000001
+Colors : MAGENTA
+Color bits : 00100000
+
+Item@0x7f14d282f3c0
+Name : a NERF(R) dagger
+Desc : "This is a totally wicked looking dagger. It's got awesome barbs on the back
+of the blade, a compass on the hilt, and myriad other embelishments that
+serve no functional purpose. You could totally be a deadly assassin with a
+sweet blade like this. Since it's so light, it won't encumber you. It's
+made out of polyurethane foam.
+Hit : 0
+Dodge : 10
+Defense : 0
+Weight : 1
+Speed : 708013425
+Special : 0
+Value : 12
+Artifact Entry : 0x0
+Types : WEAPON
+Type bits : 0000000000000001
+Colors : MAGENTA
+Color bits : 00100000
+
+Item@0x7f14d28307b0
+Name : a NERF(R) dagger
+Desc : "This is a totally wicked looking dagger. It's got awesome barbs on the back
+of the blade, a compass on the hilt, and myriad other embelishments that
+serve no functional purpose. You could totally be a deadly assassin with a
+sweet blade like this. Since it's so light, it won't encumber you. It's
+made out of polyurethane foam.
+Hit : 0
+Dodge : 10
+Defense : 0
+Weight : 1
+Speed : 3719240730
+Special : 0
+Value : 12
+Artifact Entry : 0x0
+Types : WEAPON
+Type bits : 0000000000000001
+Colors : MAGENTA
+Color bits : 00100000
+
+Item@0x7f14d2831ba0
 Name : a prom dress
 Desc : "This dress is totes fab! It's off-the-shoulder with an A-line waste, sequins,
 and lavender chiffon. It fits tight to mid-calf and you totally can't take
@@ -228,7 +848,7 @@ Shirley doesn't show up wearing the same thing again.
 Hit : 4
 Dodge : 0
 Defense : 0
-Weight : 3
+Weight : 4
 Speed : 4294967291
 Special : 0
 Value : 449
@@ -238,92 +858,55 @@ Type bits : 0000000000001000
 Colors : MAGENTA
 Color bits : 00100000
 
-Item@0x55b0a4b2f780
+Item@0x7f14d2832f90
 Name : a chainmail coif
 Desc : "A heavy chainmail head covering.
 Hit : 0
 Dodge : 0
 Defense : 17
 Weight : 8
-Speed : 3046909882
+Speed : 3273965106
 Special : 0
-Value : 58
+Value : 62
 Artifact Entry : 0x0
 Types : HELMET
 Type bits : 0000000000010000
 Colors : BLACK
 Color bits : 00000001
 
-Item@0x55b0a4b30b70
-Name : a cloak of invisibility
-Desc : "One of the Deathly Hallows, this cloak grants the wearer invisibility. Last
-know to be the property of the Boy Who Lived.
-Hit : 0
-Dodge : 38
-Defense : 0
-Weight : 1
-Speed : 3892053050
-Special : 0
-Value : 12825
-Artifact Entry : 0x0
-Types : CLOAK
-Type bits : 0000000000100000
-Colors : CYAN
-Color bits : 01000000
-
-Item@0x55b0a4b31f60
+Item@0x7f14d2834380
 Name : a chainmail coif
 Desc : "A heavy chainmail head covering.
 Hit : 0
 Dodge : 0
-Defense : 15
+Defense : 18
 Weight : 8
-Speed : 356703206
+Speed : 2166894459
 Special : 0
-Value : 53
+Value : 65
 Artifact Entry : 0x0
 Types : HELMET
 Type bits : 0000000000010000
 Colors : BLACK
 Color bits : 00000001
 
-Item@0x55b0a4b33350
-Name : a torch
-Desc : "A short wooden stick topped with an oil-soaked cloth, perfect for lighting
-your way through the dungeon.
+Item@0x7f14d2835770
+Name : a chainmail coif
+Desc : "A heavy chainmail head covering.
 Hit : 0
 Dodge : 0
-Defense : 0
-Weight : 4
-Speed : 0
-Special : 5
-Value : 1
+Defense : 16
+Weight : 8
+Speed : 1131119651
+Special : 0
+Value : 61
 Artifact Entry : 0x0
-Types : LIGHT
-Type bits : 0000010000000000
+Types : HELMET
+Type bits : 0000000000010000
 Colors : BLACK
 Color bits : 00000001
 
-Item@0x55b0a4b3e6d0
-Name : a Wicked Lasers(R) Torch
-Desc : "From the makers of the world's most refined lasers, comes the ultimate in
-handheld flashlights. The Flashtorch is a compact, portable searchlight that
-is capable of producing an incredible 4100 lumens of intense white light. Use
-this power to guide your way home, light a fire, or even fry an egg!
-Hit : 0
-Dodge : 0
-Defense : 0
-Weight : 2
-Speed : 0
-Special : 17
-Value : 199
-Artifact Entry : 0x0
-Types : LIGHT
-Type bits : 0000010000000000
-Colors : BLACK
-Color bits : 00000001
-
-Item@0x55b0a4b3fac0
+Item@0x7f14d2836b60
 Name : a NERF(R) dagger
 Desc : "This is a totally wicked looking dagger. It's got awesome barbs on the back
 of the blade, a compass on the hilt, and myriad other embelishments that
@@ -334,7 +917,136 @@ Hit : 0
 Dodge : 10
 Defense : 0
 Weight : 1
-Speed : 2853272212
+Speed : 2379911581
+Special : 0
+Value : 10
+Artifact Entry : 0x0
+Types : WEAPON
+Type bits : 0000000000000001
+Colors : MAGENTA
+Color bits : 00100000
+
+Item@0x7f14d2837f50
+Name : a NERF(R) dagger
+Desc : "This is a totally wicked looking dagger. It's got awesome barbs on the back
+of the blade, a compass on the hilt, and myriad other embelishments that
+serve no functional purpose. You could totally be a deadly assassin with a
+sweet blade like this. Since it's so light, it won't encumber you. It's
+made out of polyurethane foam.
+Hit : 0
+Dodge : 10
+Defense : 0
+Weight : 1
+Speed : 3586649478
+Special : 0
+Value : 10
+Artifact Entry : 0x0
+Types : WEAPON
+Type bits : 0000000000000001
+Colors : MAGENTA
+Color bits : 00100000
+
+Item@0x7f14d2839340
+Name : a torch
+Desc : "A short wooden stick topped with an oil-soaked cloth, perfect for lighting
+your way through the dungeon.
+Hit : 0
+Dodge : 0
+Defense : 0
+Weight : 3
+Speed : 0
+Special : 6
+Value : 2
+Artifact Entry : 0x0
+Types : LIGHT
+Type bits : 0000010000000000
+Colors : BLACK
+Color bits : 00000001
+
+Item@0x7f14d283a730
+Name : a chainmail coif
+Desc : "A heavy chainmail head covering.
+Hit : 0
+Dodge : 0
+Defense : 17
+Weight : 8
+Speed : 2231030434
+Special : 0
+Value : 52
+Artifact Entry : 0x0
+Types : HELMET
+Type bits : 0000000000010000
+Colors : BLACK
+Color bits : 00000001
+
+Item@0x7f14d283bb20
+Name : a torch
+Desc : "A short wooden stick topped with an oil-soaked cloth, perfect for lighting
+your way through the dungeon.
+Hit : 0
+Dodge : 0
+Defense : 0
+Weight : 3
+Speed : 0
+Special : 8
+Value : 3
+Artifact Entry : 0x0
+Types : LIGHT
+Type bits : 0000010000000000
+Colors : BLACK
+Color bits : 00000001
+
+Item@0x7f14d283cf10
+Name : a Wicked Lasers(R) Torch
+Desc : "From the makers of the world's most refined lasers, comes the ultimate in
+handheld flashlights. The Flashtorch is a compact, portable searchlight that
+is capable of producing an incredible 4100 lumens of intense white light. Use
+this power to guide your way home, light a fire, or even fry an egg!
+Hit : 0
+Dodge : 0
+Defense : 0
+Weight : 3
+Speed : 0
+Special : 11
+Value : 199
+Artifact Entry : 0x0
+Types : LIGHT
+Type bits : 0000010000000000
+Colors : BLACK
+Color bits : 00000001
+
+Item@0x7f14d283e300
+Name : a NERF(R) dagger
+Desc : "This is a totally wicked looking dagger. It's got awesome barbs on the back
+of the blade, a compass on the hilt, and myriad other embelishments that
+serve no functional purpose. You could totally be a deadly assassin with a
+sweet blade like this. Since it's so light, it won't encumber you. It's
+made out of polyurethane foam.
+Hit : 0
+Dodge : 10
+Defense : 0
+Weight : 1
+Speed : 1564205268
+Special : 0
+Value : 15
+Artifact Entry : 0x0
+Types : WEAPON
+Type bits : 0000000000000001
+Colors : MAGENTA
+Color bits : 00100000
+
+Item@0x7f14d283f6f0
+Name : a NERF(R) dagger
+Desc : "This is a totally wicked looking dagger. It's got awesome barbs on the back
+of the blade, a compass on the hilt, and myriad other embelishments that
+serve no functional purpose. You could totally be a deadly assassin with a
+sweet blade like this. Since it's so light, it won't encumber you. It's
+made out of polyurethane foam.
+Hit : 0
+Dodge : 10
+Defense : 0
+Weight : 1
+Speed : 2232358768
 Special : 0
 Value : 14
 Artifact Entry : 0x0
@@ -343,678 +1055,92 @@ Type bits : 0000000000000001
 Colors : MAGENTA
 Color bits : 00100000
 
-Item@0x55b0a4b40eb0
-Name : a chainmail coif
-Desc : "A heavy chainmail head covering.
+Item@0x7f14d2840ae0
+Name : a torch
+Desc : "A short wooden stick topped with an oil-soaked cloth, perfect for lighting
+your way through the dungeon.
 Hit : 0
-Dodge : 0
-Defense : 18
-Weight : 8
-Speed : 3209965324
-Special : 0
-Value : 55
-Artifact Entry : 0x0
-Types : HELMET
-Type bits : 0000000000010000
-Colors : BLACK
-Color bits : 00000001
-
-Item@0x55b0a4b422a0
-Name : a prom dress
-Desc : "This dress is totes fab! It's off-the-shoulder with an A-line waste, sequins,
-and lavender chiffon. It fits tight to mid-calf and you totally can't take
-full steps in it, but who cares? You'll be the hit of the party as long as
-Shirley doesn't show up wearing the same thing again.
-Hit : 3
-Dodge : 0
-Defense : 0
-Weight : 2
-Speed : 4294967291
-Special : 0
-Value : 449
-Artifact Entry : 0x0
-Types : ARMOR
-Type bits : 0000000000001000
-Colors : MAGENTA
-Color bits : 00100000
-
-Item@0x55b0a4b43690
-Name : a cloak of invisibility
-Desc : "One of the Deathly Hallows, this cloak grants the wearer invisibility. Last
-know to be the property of the Boy Who Lived.
-Hit : 0
-Dodge : 40
-Defense : 0
-Weight : 1
-Speed : 4269826972
-Special : 0
-Value : 11527
-Artifact Entry : 0x0
-Types : CLOAK
-Type bits : 0000000000100000
-Colors : CYAN
-Color bits : 01000000
-
-Item@0x55b0a4b44a80
-Name : a prom dress
-Desc : "This dress is totes fab! It's off-the-shoulder with an A-line waste, sequins,
-and lavender chiffon. It fits tight to mid-calf and you totally can't take
-full steps in it, but who cares? You'll be the hit of the party as long as
-Shirley doesn't show up wearing the same thing again.
-Hit : 3
 Dodge : 0
 Defense : 0
 Weight : 3
-Speed : 4294967291
-Special : 0
-Value : 449
+Speed : 0
+Special : 8
+Value : 3
 Artifact Entry : 0x0
-Types : ARMOR
-Type bits : 0000000000001000
-Colors : MAGENTA
-Color bits : 00100000
+Types : LIGHT
+Type bits : 0000010000000000
+Colors : BLACK
+Color bits : 00000001
 
-Item@0x55b0a4b45e70
-Name : a cloak of invisibility
-Desc : "One of the Deathly Hallows, this cloak grants the wearer invisibility. Last
-know to be the property of the Boy Who Lived.
-Hit : 0
-Dodge : 38
-Defense : 0
-Weight : 1
-Speed : 3658296577
-Special : 0
-Value : 12280
-Artifact Entry : 0x0
-Types : CLOAK
-Type bits : 0000000000100000
-Colors : CYAN
-Color bits : 01000000
-
-Item@0x55b0a4b47260
+Item@0x7f14d2841ed0
 Name : a chainmail coif
 Desc : "A heavy chainmail head covering.
 Hit : 0
 Dodge : 0
 Defense : 17
 Weight : 8
-Speed : 1031567352
+Speed : 446679077
 Special : 0
-Value : 60
+Value : 56
 Artifact Entry : 0x0
 Types : HELMET
 Type bits : 0000000000010000
 Colors : BLACK
 Color bits : 00000001
 
-Popped node with entity : 0x7ffe21e0ab40, next turn : 0, priority : 0
-	Entity is PC.
-Popped node with entity : 0x55b0a4b16ab0, next turn : 0, priority : 1
-	SM : 1, TE : 1, TN : 1, ER : 0
-	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
-	NPC attempting to move to : (+, )
-	Entity has been iterated.
-Entity 0x0x55b0a4b16ab0 moved from (,, ) to (+, )
-Popped node with entity : 0x55b0a4b17e80, next turn : 0, priority : 2
-	SM : 0, TE : 1, TN : 0, ER : 1
-	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
-	NPC attempting to move to : (, 	)
-	Entity has been iterated.
-Entity 0x0x55b0a4b17e80 moved from (, 	) to (, 	)
-Popped node with entity : 0x55b0a4b19250, next turn : 0, priority : 3
-	SM : 1, TE : 1, TN : 0, ER : 0
-	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
-	NPC attempting to move to : (%, )
-	Entity has been iterated.
-Entity 0x0x55b0a4b19250 moved from (&, ) to (%, )
-Popped node with entity : 0x55b0a4b1a620, next turn : 0, priority : 4
-	SM : 1, TE : 1, TN : 1, ER : 0
-	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
-	NPC attempting to move to : (, )
-	Entity has been iterated.
-Entity 0x0x55b0a4b1a620 moved from (, ) to (, )
-Popped node with entity : 0x55b0a4b1b9f0, next turn : 0, priority : 5
-	SM : 1, TE : 1, TN : 0, ER : 0
-	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
-	NPC attempting to move to : (., )
-	Entity has been iterated.
-Entity 0x0x55b0a4b1b9f0 moved from (/, ) to (., )
-Popped node with entity : 0x55b0a4b1cdc0, next turn : 0, priority : 6
-	SM : 0, TE : 0, TN : 0, ER : 1
-	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
-	Entity has been iterated.
-Entity 0x0x55b0a4b1cdc0 moved from (
-, ) to (
-, )
-Popped node with entity : 0x55b0a4b1e190, next turn : 0, priority : 7
-	SM : 1, TE : 0, TN : 0, ER : 0
-	flags.can_see_pc : 0, flags.computed_can_see_pc : 1
-	Erroneous bits you dumbass
-	No entity movement occurred.
-Popped node with entity : 0x55b0a4b1f560, next turn : 0, priority : 8
-	SM : 1, TE : 0, TN : 0, ER : 0
-	flags.can_see_pc : 0, flags.computed_can_see_pc : 1
-	Erroneous bits you dumbass
-	No entity movement occurred.
-Popped node with entity : 0x55b0a4b20930, next turn : 0, priority : 9
-	SM : 1, TE : 1, TN : 0, ER : 0
-	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
-	NPC attempting to move to : (, )
-	Entity has been iterated.
-Entity 0x0x55b0a4b20930 moved from (, ) to (, )
-Popped node with entity : 0x55b0a4b21d00, next turn : 0, priority : 10
-	SM : 1, TE : 0, TN : 0, ER : 0
-	flags.can_see_pc : 1, flags.computed_can_see_pc : 1
-	NPC attempting to move to : (, )
-	Entity has been iterated.
-Entity 0x0x55b0a4b21d00 moved from (, ) to (, )
-Popped node with entity : 0x55b0a4b16ab0, next turn : 2, priority : 1
-	SM : 1, TE : 1, TN : 1, ER : 0
-	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
-	NPC attempting to move to : (*, )
-	Entity has been iterated.
-Entity 0x0x55b0a4b16ab0 moved from (+, ) to (*, )
-Popped node with entity : 0x55b0a4b1a620, next turn : 2, priority : 4
-	SM : 1, TE : 1, TN : 1, ER : 0
-	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
-	NPC attempting to move to : (, )
-	Entity has been iterated.
-Entity 0x0x55b0a4b1a620 moved from (, ) to (, )
-Popped node with entity : 0x55b0a4b16ab0, next turn : 4, priority : 1
-	SM : 1, TE : 1, TN : 1, ER : 0
-	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
-	NPC attempting to move to : (), )
-	Entity has been iterated.
-Entity 0x0x55b0a4b16ab0 moved from (*, ) to (), )
-Popped node with entity : 0x55b0a4b1a620, next turn : 4, priority : 4
-	SM : 1, TE : 1, TN : 1, ER : 0
-	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
-	NPC attempting to move to : (, )
-	Entity has been iterated.
-Entity 0x0x55b0a4b1a620 moved from (, ) to (, )
-Popped node with entity : 0x55b0a4b1cdc0, next turn : 5, priority : 6
-	SM : 0, TE : 0, TN : 0, ER : 1
-	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
-	Entity has been iterated.
-Entity 0x0x55b0a4b1cdc0 moved from (
-, ) to (
-, )
-Popped node with entity : 0x55b0a4b16ab0, next turn : 6, priority : 1
-	SM : 1, TE : 1, TN : 1, ER : 0
-	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
-	NPC attempting to move to : ((, )
-	Entity has been iterated.
-Entity 0x0x55b0a4b16ab0 moved from (), ) to ((, )
-Popped node with entity : 0x55b0a4b1a620, next turn : 6, priority : 4
-	SM : 1, TE : 1, TN : 1, ER : 0
-	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
-	NPC attempting to move to : (, 
-)
-	Entity has been iterated.
-Entity 0x0x55b0a4b1a620 moved from (, ) to (, 
-)
-Popped node with entity : 0x55b0a4b16ab0, next turn : 8, priority : 1
-	SM : 1, TE : 1, TN : 1, ER : 0
-	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
-	NPC attempting to move to : (', )
-	Entity has been iterated.
-Entity 0x0x55b0a4b16ab0 moved from ((, ) to (', )
-Popped node with entity : 0x55b0a4b17e80, next turn : 8, priority : 2
-	SM : 0, TE : 1, TN : 0, ER : 1
-	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
-	NPC attempting to move to : (, 	)
-	Entity has been iterated.
-Entity 0x0x55b0a4b17e80 moved from (, 	) to (, 	)
-Popped node with entity : 0x55b0a4b1a620, next turn : 8, priority : 4
-	SM : 1, TE : 1, TN : 1, ER : 0
-	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
-	NPC attempting to move to : (, 	)
-	Entity has been iterated.
-Entity 0x0x55b0a4b1a620 moved from (, 
-) to (, 	)
-Popped node with entity : 0x7ffe21e0ab40, next turn : 10, priority : 0
-	Entity is PC.
-Popped node with entity : 0x55b0a4b16ab0, next turn : 10, priority : 1
-	SM : 1, TE : 1, TN : 1, ER : 0
-	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
-	NPC attempting to move to : (&, )
-	Entity has been iterated.
-Entity 0x0x55b0a4b16ab0 moved from (', ) to (&, )
-Popped node with entity : 0x55b0a4b1a620, next turn : 10, priority : 4
-	SM : 1, TE : 1, TN : 1, ER : 0
-	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
-	NPC attempting to move to : (, )
-	Entity has been iterated.
-Entity 0x0x55b0a4b1a620 moved from (, 	) to (, )
-Popped node with entity : 0x55b0a4b1cdc0, next turn : 10, priority : 6
-	SM : 0, TE : 0, TN : 0, ER : 1
-	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
-	Entity has been iterated.
-Entity 0x0x55b0a4b1cdc0 moved from (
-, ) to (, )
-Popped node with entity : 0x55b0a4b1f560, next turn : 10, priority : 8
-	SM : 1, TE : 0, TN : 0, ER : 0
-	flags.can_see_pc : 0, flags.computed_can_see_pc : 1
-	Erroneous bits you dumbass
-	No entity movement occurred.
-Popped node with entity : 0x55b0a4b16ab0, next turn : 12, priority : 1
-	SM : 1, TE : 1, TN : 1, ER : 0
-	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
-	NPC attempting to move to : (%, )
-	Entity has been iterated.
-Entity 0x0x55b0a4b16ab0 moved from (&, ) to (%, )
-Popped node with entity : 0x55b0a4b1a620, next turn : 12, priority : 4
-	SM : 1, TE : 1, TN : 1, ER : 0
-	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
-	NPC attempting to move to : (, )
-	Entity has been iterated.
-Entity 0x0x55b0a4b1a620 moved from (, ) to (, )
-Popped node with entity : 0x55b0a4b16ab0, next turn : 14, priority : 1
-	SM : 1, TE : 1, TN : 1, ER : 0
-	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
-	NPC attempting to move to : ($, )
-	Entity has been iterated.
-Entity 0x0x55b0a4b16ab0 moved from (%, ) to ($, )
-Popped node with entity : 0x55b0a4b1a620, next turn : 14, priority : 4
-	SM : 1, TE : 1, TN : 1, ER : 0
-	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
-	NPC attempting to move to : (, )
-	Entity has been iterated.
-Entity 0x0x55b0a4b1a620 moved from (, ) to (, )
-Popped node with entity : 0x55b0a4b1cdc0, next turn : 15, priority : 6
-	SM : 0, TE : 0, TN : 0, ER : 1
-	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
-	Entity has been iterated.
-Entity 0x0x55b0a4b1cdc0 moved from (, ) to (, )
-Popped node with entity : 0x55b0a4b16ab0, next turn : 16, priority : 1
-	SM : 1, TE : 1, TN : 1, ER : 0
-	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
-	NPC attempting to move to : (#, )
-	Entity has been iterated.
-Entity 0x0x55b0a4b16ab0 moved from ($, ) to (#, )
-Popped node with entity : 0x55b0a4b17e80, next turn : 16, priority : 2
-	SM : 0, TE : 1, TN : 0, ER : 1
-	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
-	Entity has been iterated.
-Entity 0x0x55b0a4b17e80 moved from (, 	) to (, 	)
-Popped node with entity : 0x55b0a4b1a620, next turn : 16, priority : 4
-	SM : 1, TE : 1, TN : 1, ER : 0
-	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
-	NPC attempting to move to : (, )
-	Entity has been iterated.
-Entity 0x0x55b0a4b1a620 moved from (, ) to (, )
-Popped node with entity : 0x55b0a4b16ab0, next turn : 18, priority : 1
-	SM : 1, TE : 1, TN : 1, ER : 0
-	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
-	NPC attempting to move to : (", )
-	Entity has been iterated.
-Entity 0x0x55b0a4b16ab0 moved from (#, ) to (", )
-Popped node with entity : 0x55b0a4b1a620, next turn : 18, priority : 4
-	SM : 1, TE : 1, TN : 1, ER : 0
-	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
-	NPC attempting to move to : (, )
-	Entity has been iterated.
-Entity 0x0x55b0a4b1a620 moved from (, ) to (, )
-Popped node with entity : 0x7ffe21e0ab40, next turn : 20, priority : 0
-	Entity is PC.
-Popped node with entity : 0x55b0a4b16ab0, next turn : 20, priority : 1
-	SM : 1, TE : 1, TN : 1, ER : 0
-	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
-	NPC attempting to move to : (!, )
-	Entity has been iterated.
-Entity 0x0x55b0a4b16ab0 moved from (", ) to (!, )
-Popped node with entity : 0x55b0a4b1a620, next turn : 20, priority : 4
-Popped node with entity : 0x55b0a4b1cdc0, next turn : 20, priority : 6
-	SM : 0, TE : 0, TN : 0, ER : 1
-	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
-	Entity has been iterated.
-Entity 0x0x55b0a4b1cdc0 moved from (, ) to (, )
-Popped node with entity : 0x55b0a4b1f560, next turn : 20, priority : 8
-	SM : 1, TE : 0, TN : 0, ER : 0
-	flags.can_see_pc : 0, flags.computed_can_see_pc : 1
-	Erroneous bits you dumbass
-	No entity movement occurred.
-Popped node with entity : 0x55b0a4b16ab0, next turn : 22, priority : 1
-	SM : 1, TE : 1, TN : 1, ER : 0
-	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
-	NPC attempting to move to : ( , )
-	Entity has been iterated.
-Entity 0x0x55b0a4b16ab0 moved from (!, ) to ( , )
-Popped node with entity : 0x55b0a4b16ab0, next turn : 24, priority : 1
-	SM : 1, TE : 1, TN : 1, ER : 0
-	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
-	NPC attempting to move to : (, )
-	Entity has been iterated.
-Entity 0x0x55b0a4b16ab0 moved from ( , ) to (, )
-Popped node with entity : 0x55b0a4b17e80, next turn : 24, priority : 2
-	SM : 0, TE : 1, TN : 0, ER : 1
-	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
-	NPC attempting to move to : (, 	)
-	Entity has been iterated.
-Entity 0x0x55b0a4b17e80 moved from (, 	) to (, 	)
-Popped node with entity : 0x55b0a4b1cdc0, next turn : 25, priority : 6
-	SM : 0, TE : 0, TN : 0, ER : 1
-	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
-	Entity has been iterated.
-Entity 0x0x55b0a4b1cdc0 moved from (, ) to (, )
-Popped node with entity : 0x55b0a4b16ab0, next turn : 26, priority : 1
-	SM : 1, TE : 1, TN : 1, ER : 0
-	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
-	NPC attempting to move to : (, )
-	Entity has been iterated.
-Entity 0x0x55b0a4b16ab0 moved from (, ) to (, )
-Popped node with entity : 0x55b0a4b16ab0, next turn : 28, priority : 1
-	SM : 1, TE : 1, TN : 1, ER : 0
-	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
-	NPC attempting to move to : (, )
-	Entity has been iterated.
-Entity 0x0x55b0a4b16ab0 moved from (, ) to (, )
-Popped node with entity : 0x55b0a4b1e190, next turn : 28, priority : 7
-	SM : 1, TE : 0, TN : 0, ER : 0
-	flags.can_see_pc : 0, flags.computed_can_see_pc : 1
-	Erroneous bits you dumbass
-	No entity movement occurred.
-Popped node with entity : 0x7ffe21e0ab40, next turn : 30, priority : 0
-	Entity is PC.
-Popped node with entity : 0x55b0a4b16ab0, next turn : 30, priority : 1
-	SM : 1, TE : 1, TN : 1, ER : 0
-	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
-	NPC attempting to move to : (, )
-	Entity has been iterated.
-Entity 0x0x55b0a4b16ab0 moved from (, ) to (, )
-Popped node with entity : 0x55b0a4b1b9f0, next turn : 30, priority : 5
-	SM : 1, TE : 1, TN : 0, ER : 0
-	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
-	NPC attempting to move to : (-, )
-	Entity has been iterated.
-Entity 0x0x55b0a4b1b9f0 moved from (., ) to (-, )
-Popped node with entity : 0x55b0a4b1cdc0, next turn : 30, priority : 6
-	SM : 0, TE : 0, TN : 0, ER : 1
-	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
-	NPC attempting to move to : (
-, )
-	Entity has been iterated.
-Entity 0x0x55b0a4b1cdc0 moved from (, ) to (
-, )
-Popped node with entity : 0x55b0a4b1f560, next turn : 30, priority : 8
-	SM : 1, TE : 0, TN : 0, ER : 0
-	flags.can_see_pc : 0, flags.computed_can_see_pc : 1
-	Erroneous bits you dumbass
-	No entity movement occurred.
-Popped node with entity : 0x55b0a4b20930, next turn : 30, priority : 9
-	SM : 1, TE : 1, TN : 0, ER : 0
-	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
-	NPC attempting to move to : (, )
-	Entity has been iterated.
-Entity 0x0x55b0a4b20930 moved from (, ) to (, )
-Popped node with entity : 0x55b0a4b16ab0, next turn : 32, priority : 1
-	SM : 1, TE : 1, TN : 1, ER : 0
-	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
-	NPC attempting to move to : (, )
-	Entity has been iterated.
-Entity 0x0x55b0a4b16ab0 moved from (, ) to (, )
-Popped node with entity : 0x55b0a4b17e80, next turn : 32, priority : 2
-	SM : 0, TE : 1, TN : 0, ER : 1
-	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
-	Entity has been iterated.
-Entity 0x0x55b0a4b17e80 moved from (, 	) to (, 	)
-Popped node with entity : 0x55b0a4b21d00, next turn : 32, priority : 10
-	SM : 1, TE : 0, TN : 0, ER : 0
-	flags.can_see_pc : 1, flags.computed_can_see_pc : 1
-	NPC attempting to move to : (, )
-	Entity has been iterated.
-Entity 0x0x55b0a4b21d00 moved from (, ) to (, )
-Popped node with entity : 0x55b0a4b16ab0, next turn : 34, priority : 1
-	SM : 1, TE : 1, TN : 1, ER : 0
-	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
-	NPC attempting to move to : (, )
-	Entity has been iterated.
-Entity 0x0x55b0a4b16ab0 moved from (, ) to (, )
-Popped node with entity : 0x55b0a4b1cdc0, next turn : 35, priority : 6
-	SM : 0, TE : 0, TN : 0, ER : 1
-	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
-	NPC attempting to move to : (	, )
-	Entity has been iterated.
-Entity 0x0x55b0a4b1cdc0 moved from (
-, ) to (	, )
-Popped node with entity : 0x55b0a4b16ab0, next turn : 36, priority : 1
-	SM : 1, TE : 1, TN : 1, ER : 0
-	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
-	NPC attempting to move to : (, )
-	Entity has been iterated.
-Entity 0x0x55b0a4b16ab0 moved from (, ) to (, )
-Popped node with entity : 0x55b0a4b16ab0, next turn : 38, priority : 1
-	SM : 1, TE : 1, TN : 1, ER : 0
-	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
-	NPC attempting to move to : (, )
-	Entity has been iterated.
-Entity 0x0x55b0a4b16ab0 moved from (, ) to (, )
-Popped node with entity : 0x7ffe21e0ab40, next turn : 40, priority : 0
-	Entity is PC.
-Popped node with entity : 0x55b0a4b16ab0, next turn : 40, priority : 1
-	SM : 1, TE : 1, TN : 1, ER : 0
-	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
-	NPC attempting to move to : (, )
-	Entity has been iterated.
-Entity 0x0x55b0a4b16ab0 moved from (, ) to (, )
-Popped node with entity : 0x55b0a4b17e80, next turn : 40, priority : 2
-	SM : 0, TE : 1, TN : 0, ER : 1
-	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
-	NPC attempting to move to : (, 	)
-	Entity has been iterated.
-Entity 0x0x55b0a4b17e80 moved from (, 	) to (, 	)
-Popped node with entity : 0x55b0a4b19250, next turn : 40, priority : 3
-	SM : 1, TE : 1, TN : 0, ER : 0
-	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
-	NPC attempting to move to : ($, )
-	Entity has been iterated.
-Entity 0x0x55b0a4b19250 moved from (%, ) to ($, )
-Popped node with entity : 0x55b0a4b1cdc0, next turn : 40, priority : 6
-	SM : 0, TE : 0, TN : 0, ER : 1
-	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
-	Entity has been iterated.
-Entity 0x0x55b0a4b1cdc0 moved from (	, ) to (
-, )
-Popped node with entity : 0x55b0a4b1f560, next turn : 40, priority : 8
-	SM : 1, TE : 0, TN : 0, ER : 0
-	flags.can_see_pc : 0, flags.computed_can_see_pc : 1
-	Erroneous bits you dumbass
-	No entity movement occurred.
-Popped node with entity : 0x55b0a4b16ab0, next turn : 42, priority : 1
-	SM : 1, TE : 1, TN : 1, ER : 0
-	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
-	NPC attempting to move to : (, )
-	Entity has been iterated.
-Entity 0x0x55b0a4b16ab0 moved from (, ) to (, )
-Popped node with entity : 0x55b0a4b16ab0, next turn : 44, priority : 1
-	SM : 1, TE : 1, TN : 1, ER : 0
-	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
-	NPC attempting to move to : (, )
-	Entity has been iterated.
-Entity 0x0x55b0a4b16ab0 moved from (, ) to (, )
-Popped node with entity : 0x55b0a4b1cdc0, next turn : 45, priority : 6
-	SM : 0, TE : 0, TN : 0, ER : 1
-	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
-	Entity has been iterated.
-Entity 0x0x55b0a4b1cdc0 moved from (
-, ) to (
-, )
-Popped node with entity : 0x55b0a4b16ab0, next turn : 46, priority : 1
-	SM : 1, TE : 1, TN : 1, ER : 0
-	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
-	NPC attempting to move to : (, )
-	Entity has been iterated.
-Entity 0x0x55b0a4b16ab0 moved from (, ) to (, )
-Popped node with entity : 0x55b0a4b16ab0, next turn : 48, priority : 1
-	SM : 1, TE : 1, TN : 1, ER : 0
-	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
-	NPC attempting to move to : (, )
-	Entity has been iterated.
-Entity 0x0x55b0a4b16ab0 moved from (, ) to (, )
-Popped node with entity : 0x55b0a4b17e80, next turn : 48, priority : 2
-	SM : 0, TE : 1, TN : 0, ER : 1
-	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
-	NPC attempting to move to : (, 	)
-	Entity has been iterated.
-Entity 0x0x55b0a4b17e80 moved from (, 	) to (, 	)
-Popped node with entity : 0x7ffe21e0ab40, next turn : 50, priority : 0
-	Entity is PC.
-Popped node with entity : 0x55b0a4b16ab0, next turn : 50, priority : 1
-	SM : 1, TE : 1, TN : 1, ER : 0
-	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
-	NPC attempting to move to : (, )
-	Entity has been iterated.
-Entity 0x0x55b0a4b16ab0 moved from (, ) to (, )
-Popped node with entity : 0x55b0a4b1cdc0, next turn : 50, priority : 6
-	SM : 0, TE : 0, TN : 0, ER : 1
-	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
-	Entity has been iterated.
-Entity 0x0x55b0a4b1cdc0 moved from (
-, ) to (, )
-Popped node with entity : 0x55b0a4b1f560, next turn : 50, priority : 8
-	SM : 1, TE : 0, TN : 0, ER : 0
-	flags.can_see_pc : 0, flags.computed_can_see_pc : 1
-	Erroneous bits you dumbass
-	No entity movement occurred.
-Popped node with entity : 0x55b0a4b16ab0, next turn : 52, priority : 1
-	SM : 1, TE : 1, TN : 1, ER : 0
-	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
-	NPC attempting to move to : (, )
-	Entity has been iterated.
-Entity 0x0x55b0a4b16ab0 moved from (, ) to (, )
-Popped node with entity : 0x55b0a4b16ab0, next turn : 54, priority : 1
-	SM : 1, TE : 1, TN : 1, ER : 0
-	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
-	NPC attempting to move to : (, )
-	Entity has been iterated.
-Entity 0x0x55b0a4b16ab0 moved from (, ) to (, )
-Popped node with entity : 0x55b0a4b1cdc0, next turn : 55, priority : 6
-	SM : 0, TE : 0, TN : 0, ER : 1
-	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
-	NPC attempting to move to : (
-, )
-	Entity has been iterated.
-Entity 0x0x55b0a4b1cdc0 moved from (, ) to (
-, )
-Popped node with entity : 0x55b0a4b16ab0, next turn : 56, priority : 1
-	SM : 1, TE : 1, TN : 1, ER : 0
-	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
-	NPC attempting to move to : (, )
-	Entity has been iterated.
-Entity 0x0x55b0a4b16ab0 moved from (, ) to (, )
-Popped node with entity : 0x55b0a4b17e80, next turn : 56, priority : 2
-	SM : 0, TE : 1, TN : 0, ER : 1
-	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
-	No entity movement occurred.
-Popped node with entity : 0x55b0a4b1e190, next turn : 56, priority : 7
-	SM : 1, TE : 0, TN : 0, ER : 0
-	flags.can_see_pc : 0, flags.computed_can_see_pc : 1
-	Erroneous bits you dumbass
-	No entity movement occurred.
-Popped node with entity : 0x55b0a4b16ab0, next turn : 58, priority : 1
-	SM : 1, TE : 1, TN : 1, ER : 0
-	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
-	NPC attempting to move to : (, )
-	Entity has been iterated.
-Entity 0x0x55b0a4b16ab0 moved from (, ) to (, )
-Popped node with entity : 0x7ffe21e0ab40, next turn : 60, priority : 0
-	Entity is PC.
-Popped node with entity : 0x55b0a4b16ab0, next turn : 60, priority : 1
-	SM : 1, TE : 1, TN : 1, ER : 0
-	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
-	NPC attempting to move to : (, )
-	Entity has been iterated.
-Entity 0x0x55b0a4b16ab0 moved from (, ) to (, )
-Popped node with entity : 0x55b0a4b1b9f0, next turn : 60, priority : 5
-	SM : 1, TE : 1, TN : 0, ER : 0
-	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
-	NPC attempting to move to : (,, )
-	Entity has been iterated.
-Entity 0x0x55b0a4b1b9f0 moved from (-, ) to (,, )
-Popped node with entity : 0x55b0a4b1cdc0, next turn : 60, priority : 6
-	SM : 0, TE : 0, TN : 0, ER : 1
-	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
-	NPC attempting to move to : (	, )
-	Entity has been iterated.
-Entity 0x0x55b0a4b1cdc0 moved from (
-, ) to (	, )
-Popped node with entity : 0x55b0a4b1f560, next turn : 60, priority : 8
-	SM : 1, TE : 0, TN : 0, ER : 0
-	flags.can_see_pc : 0, flags.computed_can_see_pc : 1
-	Erroneous bits you dumbass
-	No entity movement occurred.
-Popped node with entity : 0x55b0a4b20930, next turn : 60, priority : 9
-	SM : 1, TE : 1, TN : 0, ER : 0
-	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
-	NPC attempting to move to : (, )
-	Entity has been iterated.
-Entity 0x0x55b0a4b20930 moved from (, ) to (, )
-Popped node with entity : 0x55b0a4b16ab0, next turn : 62, priority : 1
-	SM : 1, TE : 1, TN : 1, ER : 0
-	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
-	NPC attempting to move to : (, )
-	Entity has been iterated.
-Entity 0x0x55b0a4b16ab0 moved from (, ) to (, )
-Popped node with entity : 0x55b0a4b16ab0, next turn : 64, priority : 1
-	SM : 1, TE : 1, TN : 1, ER : 0
-	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
-	NPC attempting to move to : (, )
-	Entity has been iterated.
-Entity 0x0x55b0a4b16ab0 moved from (, ) to (, )
-Popped node with entity : 0x55b0a4b17e80, next turn : 64, priority : 2
-	SM : 0, TE : 1, TN : 0, ER : 1
-	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
-	No entity movement occurred.
-Popped node with entity : 0x55b0a4b21d00, next turn : 64, priority : 10
-	SM : 1, TE : 0, TN : 0, ER : 0
-	flags.can_see_pc : 1, flags.computed_can_see_pc : 1
-	NPC attempting to move to : (, )
-	Entity has been iterated.
-Entity 0x0x55b0a4b21d00 moved from (, ) to (, )
-Popped node with entity : 0x55b0a4b1cdc0, next turn : 65, priority : 6
-	SM : 0, TE : 0, TN : 0, ER : 1
-	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
-	Entity has been iterated.
-Entity 0x0x55b0a4b1cdc0 moved from (	, ) to (
-, )
-Popped node with entity : 0x55b0a4b16ab0, next turn : 66, priority : 1
-	SM : 1, TE : 1, TN : 1, ER : 0
-	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
-	NPC attempting to move to : (
-, )
-	Entity has been iterated.
-Entity 0x0x55b0a4b16ab0 moved from (, ) to (
-, )
-Popped node with entity : 0x55b0a4b16ab0, next turn : 68, priority : 1
-	SM : 1, TE : 1, TN : 1, ER : 0
-	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
-	NPC attempting to move to : (	, )
-	Entity has been iterated.
-Entity 0x0x55b0a4b16ab0 moved from (
-, ) to (	, )
-Popped node with entity : 0x7ffe21e0ab40, next turn : 70, priority : 0
-	Entity is PC.
-Popped node with entity : 0x55b0a4b16ab0, next turn : 70, priority : 1
-	SM : 1, TE : 1, TN : 1, ER : 0
-	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
-	NPC attempting to move to : (, )
-	Entity has been iterated.
-Entity 0x0x55b0a4b16ab0 moved from (	, ) to (, )
-Popped node with entity : 0x55b0a4b1cdc0, next turn : 70, priority : 6
-	SM : 0, TE : 0, TN : 0, ER : 1
-	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
-	NPC attempting to move to : (	, )
-	Entity has been iterated.
-Entity 0x0x55b0a4b1cdc0 moved from (
-, ) to (	, )
-Popped node with entity : 0x55b0a4b1f560, next turn : 70, priority : 8
-	SM : 1, TE : 0, TN : 0, ER : 0
-	flags.can_see_pc : 0, flags.computed_can_see_pc : 1
-	Erroneous bits you dumbass
-	No entity movement occurred.
-Popped node with entity : 0x55b0a4b16ab0, next turn : 72, priority : 1
-	SM : 1, TE : 1, TN : 1, ER : 0
-	flags.can_see_pc : 0, flags.computed_can_see_pc : 0
-	NPC attempting to move to : (, )
-	Entity has been iterated.
-Entity 0x0x55b0a4b16ab0 moved from (, ) to (, )
+Item@0x7f14d28432c0
+Name : a chainmail coif
+Desc : "A heavy chainmail head covering.
+Hit : 0
+Dodge : 0
+Defense : 15
+Weight : 8
+Speed : 135176520
+Special : 0
+Value : 69
+Artifact Entry : 0x0
+Types : HELMET
+Type bits : 0000000000010000
+Colors : BLACK
+Color bits : 00000001
+
+Item@0x7f14d28446b0
+Name : a NERF(R) dagger
+Desc : "This is a totally wicked looking dagger. It's got awesome barbs on the back
+of the blade, a compass on the hilt, and myriad other embelishments that
+serve no functional purpose. You could totally be a deadly assassin with a
+sweet blade like this. Since it's so light, it won't encumber you. It's
+made out of polyurethane foam.
+Hit : 0
+Dodge : 10
+Defense : 0
+Weight : 1
+Speed : 4009648978
+Special : 0
+Value : 11
+Artifact Entry : 0x0
+Types : WEAPON
+Type bits : 0000000000000001
+Colors : MAGENTA
+Color bits : 00100000
+
+Item@0x7f14d2845aa0
+Name : a NERF(R) dagger
+Desc : "This is a totally wicked looking dagger. It's got awesome barbs on the back
+of the blade, a compass on the hilt, and myriad other embelishments that
+serve no functional purpose. You could totally be a deadly assassin with a
+sweet blade like this. Since it's so light, it won't encumber you. It's
+made out of polyurethane foam.
+Hit : 0
+Dodge : 10
+Defense : 0
+Weight : 1
+Speed : 1187185682
+Special : 0
+Value : 14
+Artifact Entry : 0x0
+Types : WEAPON
+Type bits : 0000000000000001
+Colors : MAGENTA
+Color bits : 00100000
+

@@ -270,8 +270,8 @@ Entity::Entity(Entity::PCGenT x) :
     {
         .name{ "Its you lol" },
         .desc{ "An unlikely hero." },
-        .attack_damage{ { .base{ 8 }, .sides{ 6 }, .rolls{ 2 } }, std::random_device{}() },
-        .speed{ 10 },
+        .attack_damage{ { .base{ 2 }, .sides{ 5 }, .rolls{ 1 } }, std::random_device{}() },
+        .speed{ 25 },
         .ability_bits{ 0 },
         .color{ DisplayColor::WHITE },
         .symbol{ '@' },

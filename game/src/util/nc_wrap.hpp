@@ -2,6 +2,8 @@
 
 #include <array>
 
+#include <cstdarg>
+
 #include <ncurses.h>
 
 
@@ -82,6 +84,13 @@ public:
     {
         wattron(w, COLOR_PAIR(PairOff + idx));
         mvwaddch(w, y, x, c);
+        wattroff(w, COLOR_PAIR(PairOff + idx));
+    }
+    template<typename... ArgT>
+    void printf(WINDOW* w, int y, int x, NCURSES_PAIRS_T idx, const char* fmt, ArgT ...args)
+    {
+        wattron(w, COLOR_PAIR(PairOff + idx));
+        mvwprintw(w, y, x, fmt, args...);
         wattroff(w, COLOR_PAIR(PairOff + idx));
     }
 

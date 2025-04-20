@@ -262,8 +262,8 @@ bool DungeonLevel::TerrainMap::Room::collides(const Room& other) const
 
     return
         (p >= 0 && q <= 0) &&
-        (r >= 0 && s <= 0) &&
-        (p || r) && (q || s) && (p || s) && (q || r);
+        (r >= 0 && s <= 0);
+        // (p || r) && (q || s) && (p || s) && (q || r);
 }
 
 
@@ -325,9 +325,13 @@ void DungeonLevel::reset()
         }
     }
 
-    // reset pc?
+    this->entity_queue = std::priority_queue<EntityQueueNode>{};
+
+    this->pc.state.target_pos = this->pc.state.pos.assign(0, 0);
     this->npcs.clear();
     this->items.clear();
+
+    this->npcs_remaining = 0;
 }
 
 int DungeonLevel::loadTerrain(FILE* f)
@@ -584,25 +588,29 @@ int DungeonLevel::copyVisCells()
 
 void DungeonLevel::writeChar(WINDOW* win, Vec2u8 loc)
 {
-    Entity* e = DungeonLevel::accessGridElem(this->entity_map, loc);
-    if(e)
+    const bool lit = (loc.cast<int>() - this->pc.state.pos).lensquared() <= VIS_RADSQ;
+
+    if(lit) wattron(win, A_BOLD);
+
+    if(Entity* e = DungeonLevel::accessGridElem(this->entity_map, loc); e)
     {
         const short c = e->getColor();
         wattron(win, COLOR_PAIR(c));
         mvwaddch(win, loc.y, loc.x, e->getChar());
         wattroff(win, COLOR_PAIR(c));
-        return;
     }
-
-    Item* i = DungeonLevel::accessGridElem(this->item_map, loc);
-    if(i)
+    else
+    if(Item* i = DungeonLevel::accessGridElem(this->item_map, loc); i)
     {
         const short c = i->getColor();
         wattron(win, COLOR_PAIR(c));
         mvwaddch(win, loc.y, loc.x, i->getChar());
         wattroff(win, COLOR_PAIR(c));
-        return;
+    }
+    else
+    {
+        mvwaddch(win, loc.y, loc.x, DungeonLevel::accessGridElem(this->map.terrain, loc).getChar());
     }
 
-    mvwaddch(win, loc.y, loc.x, DungeonLevel::accessGridElem(this->map.terrain, loc).getChar());
+    if(lit) wattroff(win, A_BOLD);
 }

@@ -194,7 +194,7 @@ int DungeonLevel::handlePCMove(Vec2u8 to, bool is_goto)
         this->pc.state.pos = to;
 
         Entity*& slot = DungeonLevel::accessGridElem(this->entity_map, to);
-        if(slot)   // previous entity
+        if(slot && !slot->isPC())   // previous entity
         {
             (slot)->state.health = 0;
             this->npcs_remaining--;

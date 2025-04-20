@@ -167,6 +167,11 @@ public:
         return *this;
     }
 
+    inline VecT& clamp(const VecT& min, const VecT& max)
+    {
+        return this->cwiseMinEq(max).cwiseMaxEq(min);
+    }
+
 public:
     inline T sum() const
     {

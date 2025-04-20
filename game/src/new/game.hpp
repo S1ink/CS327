@@ -54,7 +54,7 @@ protected:
     int overwrite_changes();
 
     int iterate_next_pc();
-    int iterate_pc_cmd(int move_cmd);
+    int iterate_pc_cmd(int move_cmd, bool& was_nop);
     int handle_mlist_cmd(int mlist_cmd);
     int handle_dbg_cmd(int dbg_cmd);
 

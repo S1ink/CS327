@@ -3,6 +3,13 @@
 #include "util/debug.hpp"
 
 
+#define NC_PRINT(...) \
+    move(0, 0); \
+    clrtoeol(); \
+    mvprintw(0, 0, __VA_ARGS__); \
+    refresh();
+
+
 void GameState::MListWindow::onShow()
 {
     this->prox_gradient.applyForeground(COLOR_BLACK);
@@ -12,7 +19,7 @@ void GameState::MListWindow::onShow()
 
     size_t alive_i = 0;
     for( auto m = this->level->npcs.begin();
-        m != this->level->npcs.end() && alive_i < (DUNGEON_Y_DIM - 2);
+        m != this->level->npcs.end() && alive_i < MONLIST_WIN_Y_DIM;
         m++ )
     {
         if(m->state.health > 0)
@@ -24,25 +31,23 @@ void GameState::MListWindow::onShow()
     }
 
     this->refresh();
-
-    // NC_PRINT("%d monster(s) remain.", this->level->num_monsters);
 }
 
 void GameState::MListWindow::onScrollUp()
 {
-    if((int)this->level->npcs_remaining - this->scroll_amount > (DUNGEON_Y_DIM - 2))
+    if((int)this->level->npcs_remaining - this->scroll_amount > MONLIST_WIN_Y_DIM)
     {
         this->scroll_amount += 1;
         wscrl(this->win, 1);
 
-        const int target_mnum = DUNGEON_Y_DIM - 3 + this->scroll_amount;
+        const int target_mnum = (MONLIST_WIN_Y_DIM - 1) + this->scroll_amount;
         auto m = this->level->npcs.begin();
         for(int mon = 0; m->state.health <= 0 || mon < target_mnum; m++)
         {
             if(m->state.health) mon++;
         }
 
-        this->printEntry(*m, DUNGEON_Y_DIM - 3);
+        this->printEntry(*m, (MONLIST_WIN_Y_DIM - 1));
         this->refresh();
     }
 }
@@ -54,9 +59,8 @@ void GameState::MListWindow::onScrollDown()
         this->scroll_amount -= 1;
         wscrl(this->win, -1);
 
-        const int target_mnum = this->scroll_amount;
         auto m = this->level->npcs.begin();
-        for(int mon = 0; !m->state.health || mon < target_mnum; m++)
+        for(int mon = 0; !m->state.health || mon < this->scroll_amount; m++)
         {
             if(m->state.health) mon++;
         }
@@ -75,28 +79,25 @@ void GameState::MListWindow::printEntry(const Entity& m, int line)
 {
     const int
         dx = (int)this->level->pc.state.pos.x - (int)m.state.pos.x,
-        dy = (int)this->level->pc.state.pos.y - (int)m.state.pos.y;
-        // ds = m->md.tunneling ? this->level->terrain_costs[m->pos.y][m->pos.x] : this->level->tunnel_costs[m->pos.y][m->pos.x];
+        dy = (int)this->level->pc.state.pos.y - (int)m.state.pos.y,
+        ds = m.config.can_tunnel ?
+            DungeonLevel::accessGridElem(this->level->terrain_costs, m.state.pos) :
+            DungeonLevel::accessGridElem(this->level->tunnel_costs, m.state.pos),
+        ci = (MIN(63, ds) >> 2);
+
+    // NC_PRINT("trav weight is %d", ds);
 
     wmove(this->win, line, 0);
     wclrtoeol(this->win);
 
-    // if(ds < 5)
-    // {
-    //     wattron(this->win, COLOR_PAIR(COLOR_RED));
-    // }
-
-    mvwprintw( this->win, line, 0, "[%s] : %d %s, %d %s",
+    this->prox_gradient.printf(
+        this->win, line, 0, ci, "[%s] : %d %s, %d %s",
         m.config.name.data(),
         abs(dx),
         dx > 0 ? "West" : "East",
         abs(dy),
         dy > 0 ? "North" : "South" );
 
-    // if(ds < 5)
-    // {
-    //     wattroff(this->win, COLOR_PAIR(COLOR_RED));
-    // }
 }
 
 
@@ -285,8 +286,8 @@ void GameState::MapWindow::writeFogMap()
             const int8_t y = static_cast<int8_t>(this->level->pc.state.pos.y) + v[0];
             const int8_t x = static_cast<int8_t>(this->level->pc.state.pos.x) + v[1];
 
-            if( (y >= 0 && y < DUNGEON_Y_DIM && x >= 0 && x < DUNGEON_X_DIM) &&
-                (this->level->entity_map[y][x] || this->level->item_map[y][x]) )
+            if( (y >= 1 && y < DUNGEON_Y_DIM - 1 && x >= 1 && x < DUNGEON_X_DIM - 1) )
+                // (this->level->entity_map[y][x] || this->level->item_map[y][x]) )
             {
                 this->level->writeChar(this->win, {x, y});
             }
@@ -501,12 +502,6 @@ static int nc_print_win_lose(int s, const std::atomic<bool>& r)
     #undef MIN_PAUSE_MS
     #undef MAX_PAUSE_MS
 }
-
-#define NC_PRINT(...) \
-    move(0, 0); \
-    clrtoeol(); \
-    mvprintw(0, 0, __VA_ARGS__); \
-    refresh();
 
 enum
 {
@@ -741,7 +736,7 @@ int GameState::iterate_next_pc()
         //     << ", priority : " << (int)qn.priority << std::endl;
         if(e->state.health > 0)
         {
-            qn.next_turn += e->config.speed;
+            qn.next_turn += (1000 / e->config.speed);
             this->level.entity_queue.push(qn);
 
             if(!e->config.is_pc)
@@ -763,10 +758,10 @@ int GameState::iterate_next_pc()
                 //     FileDebug::get() << "\tNo entity movement occurred.\n";
                 // }
             }
-            // else
-            // {
-            //     FileDebug::get() << "\tEntity is PC.\n";
-            // }
+            else if(e->config.unique_entry)
+            {
+                this->unique_availability[e->config.unique_entry] = false;
+            }
         }
     }
     while(!(s = this->level.getWinLose()) && (!e || !e->config.is_pc));
@@ -776,8 +771,10 @@ int GameState::iterate_next_pc()
     return s;
 }
 
-int GameState::iterate_pc_cmd(int move_cmd)
+int GameState::iterate_pc_cmd(int move_cmd, bool& was_nop)
 {
+    was_nop = true;
+
     static const int8_t off[] = {
         0, -1,
         0, +1,
@@ -812,6 +809,8 @@ int GameState::iterate_pc_cmd(int move_cmd)
                 from = pc.state.target_pos;
                 pc.state.target_pos += d;
 
+                pc.state.target_pos.clamp(Vec2u8{1, 1}, Vec2u8{DUNGEON_X_DIM - 2, DUNGEON_Y_DIM - 2});
+
                 this->map_win.onGotoMove(from, pc.state.target_pos);
             }
             else
@@ -820,6 +819,7 @@ int GameState::iterate_pc_cmd(int move_cmd)
                 if( this->level.handlePCMove(static_cast<Vec2i8>(pc.state.pos) + d, false) )
                 {
                     this->map_win.onPlayerMove(from, pc.state.pos);
+                    was_nop = false;
                 }
             }
 
@@ -832,6 +832,7 @@ int GameState::iterate_pc_cmd(int move_cmd)
             {
                 Vec2u8 pc_pos;
 
+                this->level.reset();
                 this->initDungeonRandom();  // TODO: handle unique item resets
 
                 this->map_win.changeLevel(this->level);
@@ -844,10 +845,8 @@ int GameState::iterate_pc_cmd(int move_cmd)
             if(this->state.is_goto_ctrl)
             {
                 Vec2u8 from = pc.state.pos;
-                if( this->level.handlePCMove(pc.state.target_pos, true) )
-                {
-                    this->map_win.onPlayerMove(from, pc.state.pos);
-                }
+                this->level.handlePCMove(pc.state.target_pos, true);
+                this->map_win.onPlayerMove(from, pc.state.pos);
                 this->state.is_goto_ctrl = false;
             }
             else
@@ -871,7 +870,7 @@ int GameState::iterate_pc_cmd(int move_cmd)
             }
             break;
         }
-        case MOVE_CMD_SKIP:
+        case MOVE_CMD_SKIP: was_nop = false;
         default: break;
     }
 
@@ -889,7 +888,7 @@ int GameState::handle_mlist_cmd(int mlist_cmd)
         {
             this->state.active_win = GWIN_MLIST;
             this->mlist_win.onShow();
-            // NC_PRINT("%d monster(s) remain.", this->level.npcs_remaining);
+            NC_PRINT("%lu monster(s) remain.", this->level.npcs_remaining);
             break;
         }
         case MLIST_CMD_HIDE:
@@ -904,10 +903,12 @@ int GameState::handle_mlist_cmd(int mlist_cmd)
         case MLIST_CMD_SU:
         {
             this->mlist_win.onScrollUp();
+            break;
         }
         case MLIST_CMD_SD:
         {
             this->mlist_win.onScrollDown();
+            break;
         }
         default: break;
     }
@@ -1140,6 +1141,7 @@ void GameState::run(const std::atomic<bool>& r)
     int status;
     InputCommand ic = zeroed_input();
     int c;
+    bool pc_nop = false;
 
     this->state.active_win = GWIN_MAP;
     this->map_win.onRefresh(true);
@@ -1151,7 +1153,8 @@ void GameState::run(const std::atomic<bool>& r)
         const int is_currently_map = (this->state.active_win == GWIN_MAP);
 
         this->overwrite_changes();
-        if( is_currently_map &&
+        if( !pc_nop &&
+            is_currently_map &&
             ic.move_cmd &&
             !this->state.is_goto_ctrl &&
             (status = this->iterate_next_pc()) ) break;  // game done when iterate_next_pc() returns non-zero
@@ -1165,7 +1168,7 @@ void GameState::run(const std::atomic<bool>& r)
         }
         else if(ic.move_cmd && is_currently_map)
         {
-            status = this->iterate_pc_cmd(ic.move_cmd);
+            status = this->iterate_pc_cmd(ic.move_cmd, pc_nop);
         }
         else if(ic.mlist_cmd)
         {

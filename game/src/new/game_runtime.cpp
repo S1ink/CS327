@@ -9,6 +9,12 @@
     mvprintw(0, 0, __VA_ARGS__); \
     refresh();
 
+#define NC_PRINT2(...) \
+    move((DUNGEON_Y_DIM + 1), 0); \
+    clrtoeol(); \
+    mvprintw((DUNGEON_Y_DIM + 1), 0, __VA_ARGS__); \
+    refresh();
+
 
 void GameState::MListWindow::onShow()
 {
@@ -906,7 +912,7 @@ int GameState::iterate_next_pc()
                 {
                     // FileDebug::get() << "\tEntity has been iterated.\n";
 
-                    this->map_win.onMonsterMove(pre, e->state.pos);
+                    // this->map_win.onMonsterMove(pre, e->state.pos);
 
                     // FileDebug::get() << "Entity 0x"
                     //     << std::hex << e << std::dec
@@ -918,10 +924,10 @@ int GameState::iterate_next_pc()
                 //     FileDebug::get() << "\tNo entity movement occurred.\n";
                 // }
             }
-            else if(e->config.unique_entry)
-            {
-                this->unique_availability[e->config.unique_entry] = false;
-            }
+        }
+        else if(e->config.unique_entry)
+        {
+            this->unique_availability[e->config.unique_entry] = false;
         }
     }
     while(!(s = this->level.getWinLose()) && (!e || !e->config.is_pc));
@@ -1318,9 +1324,12 @@ void GameState::run(const std::atomic<bool>& r)
             is_currently_map &&
             (status = this->iterate_next_pc()) ) break;  // game done when iterate_next_pc() returns non-zero
 
+        NC_PRINT2("HEALTH: %d", this->level.pc.state.health)
+
     // 3. accept user input
         int c = getch();
         uint8_t d = 0;
+        pc_nop = false;
 
     // 4. process input
         if(UserInput::checkExit(c))
@@ -1336,15 +1345,18 @@ void GameState::run(const std::atomic<bool>& r)
         if((d = UserInput::checkMlist(c)))
         {
             this->handle_mlist_cmd(d);
+            pc_nop = true;
         }
         else
         if((d = UserInput::checkDbg(c)))
         {
             this->handle_dbg_cmd(d);
+            pc_nop = true;
         }
         else
         {
             NC_PRINT("Unknown key: %#o", c);
+            pc_nop = true;
         }
     }
 

@@ -99,26 +99,33 @@ static int handle_entity_move(DungeonLevel& d, Entity& e, Vec2u8 to)
 
     if(flags.has_entity_moved)
     {
-        e.state.pos = to;
-
         Entity*& slot = DungeonLevel::accessGridElem(d.entity_map, to);
         if(slot)   // previous entity
         {
             if(slot->config.is_pc)
             {
                 uint32_t a = e.config.attack_damage.roll(d.rroll);
-                if(slot->state.health < a) slot->state.health = 0;
-                else slot->state.health -= a;
+                if(slot->state.health < a)
+                {
+                    slot->state.health = 0;
+                    e.state.pos = to;
+                }
+                else
+                {
+                    slot->state.health -= a;
+                    flags.has_entity_moved = false;
+                }
             }
             else
             {
                 Entity* x = slot;
+                e.state.pos = to;
                 slot = &e;
                 prev_slot = nullptr;
 
                 uint8_t valid_dirs[8];
                 const uint8_t n_dirs = filter_open_cells(d, x->state.pos, valid_dirs);
-                const uint8_t ri = RANDOM_IN_RANGE(0, n_dirs);
+                const uint8_t ri = RANDOM_IN_RANGE(0, n_dirs - 1);
                 x->state.pos.x += OFF_DIRECTIONS[valid_dirs[ri]][0];
                 x->state.pos.y += OFF_DIRECTIONS[valid_dirs[ri]][1];
                 DungeonLevel::accessGridElem(d.entity_map, x->state.pos) = x;
@@ -126,6 +133,7 @@ static int handle_entity_move(DungeonLevel& d, Entity& e, Vec2u8 to)
         }
         else
         {
+            e.state.pos = to;
             slot = &e;
             prev_slot = nullptr;
         }
@@ -218,6 +226,8 @@ static void pathing_export_vec2u8(void* v, uint8_t x, uint8_t y)
 
 int DungeonLevel::handlePCMove(Vec2u8 to, bool is_goto)
 {
+    if(to == this->pc.state.pos) return false;
+
     Entity*& prev_slot = DungeonLevel::accessGridElem(this->entity_map, this->pc.state.pos);
     bool has_moved = false;
 
@@ -237,16 +247,30 @@ int DungeonLevel::handlePCMove(Vec2u8 to, bool is_goto)
 
     if(has_moved)
     {
-        this->pc.state.pos = to;
-
         Entity*& slot = DungeonLevel::accessGridElem(this->entity_map, to);
-        if(slot && !slot->isPC())   // previous entity
+        if(slot)   // previous entity
         {
-            (slot)->state.health = 0;
-            this->npcs_remaining--;
+            uint32_t a = this->pc.config.attack_damage.roll(this->rroll);
+            if(a > slot->state.health)
+            {
+                slot->state.health = 0;
+                this->npcs_remaining--;
+
+                slot = &this->pc;
+                this->pc.state.pos = to;
+                prev_slot = nullptr;
+            }
+            else
+            {
+                slot->state.health -= a;
+            }
         }
-        slot = &this->pc;
-        prev_slot = nullptr;
+        else
+        {
+            slot = &this->pc;
+            this->pc.state.pos = to;
+            prev_slot = nullptr;
+        }
     }
 
     if(has_moved)

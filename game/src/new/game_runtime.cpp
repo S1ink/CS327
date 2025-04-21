@@ -503,6 +503,8 @@ static int nc_print_win_lose(int s, const std::atomic<bool>& r)
     #undef MAX_PAUSE_MS
 }
 
+// ENUMS: base commands are MOVE..., ACTION..., and DBG...
+// Mode specific commands are listed for sub-ctrl loops: MLIST, LOOK, GOTO
 enum
 {
     MOVE_CMD_NONE = 0,
@@ -517,18 +519,24 @@ enum
     MOVE_CMD_DR,
     MOVE_CMD_US,    // up stair
     MOVE_CMD_DS,    // down stair
-    MOVE_CMD_GOTO,
-    MOVE_CMD_RGOTO,
+    MOVE_CMD_GOTO,  // TODO: delete
+    MOVE_CMD_RGOTO, // TODO: delete
     NUM_MOVE_CMD
 };
 enum
 {
-    MLIST_CMD_NONE = 0,
-    MLIST_CMD_SHOW,
-    MLIST_CMD_HIDE,
-    MLIST_CMD_SU,       // scroll up
-    MLIST_CMD_SD,       // scroll down
-    NUM_MLIST_CMD
+    ACTION_CMD_NONE = 0,
+    ACTION_CMD_WEAR,        // --> change to INVENTORY window
+    ACTION_CMD_UNWEAR,      // --> change to EQUIPMENT window
+    ACTION_CMD_DROP,        // --> change to INVENTORY window
+    ACTION_CMD_EXPUNGE,     // --> change to INVENTORY window
+    ACTION_CMD_INVENTORY,   // --> change to INVENTORY window
+    ACTION_CMD_EQUIPMENT,   // --> change to EQUIPMENT window
+    ACTION_CMD_INSPECT,     // --> change to INVENTORY window
+    ACTION_CMD_MLIST,       // --> change to MLIST window
+    ACTION_CMD_LOOK,        // --> change to LOOK mode
+    ACTION_CMD_GOTO,        // --> change to GOTO mode
+    NUM_ACTION_CMD
 };
 enum
 {
@@ -540,6 +548,158 @@ enum
     DBG_CMD_SHOW_TWEIGHTS,
     NUM_DBG_CMD
 };
+
+enum
+{
+    MLIST_CMD_NONE = 0,
+    MLIST_CMD_SHOW,
+    MLIST_CMD_ESCAPE,
+    MLIST_CMD_SU,       // scroll up
+    MLIST_CMD_SD,       // scroll down
+    NUM_MLIST_CMD
+};
+enum
+{
+    LOOK_CMD_NONE = 0,
+    LOOK_CMD_ESCAPE,
+    LOOK_CMD_CONFIRM,
+    NUM_LOOK_CMD
+};
+enum
+{
+    GOTO_CMD_NONE = 0,
+    GOTO_CMD_ESCAPE,
+    GOTO_CMD_CONFIRM,
+    GOTO_CMD_RANDOM,
+    NUM_GOTO_CMD
+};
+
+class UserInput
+{
+public:
+    static bool checkExit(int in);
+    static uint8_t checkMoveDir(int in);
+    static uint8_t checkMove(int in);
+    static uint8_t checkAction(int in);
+    static uint8_t checkDbg(int in);
+    static uint8_t checkMlist(int in);
+    static uint8_t checkLook(int in);
+    static uint8_t checkGoto(int in);
+    static uint8_t checkEquipSlot(int in);
+    static uint8_t checkCarrySlot(int in);
+};
+
+bool UserInput::checkExit(int in)
+{
+    return in == 'Q' || in == 03;   // Ctrl+C
+}
+uint8_t UserInput::checkMoveDir(int in)
+{
+    switch(in)
+    {
+        case '7':
+        case 'y': return MOVE_CMD_UL;    // move up + left
+        case '8':
+        case 'k': return MOVE_CMD_U;     // move up
+        case '9':
+        case 'u': return MOVE_CMD_UR;    // move up + right
+        case '6':
+        case 'l': return MOVE_CMD_R;     // move right
+        case '3':
+        case 'n': return MOVE_CMD_DR;    // move down + right
+        case '2':
+        case 'j': return MOVE_CMD_D;     // move down
+        case '1':
+        case 'b': return MOVE_CMD_DL;    // move down + left
+        case '4':
+        case 'h': return MOVE_CMD_L;     // move left
+    }
+    return 0;
+}
+uint8_t UserInput::checkMove(int in)
+{
+    if(uint8_t u = checkMoveDir(in); u) return u;
+    switch(in)
+    {
+        case '>': return MOVE_CMD_DS;    // down stair
+        case '<': return MOVE_CMD_US;    // up stair
+        case '5':
+        case ' ':
+        case '.': return MOVE_CMD_SKIP;  // rest
+        case 'g': return MOVE_CMD_GOTO;
+        case 'r': return MOVE_CMD_RGOTO;
+    }
+    return 0;
+}
+uint8_t UserInput::checkAction(int in)
+{
+    switch(in)
+    {
+        case 'w': return ACTION_CMD_WEAR;
+        case 't': return ACTION_CMD_UNWEAR;
+        case 'd': return ACTION_CMD_DROP;
+        case 'x': return ACTION_CMD_EXPUNGE;
+        case 'i': return ACTION_CMD_INVENTORY;
+        case 'e': return ACTION_CMD_EQUIPMENT;
+        case 'I': return ACTION_CMD_INSPECT;
+        case 'm': return ACTION_CMD_MLIST;
+        case 'L': return ACTION_CMD_LOOK;
+        case 'g': return ACTION_CMD_GOTO;
+    }
+    return 0;
+}
+uint8_t UserInput::checkDbg(int in)
+{
+    switch(in)
+    {
+        case 'f': return DBG_CMD_TOGGLE_FOG;
+        case 's': return DBG_CMD_SHOW_DUNGEON;
+        case 'H': return DBG_CMD_SHOW_HARDNESS;
+        case 'D': return DBG_CMD_SHOW_FWEIGHTS;
+        case 'T': return DBG_CMD_SHOW_TWEIGHTS;
+    }
+    return 0;
+}
+uint8_t UserInput::checkMlist(int in)
+{
+    switch(in)
+    {
+        case 'm': return MLIST_CMD_SHOW;    // display map
+        case 033: return MLIST_CMD_ESCAPE;    // escape
+        case KEY_UP: return MLIST_CMD_SU;      // scroll up
+        case KEY_DOWN: return MLIST_CMD_SD;      // scroll down
+    }
+    return 0;
+}
+uint8_t UserInput::checkLook(int in)
+{
+    switch(in)
+    {
+        case 033: return LOOK_CMD_ESCAPE;
+        case 't': return LOOK_CMD_CONFIRM;
+    }
+    return 0;
+}
+uint8_t UserInput::checkGoto(int in)
+{
+    switch(in)
+    {
+        case 033: return GOTO_CMD_ESCAPE;
+        case 'g': return GOTO_CMD_CONFIRM;
+        case 'r': return GOTO_CMD_RANDOM;
+    }
+    return 0;
+}
+uint8_t UserInput::checkEquipSlot(int in)
+{
+    if(in >= 'a' && in <= 'l') return static_cast<uint8_t>(in - 'a') + 1;
+    return 0;
+}
+uint8_t UserInput::checkCarrySlot(int in)
+{
+    if(in >= '0' && in <= '9') return static_cast<uint8_t>(in - '0') + 1;
+    return 0;
+}
 
 typedef struct
 {
@@ -667,7 +827,7 @@ static inline InputCommand decode_input_command(int in)
         }
         case 033:   // Esc key
         {
-            cmd.mlist_cmd = MLIST_CMD_HIDE;    // escape
+            cmd.mlist_cmd = MLIST_CMD_ESCAPE;    // escape
             break;
         }
     // --- DEBUG COMMANDS -----------------
@@ -891,7 +1051,7 @@ int GameState::handle_mlist_cmd(int mlist_cmd)
             NC_PRINT("%lu monster(s) remain.", this->level.npcs_remaining);
             break;
         }
-        case MLIST_CMD_HIDE:
+        case MLIST_CMD_ESCAPE:
         {
             if(is_currently_mlist)
             {
@@ -1138,9 +1298,8 @@ bool GameState::initializeEntities()
 
 void GameState::run(const std::atomic<bool>& r)
 {
-    int status;
-    InputCommand ic = zeroed_input();
-    int c;
+    int status = 0;
+    // InputCommand ic = zeroed_input();
     bool pc_nop = false;
 
     this->state.active_win = GWIN_MAP;
@@ -1148,35 +1307,40 @@ void GameState::run(const std::atomic<bool>& r)
 
     NC_PRINT("Welcome to the dungeon. Good luck! :)");
 
-    for(ic.move_cmd = MOVE_CMD_SKIP, status = 0; !status && r;)
+    while(!status && r) // not won/lost, not exit
     {
         const int is_currently_map = (this->state.active_win == GWIN_MAP);
 
+    // 1. update window if previously changed
         this->overwrite_changes();
+    // 2. iterate monsters if necessary, break on
         if( !pc_nop &&
             is_currently_map &&
-            ic.move_cmd &&
-            !this->state.is_goto_ctrl &&
             (status = this->iterate_next_pc()) ) break;  // game done when iterate_next_pc() returns non-zero
 
-        ic = decode_input_command((c = getch()));
+    // 3. accept user input
+        int c = getch();
+        uint8_t d = 0;
 
-
-        if(ic.exit)
+    // 4. process input
+        if(UserInput::checkExit(c))
         {
             raise(SIGINT);
         }
-        else if(ic.move_cmd && is_currently_map)
+        else
+        if((d = UserInput::checkMove(c)) && is_currently_map)
         {
-            status = this->iterate_pc_cmd(ic.move_cmd, pc_nop);
+            status = this->iterate_pc_cmd(d, pc_nop);
         }
-        else if(ic.mlist_cmd)
+        else
+        if((d = UserInput::checkMlist(c)))
         {
-            this->handle_mlist_cmd(ic.mlist_cmd);
+            this->handle_mlist_cmd(d);
         }
-        else if(ic.dbg_cmd)
+        else
+        if((d = UserInput::checkDbg(c)))
         {
-            this->handle_dbg_cmd(ic.dbg_cmd);
+            this->handle_dbg_cmd(d);
         }
         else
         {

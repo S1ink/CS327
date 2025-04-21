@@ -152,7 +152,8 @@ public:
 
 public:
     inline DungeonLevel() :
-        pc{ Entity::PCGenT{} }
+        pc{ Entity::PCGenT{} },
+        rroll{ std::random_device{}() }
     {
         this->reset();
     }
@@ -195,6 +196,7 @@ public:
 
     // uint32_t seed{ 0 };
     std::mt19937 rgen;
+    std::mt19937 rroll;
 
 };
 

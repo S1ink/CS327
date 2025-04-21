@@ -21,6 +21,47 @@ static constexpr int8_t OFF_DIRECTIONS[8][2] =
     { -1, +1 },
 };
 
+static uint8_t filter_valid_terrain_directions(
+    DungeonLevel::TerrainMap& map,
+    Vec2u8 pos,
+    bool tunneling,
+    uint8_t valid_dirs[8])
+{
+    uint8_t n_valid_dirs = 0;
+    uint8_t x, y;
+    for(size_t i = 0; i < 8; i++)
+    {
+        x = pos.x + OFF_DIRECTIONS[i][0];
+        y = pos.y + OFF_DIRECTIONS[i][1];
+        if(map.terrain[y][x].type || (tunneling && map.hardness[y][x] < 0xFF))
+        {
+            valid_dirs[n_valid_dirs] = i;
+            n_valid_dirs++;
+        }
+    }
+    return n_valid_dirs;
+}
+static uint8_t filter_open_cells(
+    DungeonLevel& d,
+    Vec2u8 pos,
+    uint8_t valid_dirs[8] )
+{
+    const uint8_t n = filter_valid_terrain_directions(d.map, pos, false, valid_dirs);
+
+    uint8_t x, y, r = 0;
+    for(uint8_t i = 0; i < n; i++)
+    {
+        x = pos.x + OFF_DIRECTIONS[i][0];
+        y = pos.y + OFF_DIRECTIONS[i][1];
+        if(!d.entity_map[y][x])
+        {
+            valid_dirs[r] = i;
+            r++;
+        }
+    }
+    return r;
+}
+
 // returns 1 if the entity successfully moved, 0 otherwise
 static int handle_entity_move(DungeonLevel& d, Entity& e, Vec2u8 to)
 {
@@ -63,15 +104,31 @@ static int handle_entity_move(DungeonLevel& d, Entity& e, Vec2u8 to)
         Entity*& slot = DungeonLevel::accessGridElem(d.entity_map, to);
         if(slot)   // previous entity
         {
-            slot->state.health = 0; // this marks that the entity will no longer be iterated -- TODO: immediate heap removal!
-            if(!slot->config.is_pc)
+            if(slot->config.is_pc)
             {
-                d.npcs_remaining--;
+                uint32_t a = e.config.attack_damage.roll(d.rroll);
+                if(slot->state.health < a) slot->state.health = 0;
+                else slot->state.health -= a;
             }
-            else d.pc.state.health = 0;
+            else
+            {
+                Entity* x = slot;
+                slot = &e;
+                prev_slot = nullptr;
+
+                uint8_t valid_dirs[8];
+                const uint8_t n_dirs = filter_open_cells(d, x->state.pos, valid_dirs);
+                const uint8_t ri = RANDOM_IN_RANGE(0, n_dirs);
+                x->state.pos.x += OFF_DIRECTIONS[valid_dirs[ri]][0];
+                x->state.pos.y += OFF_DIRECTIONS[valid_dirs[ri]][1];
+                DungeonLevel::accessGridElem(d.entity_map, x->state.pos) = x;
+            }
         }
-        slot = &e;
-        prev_slot = nullptr;
+        else
+        {
+            slot = &e;
+            prev_slot = nullptr;
+        }
     }
 
     if(flags.terrain_updated)
@@ -94,18 +151,7 @@ static int move_random(DungeonLevel& d, Entity& e, int r)
     const bool has_tunneling = e.config.can_tunnel;
 
     uint8_t valid_dirs[8];
-    uint8_t n_valid_dirs = 0;
-    uint8_t x, y;
-    for(size_t i = 0; i < 8; i++)
-    {
-        x = e.state.pos.x + OFF_DIRECTIONS[i][0];
-        y = e.state.pos.y + OFF_DIRECTIONS[i][1];
-        if(d.map.terrain[y][x].type || (has_tunneling && d.map.hardness[y][x] < 0xFF))
-        {
-            valid_dirs[n_valid_dirs] = i;
-            n_valid_dirs++;
-        }
-    }
+    uint8_t n_valid_dirs = filter_valid_terrain_directions(d.map, e.state.pos, has_tunneling, valid_dirs);
 
     return n_valid_dirs ? handle_entity_move_dir(d, e, valid_dirs[(r ? r : rand()) % n_valid_dirs]) : 0;
 }

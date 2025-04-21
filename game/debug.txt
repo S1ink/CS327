@@ -1,567 +1,31 @@
-Entity@0x7ffcea337ed0
+Entity@0x7ffd70a6f010
 Name : Its you lol
 Desc : "An unlikely hero."
 Symbol : @
 Speed : 25
 Health : 100
-Attack : 8+6d2
+Attack : 2+5d1
 Unique Entry : 0x0
 Colors : WHITE
 Color bits : 0b10000000
 Abilities :
 Ability bits : 0b0000001000000000
 
-Entity@0x55becfc62720
-Name : Tsukino Usagi
-Desc : "In our world, she's the youma!  Tsukini kawatte oshioki yo, Sailor Moon!"
-Symbol : p
-Speed : 10
-Health : 100
-Attack : 0+5d3
-Unique Entry : 0x55becfc68a20
-Colors : BLUE
-Color bits : 0b00010000
-Abilities : TELE ERRATIC UNIQ
-Ability bits : 0b0000000010001010
-
-Entity@0x55becfc6cb80
-Name : Casper the Friendly Ghost
-Desc : "Casper, the friendly ghost,
-The friendliest ghost you know.
-Though grown-ups might
-Look at him with fright,
-The children all love him so.
-
-He always says hello,
-and he's really glad to meetcha.
-Wherever he may go,
-He's kind to every living creature.
-
-Grown-ups don't understand
-Why children love him the most.
-But kids all know
-That he loves them so,
-Casper the friendly ghost."
+Entity@0x5e6432fdb640
+Name : Slimer
+Desc : "Better call Venkman.  He's covered with ectoplasm, and he wants to eat all
+your food."
 Symbol : G
-Speed : 9
-Health : 22
+Speed : 12
+Health : 26
 Attack : 0+2d1
-Unique Entry : 0x55becfc68a80
-Colors : CYAN
-Color bits : 0b01000000
-Abilities : TELE PASS UNIQ
-Ability bits : 0b0000000010010010
-
-Entity@0x55becfc70700
-Name : C Program
-Desc : "It may require a few extra lines of code, but damn is it fast!"
-Symbol : C
-Speed : 31
-Health : 70
-Attack : 5+6d1
-Unique Entry : 0x0
+Unique Entry : 0x5e6432fe1a50
 Colors : GREEN
 Color bits : 0b00000100
-Abilities : SMART
-Ability bits : 0b0000000000000001
+Abilities : TELE ERRATIC PASS UNIQ
+Ability bits : 0b0000000010011010
 
-Item@0x55becfc62720
-Name : a torch
-Desc : "A short wooden stick topped with an oil-soaked cloth, perfect for lighting
-your way through the dungeon.
-Hit : 0
-Dodge : 0
-Defense : 0
-Weight : 3
-Speed : 0
-Special : 7
-Value : 3
-Artifact Entry : 0x0
-Types : LIGHT
-Type bits : 0000010000000000
-Colors : BLACK
-Color bits : 00000001
-
-Item@0x55becfc742a0
-Name : a NERF(R) dagger
-Desc : "This is a totally wicked looking dagger. It's got awesome barbs on the back
-of the blade, a compass on the hilt, and myriad other embelishments that
-serve no functional purpose. You could totally be a deadly assassin with a
-sweet blade like this. Since it's so light, it won't encumber you. It's
-made out of polyurethane foam.
-Hit : 0
-Dodge : 10
-Defense : 0
-Weight : 1
-Speed : 236501139
-Special : 0
-Value : 11
-Artifact Entry : 0x0
-Types : WEAPON
-Type bits : 0000000000000001
-Colors : MAGENTA
-Color bits : 00100000
-
-Item@0x55becfc77e80
-Name : a NERF(R) dagger
-Desc : "This is a totally wicked looking dagger. It's got awesome barbs on the back
-of the blade, a compass on the hilt, and myriad other embelishments that
-serve no functional purpose. You could totally be a deadly assassin with a
-sweet blade like this. Since it's so light, it won't encumber you. It's
-made out of polyurethane foam.
-Hit : 0
-Dodge : 10
-Defense : 0
-Weight : 1
-Speed : 3237344674
-Special : 0
-Value : 14
-Artifact Entry : 0x0
-Types : WEAPON
-Type bits : 0000000000000001
-Colors : MAGENTA
-Color bits : 00100000
-
-Item@0x55becfc79270
-Name : a chainmail coif
-Desc : "A heavy chainmail head covering.
-Hit : 0
-Dodge : 0
-Defense : 19
-Weight : 8
-Speed : 620527503
-Special : 0
-Value : 51
-Artifact Entry : 0x0
-Types : HELMET
-Type bits : 0000000000010000
-Colors : BLACK
-Color bits : 00000001
-
-Item@0x55becfc7f630
-Name : a NERF(R) dagger
-Desc : "This is a totally wicked looking dagger. It's got awesome barbs on the back
-of the blade, a compass on the hilt, and myriad other embelishments that
-serve no functional purpose. You could totally be a deadly assassin with a
-sweet blade like this. Since it's so light, it won't encumber you. It's
-made out of polyurethane foam.
-Hit : 0
-Dodge : 10
-Defense : 0
-Weight : 1
-Speed : 2491656457
-Special : 0
-Value : 13
-Artifact Entry : 0x0
-Types : WEAPON
-Type bits : 0000000000000001
-Colors : MAGENTA
-Color bits : 00100000
-
-Item@0x55becfc80a20
-Name : a prom dress
-Desc : "This dress is totes fab! It's off-the-shoulder with an A-line waste, sequins,
-and lavender chiffon. It fits tight to mid-calf and you totally can't take
-full steps in it, but who cares? You'll be the hit of the party as long as
-Shirley doesn't show up wearing the same thing again.
-Hit : 4
-Dodge : 0
-Defense : 0
-Weight : 3
-Speed : 4294967291
-Special : 0
-Value : 449
-Artifact Entry : 0x0
-Types : ARMOR
-Type bits : 0000000000001000
-Colors : MAGENTA
-Color bits : 00100000
-
-Item@0x55becfc81e10
-Name : a cloak of invisibility
-Desc : "One of the Deathly Hallows, this cloak grants the wearer invisibility. Last
-know to be the property of the Boy Who Lived.
-Hit : 0
-Dodge : 37
-Defense : 0
-Weight : 1
-Speed : 3838147806
-Special : 0
-Value : 12616
-Artifact Entry : 0x0
-Types : CLOAK
-Type bits : 0000000000100000
-Colors : CYAN
-Color bits : 01000000
-
-Item@0x55becfc83200
-Name : a chainmail coif
-Desc : "A heavy chainmail head covering.
-Hit : 0
-Dodge : 0
-Defense : 13
-Weight : 8
-Speed : 1254482565
-Special : 0
-Value : 62
-Artifact Entry : 0x0
-Types : HELMET
-Type bits : 0000000000010000
-Colors : BLACK
-Color bits : 00000001
-
-Item@0x55becfc8e580
-Name : a torch
-Desc : "A short wooden stick topped with an oil-soaked cloth, perfect for lighting
-your way through the dungeon.
-Hit : 0
-Dodge : 0
-Defense : 0
-Weight : 3
-Speed : 0
-Special : 9
-Value : 2
-Artifact Entry : 0x0
-Types : LIGHT
-Type bits : 0000010000000000
-Colors : BLACK
-Color bits : 00000001
-
-Item@0x55becfc8f970
-Name : a NERF(R) dagger
-Desc : "This is a totally wicked looking dagger. It's got awesome barbs on the back
-of the blade, a compass on the hilt, and myriad other embelishments that
-serve no functional purpose. You could totally be a deadly assassin with a
-sweet blade like this. Since it's so light, it won't encumber you. It's
-made out of polyurethane foam.
-Hit : 0
-Dodge : 10
-Defense : 0
-Weight : 1
-Speed : 1271040252
-Special : 0
-Value : 15
-Artifact Entry : 0x0
-Types : WEAPON
-Type bits : 0000000000000001
-Colors : MAGENTA
-Color bits : 00100000
-
-Item@0x55becfc90d60
-Name : a NERF(R) dagger
-Desc : "This is a totally wicked looking dagger. It's got awesome barbs on the back
-of the blade, a compass on the hilt, and myriad other embelishments that
-serve no functional purpose. You could totally be a deadly assassin with a
-sweet blade like this. Since it's so light, it won't encumber you. It's
-made out of polyurethane foam.
-Hit : 0
-Dodge : 10
-Defense : 0
-Weight : 1
-Speed : 2673832280
-Special : 0
-Value : 13
-Artifact Entry : 0x0
-Types : WEAPON
-Type bits : 0000000000000001
-Colors : MAGENTA
-Color bits : 00100000
-
-Item@0x55becfc92150
-Name : a NERF(R) dagger
-Desc : "This is a totally wicked looking dagger. It's got awesome barbs on the back
-of the blade, a compass on the hilt, and myriad other embelishments that
-serve no functional purpose. You could totally be a deadly assassin with a
-sweet blade like this. Since it's so light, it won't encumber you. It's
-made out of polyurethane foam.
-Hit : 0
-Dodge : 10
-Defense : 0
-Weight : 1
-Speed : 815218249
-Special : 0
-Value : 11
-Artifact Entry : 0x0
-Types : WEAPON
-Type bits : 0000000000000001
-Colors : MAGENTA
-Color bits : 00100000
-
-Item@0x55becfc93540
-Name : a Wicked Lasers(R) Torch
-Desc : "From the makers of the world's most refined lasers, comes the ultimate in
-handheld flashlights. The Flashtorch is a compact, portable searchlight that
-is capable of producing an incredible 4100 lumens of intense white light. Use
-this power to guide your way home, light a fire, or even fry an egg!
-Hit : 0
-Dodge : 0
-Defense : 0
-Weight : 2
-Speed : 0
-Special : 10
-Value : 199
-Artifact Entry : 0x0
-Types : LIGHT
-Type bits : 0000010000000000
-Colors : BLACK
-Color bits : 00000001
-
-Item@0x55becfc94930
-Name : a torch
-Desc : "A short wooden stick topped with an oil-soaked cloth, perfect for lighting
-your way through the dungeon.
-Hit : 0
-Dodge : 0
-Defense : 0
-Weight : 3
-Speed : 0
-Special : 6
-Value : 3
-Artifact Entry : 0x0
-Types : LIGHT
-Type bits : 0000010000000000
-Colors : BLACK
-Color bits : 00000001
-
-Item@0x55becfc95d20
-Name : a torch
-Desc : "A short wooden stick topped with an oil-soaked cloth, perfect for lighting
-your way through the dungeon.
-Hit : 0
-Dodge : 0
-Defense : 0
-Weight : 3
-Speed : 0
-Special : 6
-Value : 3
-Artifact Entry : 0x0
-Types : LIGHT
-Type bits : 0000010000000000
-Colors : BLACK
-Color bits : 00000001
-
-Item@0x55becfc97110
-Name : a NERF(R) dagger
-Desc : "This is a totally wicked looking dagger. It's got awesome barbs on the back
-of the blade, a compass on the hilt, and myriad other embelishments that
-serve no functional purpose. You could totally be a deadly assassin with a
-sweet blade like this. Since it's so light, it won't encumber you. It's
-made out of polyurethane foam.
-Hit : 0
-Dodge : 10
-Defense : 0
-Weight : 1
-Speed : 1080846832
-Special : 0
-Value : 13
-Artifact Entry : 0x0
-Types : WEAPON
-Type bits : 0000000000000001
-Colors : MAGENTA
-Color bits : 00100000
-
-Item@0x7f14d283cf10
-Name : a NERF(R) dagger
-Desc : "This is a totally wicked looking dagger. It's got awesome barbs on the back
-of the blade, a compass on the hilt, and myriad other embelishments that
-serve no functional purpose. You could totally be a deadly assassin with a
-sweet blade like this. Since it's so light, it won't encumber you. It's
-made out of polyurethane foam.
-Hit : 0
-Dodge : 10
-Defense : 0
-Weight : 1
-Speed : 1980893972
-Special : 0
-Value : 10
-Artifact Entry : 0x0
-Types : WEAPON
-Type bits : 0000000000000001
-Colors : MAGENTA
-Color bits : 00100000
-
-Item@0x7f14d283e300
-Name : a NERF(R) dagger
-Desc : "This is a totally wicked looking dagger. It's got awesome barbs on the back
-of the blade, a compass on the hilt, and myriad other embelishments that
-serve no functional purpose. You could totally be a deadly assassin with a
-sweet blade like this. Since it's so light, it won't encumber you. It's
-made out of polyurethane foam.
-Hit : 0
-Dodge : 10
-Defense : 0
-Weight : 1
-Speed : 2430481341
-Special : 0
-Value : 11
-Artifact Entry : 0x0
-Types : WEAPON
-Type bits : 0000000000000001
-Colors : MAGENTA
-Color bits : 00100000
-
-Item@0x7f14d283f6f0
-Name : a torch
-Desc : "A short wooden stick topped with an oil-soaked cloth, perfect for lighting
-your way through the dungeon.
-Hit : 0
-Dodge : 0
-Defense : 0
-Weight : 4
-Speed : 0
-Special : 6
-Value : 3
-Artifact Entry : 0x0
-Types : LIGHT
-Type bits : 0000010000000000
-Colors : BLACK
-Color bits : 00000001
-
-Item@0x7f14d2840ae0
-Name : a torch
-Desc : "A short wooden stick topped with an oil-soaked cloth, perfect for lighting
-your way through the dungeon.
-Hit : 0
-Dodge : 0
-Defense : 0
-Weight : 3
-Speed : 0
-Special : 6
-Value : 3
-Artifact Entry : 0x0
-Types : LIGHT
-Type bits : 0000010000000000
-Colors : BLACK
-Color bits : 00000001
-
-Item@0x7f14d2841ed0
-Name : a prom dress
-Desc : "This dress is totes fab! It's off-the-shoulder with an A-line waste, sequins,
-and lavender chiffon. It fits tight to mid-calf and you totally can't take
-full steps in it, but who cares? You'll be the hit of the party as long as
-Shirley doesn't show up wearing the same thing again.
-Hit : 3
-Dodge : 0
-Defense : 0
-Weight : 3
-Speed : 4294967291
-Special : 0
-Value : 449
-Artifact Entry : 0x0
-Types : ARMOR
-Type bits : 0000000000001000
-Colors : MAGENTA
-Color bits : 00100000
-
-Item@0x7f14d28432c0
-Name : a chainmail coif
-Desc : "A heavy chainmail head covering.
-Hit : 0
-Dodge : 0
-Defense : 18
-Weight : 8
-Speed : 1594363567
-Special : 0
-Value : 59
-Artifact Entry : 0x0
-Types : HELMET
-Type bits : 0000000000010000
-Colors : BLACK
-Color bits : 00000001
-
-Item@0x7f14d28446b0
-Name : the Aegis
-Desc : "A very high-quality shield. Nobody knows what it looks like, except for
-maybe--now--you, but you're not telling. The back side is inscribed with the
-words: "If found, please return to Zeus, Mount Olympus".
-Hit : 0
-Dodge : 31
-Defense : 33
-Weight : 3
-Speed : 1027181411
-Special : 0
-Value : 17000
-Artifact Entry : 0x0x55becfc6b010
-Types : OFFHAND
-Type bits : 0000000000000010
-Colors : YELLOW
-Color bits : 00001000
-
-Item@0x7f14d2845aa0
-Name : a chainmail coif
-Desc : "A heavy chainmail head covering.
-Hit : 0
-Dodge : 0
-Defense : 20
-Weight : 8
-Speed : 4112058935
-Special : 0
-Value : 62
-Artifact Entry : 0x0
-Types : HELMET
-Type bits : 0000000000010000
-Colors : BLACK
-Color bits : 00000001
-
-Item@0x7f14d2846e90
-Name : a prom dress
-Desc : "This dress is totes fab! It's off-the-shoulder with an A-line waste, sequins,
-and lavender chiffon. It fits tight to mid-calf and you totally can't take
-full steps in it, but who cares? You'll be the hit of the party as long as
-Shirley doesn't show up wearing the same thing again.
-Hit : 2
-Dodge : 0
-Defense : 0
-Weight : 4
-Speed : 4294967291
-Special : 0
-Value : 449
-Artifact Entry : 0x0
-Types : ARMOR
-Type bits : 0000000000001000
-Colors : MAGENTA
-Color bits : 00100000
-
-Entity@0x7ffcea337ed0
-Name : Its you lol
-Desc : "An unlikely hero."
-Symbol : @
-Speed : 25
-Health : 100
-Attack : 8+6d2
-Unique Entry : 0x0
-Colors : WHITE
-Color bits : 0b10000000
-Abilities :
-Ability bits : 0b0000001000000000
-
-Entity@0x55becfc6df60
-Name : River Crab
-Desc : "It's a fresh-water crustacean that just wants everybody to get along."
-Symbol : c
-Speed : 40
-Health : 200
-Attack : 0+1d0
-Unique Entry : 0x0
-Colors : RED
-Color bits : 0b00000010
-Abilities : SMART TELE PICKUP
-Ability bits : 0b0000000000100011
-
-Entity@0x55becfc6f330
-Name : Slime
-Desc : "Eww...  It's slimy."
-Symbol : s
-Speed : 8
-Health : 20
-Attack : 0+4d1
-Unique Entry : 0x0
-Colors : GREEN
-Color bits : 0b00000100
-Abilities : TUNNEL ERRATIC
-Ability bits : 0b0000000000001100
-
-Entity@0x55becfc70700
+Entity@0x5e6432fe6b30
 Name : Rory Gilmore
 Desc : "All decked out in a brand new Chilton uniform, she talks faster than anybody
 you've ever known.  She's dual-wielding Proust's "Rememberance of Things
@@ -569,43 +33,15 @@ Past" and a half-empty coffee cup; you'd better watch out or she'll hit you
 with a litany of cultural references from which you'll never recover."
 Symbol : p
 Speed : 50
-Health : 18
+Health : 17
 Attack : 0+2d1
-Unique Entry : 0x55becfc689c0
+Unique Entry : 0x5e6432fe1930
 Colors : MAGENTA
 Color bits : 0b00100000
 Abilities : SMART ERRATIC UNIQ
 Ability bits : 0b0000000010001001
 
-Entity@0x55becfc71ad0
-Name : Slimer
-Desc : "Better call Venkman.  He's covered with ectoplasm, and he wants to eat all
-your food."
-Symbol : G
-Speed : 8
-Health : 20
-Attack : 0+2d1
-Unique Entry : 0x55becfc68ae0
-Colors : GREEN
-Color bits : 0b00000100
-Abilities : TELE ERRATIC PASS UNIQ
-Ability bits : 0b0000000010011010
-
-Entity@0x55becfc77df0
-Name : Grass Mud Horse
-Desc : "This desert-dwelling alpaca relative somehow made it into the dungeon.  Be
-careful!  It packs a powerful punch!"
-Symbol : h
-Speed : 15
-Health : 200
-Attack : 10000+1000d10
-Unique Entry : 0x0
-Colors : YELLOW
-Color bits : 0b00001000
-Abilities : TELE ERRATIC DESTROY
-Ability bits : 0b0000000001001010
-
-Entity@0x55becfc791c0
+Entity@0x5e6432fea6b0
 Name : Overhead Projector
 Desc : "Some really old skool tech that might go over your head.  It's kind of like
 Powerpoint, but without computers.  You've probably never seen one before
@@ -628,7 +64,52 @@ Color bits : 0b00001000
 Abilities : ERRATIC
 Ability bits : 0b0000000000001000
 
-Entity@0x55becfc7a590
+Entity@0x5e6432feba80
+Name : Software Bug
+Desc : "The TA says it crashes whenever it runs, but it works fine on *your*
+computer.  It's probably a hardware problem.  It's really, really, really
+annoying."
+Symbol : z
+Speed : 30
+Health : 100000
+Attack : 0+1d0
+Unique Entry : 0x0
+Colors : RED
+Color bits : 0b00000010
+Abilities : SMART TELE
+Ability bits : 0b0000000000000011
+
+Entity@0x5e6432ff1da0
+Name : Software Bug
+Desc : "The TA says it crashes whenever it runs, but it works fine on *your*
+computer.  It's probably a hardware problem.  It's really, really, really
+annoying."
+Symbol : z
+Speed : 30
+Health : 100000
+Attack : 0+1d0
+Unique Entry : 0x0
+Colors : RED
+Color bits : 0b00000010
+Abilities : SMART TELE
+Ability bits : 0b0000000000000011
+
+Entity@0x5e6432ff3170
+Name : Software Bug
+Desc : "The TA says it crashes whenever it runs, but it works fine on *your*
+computer.  It's probably a hardware problem.  It's really, really, really
+annoying."
+Symbol : z
+Speed : 30
+Health : 100000
+Attack : 0+1d0
+Unique Entry : 0x0
+Colors : RED
+Color bits : 0b00000010
+Abilities : SMART TELE
+Ability bits : 0b0000000000000011
+
+Entity@0x5e6432ff4540
 Name : Junior Barbarian
 Desc : "This is a junior barbarian.  He--or is it she?  You can't tell for sure--
 looks like... it should still be in barbarian school.  The barbarians are
@@ -636,8 +117,8 @@ putting them in the dungeons young these days.  It's wearing dirty, tattered
 cloth armor and wielding a wooden sword.  You have a hard time feeling
 intimidated."
 Symbol : p
-Speed : 10
-Health : 16
+Speed : 9
+Health : 20
 Attack : 0+4d1
 Unique Entry : 0x0
 Colors : YELLOW
@@ -645,11 +126,40 @@ Color bits : 0b00001000
 Abilities : SMART
 Ability bits : 0b0000000000000001
 
-Entity@0x55becfc7b960
+Entity@0x5e6432ff5910
+Name : Tsukino Usagi
+Desc : "In our world, she's the youma!  Tsukini kawatte oshioki yo, Sailor Moon!"
+Symbol : p
+Speed : 10
+Health : 100
+Attack : 0+5d3
+Unique Entry : 0x5e6432fe1990
+Colors : BLUE
+Color bits : 0b00010000
+Abilities : TELE ERRATIC UNIQ
+Ability bits : 0b0000000010001010
+
+Entity@0x5e6433000b70
+Name : Titan
+Desc : "Looming over you at a massive 15 feet tall, weighing nearly a ton, the
+Titan is a force to be reckoned with. A mighty oak club is his weapon of
+choice, but you are all too aware it would take no more than a flick of
+the wrist for him to shatter every bone in your body."
+Symbol : M
+Speed : 8
+Health : 1075
+Attack : 25+6d3
+Unique Entry : 0x0
+Colors : GREEN
+Color bits : 0b00000100
+Abilities : SMART TUNNEL
+Ability bits : 0b0000000000000101
+
+Entity@0x5e6433001f40
 Name : Slime
 Desc : "Eww...  It's slimy."
 Symbol : s
-Speed : 9
+Speed : 8
 Health : 20
 Attack : 0+4d1
 Unique Entry : 0x0
@@ -658,48 +168,49 @@ Color bits : 0b00000100
 Abilities : TUNNEL ERRATIC
 Ability bits : 0b0000000000001100
 
-Entity@0x55becfc8ebb0
-Name : David Bowie
-Desc : "He was the human equivalent of a Google search, a portal through which you
-could step into an amazing, very different wider world. He flooded plain
-everyday reality with extraordinary, unexpected information, processing the
-details through a buoyant, mobile mind and made intellectual discovery seem
-incredibly glamorous.
-                       - Joe Coscarelli in the New York Times"
-Symbol : p
-Speed : 19
-Health : 219
-Attack : 9+8d3
-Unique Entry : 0x55becfc68b40
-Colors : WHITE
-Color bits : 0b10000000
-Abilities : SMART ERRATIC PICKUP UNIQ
-Ability bits : 0b0000000010101001
-
-Entity@0x55becfc8ff80
-Name : Amazon Lich Queen
-Desc : "She was a powerful Amazon warrior in life.  Death at the hands of the undead
-hordes was followed by her resurrection through dark, necromantic arts.  Her
-power in life didn't approach her undead glory.  Clad in night-black robes
-that don't move in the wind, her incorporeal form commands the power of death
-over life.  You may just be her next victim.  You fear for your soul as you
-quake before her malevolent majesty."
-Symbol : p
-Speed : 25
-Health : 3981
-Attack : 30+9d5
+Entity@0x5e6433003310
+Name : Software Bug
+Desc : "The TA says it crashes whenever it runs, but it works fine on *your*
+computer.  It's probably a hardware problem.  It's really, really, really
+annoying."
+Symbol : z
+Speed : 30
+Health : 100000
+Attack : 0+1d0
 Unique Entry : 0x0
-Colors : BLACK
-Color bits : 0b00000001
-Abilities : SMART PASS
-Ability bits : 0b0000000000010001
+Colors : RED
+Color bits : 0b00000010
+Abilities : SMART TELE
+Ability bits : 0b0000000000000011
 
-Entity@0x55becfc91350
+Entity@0x5e64330046e0
+Name : SpongeBob SquarePants
+Desc : "  "Are you ready, kids?!?!"
+  "I can't hear you!"
+
+He lives in a pineapple under the sea.  He's enormous and yellow and porous.
+And he's tired of flipping Krabby Patties and playing unofficial sidekick and
+the ocean's biggest fan to Mermaid Man.  Each of those billions of pores is
+saturated with soaked-up malevolence, and all of it is focused on you.
+
+SpongeBob rules the dungeons of 327.  He'll coat the dungeon floor with your
+blood and soak it right up to increase his power."
+Symbol : S
+Speed : 80
+Health : 6666
+Attack : 0+4d1
+Unique Entry : 0x5e6432fe1b10
+Colors : YELLOW
+Color bits : 0b00001000
+Abilities : TUNNEL ERRATIC DESTROY UNIQ BOSS
+Ability bits : 0b0000000111001100
+
+Entity@0x5e6433005ab0
 Name : C Program
 Desc : "It may require a few extra lines of code, but damn is it fast!"
 Symbol : C
-Speed : 35
-Health : 76
+Speed : 30
+Health : 94
 Attack : 5+6d1
 Unique Entry : 0x0
 Colors : GREEN
@@ -707,440 +218,105 @@ Color bits : 0b00000100
 Abilities : SMART
 Ability bits : 0b0000000000000001
 
-Item@0x7f14d2829010
-Name : a chainmail coif
-Desc : "A heavy chainmail head covering.
-Hit : 0
-Dodge : 0
-Defense : 21
-Weight : 8
-Speed : 3099848259
-Special : 0
-Value : 66
-Artifact Entry : 0x0
-Types : HELMET
-Type bits : 0000000000010000
-Colors : BLACK
-Color bits : 00000001
+Entity@0x5e6433006e80
+Name : River Crab
+Desc : "It's a fresh-water crustacean that just wants everybody to get along."
+Symbol : c
+Speed : 40
+Health : 200
+Attack : 0+1d0
+Unique Entry : 0x0
+Colors : RED
+Color bits : 0b00000010
+Abilities : SMART TELE PICKUP
+Ability bits : 0b0000000000100011
 
-Item@0x7f14d282a400
-Name : a chainmail coif
-Desc : "A heavy chainmail head covering.
-Hit : 0
-Dodge : 0
-Defense : 16
-Weight : 8
-Speed : 3876145609
-Special : 0
-Value : 62
-Artifact Entry : 0x0
-Types : HELMET
-Type bits : 0000000000010000
-Colors : BLACK
-Color bits : 00000001
+Entity@0x5e6433008250
+Name : Software Bug
+Desc : "The TA says it crashes whenever it runs, but it works fine on *your*
+computer.  It's probably a hardware problem.  It's really, really, really
+annoying."
+Symbol : z
+Speed : 30
+Health : 100000
+Attack : 0+1d0
+Unique Entry : 0x0
+Colors : RED
+Color bits : 0b00000010
+Abilities : SMART TELE
+Ability bits : 0b0000000000000011
 
-Item@0x7f14d282b7f0
+Item@0x5e6432fdb640
 Name : a NERF(R) dagger
-Desc : "This is a totally wicked looking dagger. It's got awesome barbs on the back
-of the blade, a compass on the hilt, and myriad other embelishments that
-serve no functional purpose. You could totally be a deadly assassin with a
-sweet blade like this. Since it's so light, it won't encumber you. It's
+Desc : "This is a totally wicked looking dagger.  It's got awesome barbs on the back
+of the blade, a compass on the hilt, and myriad other embellishments that
+serve no functional purpose.  You could totally be a deadly assassin with a
+sweet blade like this.  Since it's so light, it won't encumber you.  It's
 made out of polyurethane foam.
 Hit : 0
 Dodge : 10
 Defense : 0
 Weight : 1
-Speed : 3029382933
-Special : 0
-Value : 12
-Artifact Entry : 0x0
-Types : WEAPON
-Type bits : 0000000000000001
-Colors : MAGENTA
-Color bits : 00100000
-
-Item@0x7f14d282cbe0
-Name : a NERF(R) dagger
-Desc : "This is a totally wicked looking dagger. It's got awesome barbs on the back
-of the blade, a compass on the hilt, and myriad other embelishments that
-serve no functional purpose. You could totally be a deadly assassin with a
-sweet blade like this. Since it's so light, it won't encumber you. It's
-made out of polyurethane foam.
-Hit : 0
-Dodge : 10
-Defense : 0
-Weight : 1
-Speed : 476093107
-Special : 0
-Value : 11
-Artifact Entry : 0x0
-Types : WEAPON
-Type bits : 0000000000000001
-Colors : MAGENTA
-Color bits : 00100000
-
-Item@0x7f14d282dfd0
-Name : a NERF(R) dagger
-Desc : "This is a totally wicked looking dagger. It's got awesome barbs on the back
-of the blade, a compass on the hilt, and myriad other embelishments that
-serve no functional purpose. You could totally be a deadly assassin with a
-sweet blade like this. Since it's so light, it won't encumber you. It's
-made out of polyurethane foam.
-Hit : 0
-Dodge : 10
-Defense : 0
-Weight : 1
-Speed : 1048498644
-Special : 0
-Value : 10
-Artifact Entry : 0x0
-Types : WEAPON
-Type bits : 0000000000000001
-Colors : MAGENTA
-Color bits : 00100000
-
-Item@0x7f14d282f3c0
-Name : a NERF(R) dagger
-Desc : "This is a totally wicked looking dagger. It's got awesome barbs on the back
-of the blade, a compass on the hilt, and myriad other embelishments that
-serve no functional purpose. You could totally be a deadly assassin with a
-sweet blade like this. Since it's so light, it won't encumber you. It's
-made out of polyurethane foam.
-Hit : 0
-Dodge : 10
-Defense : 0
-Weight : 1
-Speed : 708013425
-Special : 0
-Value : 12
-Artifact Entry : 0x0
-Types : WEAPON
-Type bits : 0000000000000001
-Colors : MAGENTA
-Color bits : 00100000
-
-Item@0x7f14d28307b0
-Name : a NERF(R) dagger
-Desc : "This is a totally wicked looking dagger. It's got awesome barbs on the back
-of the blade, a compass on the hilt, and myriad other embelishments that
-serve no functional purpose. You could totally be a deadly assassin with a
-sweet blade like this. Since it's so light, it won't encumber you. It's
-made out of polyurethane foam.
-Hit : 0
-Dodge : 10
-Defense : 0
-Weight : 1
-Speed : 3719240730
-Special : 0
-Value : 12
-Artifact Entry : 0x0
-Types : WEAPON
-Type bits : 0000000000000001
-Colors : MAGENTA
-Color bits : 00100000
-
-Item@0x7f14d2831ba0
-Name : a prom dress
-Desc : "This dress is totes fab! It's off-the-shoulder with an A-line waste, sequins,
-and lavender chiffon. It fits tight to mid-calf and you totally can't take
-full steps in it, but who cares? You'll be the hit of the party as long as
-Shirley doesn't show up wearing the same thing again.
-Hit : 4
-Dodge : 0
-Defense : 0
-Weight : 4
-Speed : 4294967291
-Special : 0
-Value : 449
-Artifact Entry : 0x0
-Types : ARMOR
-Type bits : 0000000000001000
-Colors : MAGENTA
-Color bits : 00100000
-
-Item@0x7f14d2832f90
-Name : a chainmail coif
-Desc : "A heavy chainmail head covering.
-Hit : 0
-Dodge : 0
-Defense : 17
-Weight : 8
-Speed : 3273965106
-Special : 0
-Value : 62
-Artifact Entry : 0x0
-Types : HELMET
-Type bits : 0000000000010000
-Colors : BLACK
-Color bits : 00000001
-
-Item@0x7f14d2834380
-Name : a chainmail coif
-Desc : "A heavy chainmail head covering.
-Hit : 0
-Dodge : 0
-Defense : 18
-Weight : 8
-Speed : 2166894459
-Special : 0
-Value : 65
-Artifact Entry : 0x0
-Types : HELMET
-Type bits : 0000000000010000
-Colors : BLACK
-Color bits : 00000001
-
-Item@0x7f14d2835770
-Name : a chainmail coif
-Desc : "A heavy chainmail head covering.
-Hit : 0
-Dodge : 0
-Defense : 16
-Weight : 8
-Speed : 1131119651
-Special : 0
-Value : 61
-Artifact Entry : 0x0
-Types : HELMET
-Type bits : 0000000000010000
-Colors : BLACK
-Color bits : 00000001
-
-Item@0x7f14d2836b60
-Name : a NERF(R) dagger
-Desc : "This is a totally wicked looking dagger. It's got awesome barbs on the back
-of the blade, a compass on the hilt, and myriad other embelishments that
-serve no functional purpose. You could totally be a deadly assassin with a
-sweet blade like this. Since it's so light, it won't encumber you. It's
-made out of polyurethane foam.
-Hit : 0
-Dodge : 10
-Defense : 0
-Weight : 1
-Speed : 2379911581
-Special : 0
-Value : 10
-Artifact Entry : 0x0
-Types : WEAPON
-Type bits : 0000000000000001
-Colors : MAGENTA
-Color bits : 00100000
-
-Item@0x7f14d2837f50
-Name : a NERF(R) dagger
-Desc : "This is a totally wicked looking dagger. It's got awesome barbs on the back
-of the blade, a compass on the hilt, and myriad other embelishments that
-serve no functional purpose. You could totally be a deadly assassin with a
-sweet blade like this. Since it's so light, it won't encumber you. It's
-made out of polyurethane foam.
-Hit : 0
-Dodge : 10
-Defense : 0
-Weight : 1
-Speed : 3586649478
-Special : 0
-Value : 10
-Artifact Entry : 0x0
-Types : WEAPON
-Type bits : 0000000000000001
-Colors : MAGENTA
-Color bits : 00100000
-
-Item@0x7f14d2839340
-Name : a torch
-Desc : "A short wooden stick topped with an oil-soaked cloth, perfect for lighting
-your way through the dungeon.
-Hit : 0
-Dodge : 0
-Defense : 0
-Weight : 3
 Speed : 0
-Special : 6
-Value : 2
-Artifact Entry : 0x0
-Types : LIGHT
-Type bits : 0000010000000000
-Colors : BLACK
-Color bits : 00000001
-
-Item@0x7f14d283a730
-Name : a chainmail coif
-Desc : "A heavy chainmail head covering.
-Hit : 0
-Dodge : 0
-Defense : 17
-Weight : 8
-Speed : 2231030434
 Special : 0
-Value : 52
+Value : 13
 Artifact Entry : 0x0
-Types : HELMET
-Type bits : 0000000000010000
-Colors : BLACK
-Color bits : 00000001
+Types : WEAPON
+Type bits : 0000000000000001
+Colors : MAGENTA
+Color bits : 00100000
 
-Item@0x7f14d283bb20
-Name : a torch
-Desc : "A short wooden stick topped with an oil-soaked cloth, perfect for lighting
-your way through the dungeon.
+Item@0x5e6432fe6b50
+Name : a ring of speed
+Desc : "Not only is it stylish, but it will let you move faster.
 Hit : 0
 Dodge : 0
 Defense : 0
-Weight : 3
+Weight : 1
+Speed : 7
+Special : 0
+Value : 1000
+Artifact Entry : 0x0
+Types : RING
+Type bits : 0000000100000000
+Colors : RED
+Color bits : 00000010
+
+Item@0x5e6432fea730
+Name : Sting
+Desc : "A magical, elven blade, it glows blue when orcs are near.
+Hit : 10
+Dodge : 0
+Defense : 10
+Weight : 10
+Speed : 5
+Special : 10
+Value : 300
+Artifact Entry : 0x0x5e6432fe4d28
+Types : WEAPON
+Type bits : 0000000000000001
+Colors : BLUE
+Color bits : 00010000
+
+Item@0x5e6432febb20
+Name : fingerless gloves
+Desc : "Put these on and you'll be bad like Michael Jackson.
+Hit : 10
+Dodge : 0
+Defense : 10
+Weight : 2
 Speed : 0
-Special : 8
+Special : 0
 Value : 3
 Artifact Entry : 0x0
-Types : LIGHT
-Type bits : 0000010000000000
-Colors : BLACK
-Color bits : 00000001
+Types : GLOVES
+Type bits : 0000000001000000
+Colors : GREEN
+Color bits : 00000100
 
-Item@0x7f14d283cf10
+Item@0x5e643300f9c0
 Name : a Wicked Lasers(R) Torch
 Desc : "From the makers of the world's most refined lasers, comes the ultimate in
 handheld flashlights. The Flashtorch is a compact, portable searchlight that
 is capable of producing an incredible 4100 lumens of intense white light. Use
 this power to guide your way home, light a fire, or even fry an egg!
-Hit : 0
-Dodge : 0
-Defense : 0
-Weight : 3
-Speed : 0
-Special : 11
-Value : 199
-Artifact Entry : 0x0
-Types : LIGHT
-Type bits : 0000010000000000
-Colors : BLACK
-Color bits : 00000001
-
-Item@0x7f14d283e300
-Name : a NERF(R) dagger
-Desc : "This is a totally wicked looking dagger. It's got awesome barbs on the back
-of the blade, a compass on the hilt, and myriad other embelishments that
-serve no functional purpose. You could totally be a deadly assassin with a
-sweet blade like this. Since it's so light, it won't encumber you. It's
-made out of polyurethane foam.
-Hit : 0
-Dodge : 10
-Defense : 0
-Weight : 1
-Speed : 1564205268
-Special : 0
-Value : 15
-Artifact Entry : 0x0
-Types : WEAPON
-Type bits : 0000000000000001
-Colors : MAGENTA
-Color bits : 00100000
-
-Item@0x7f14d283f6f0
-Name : a NERF(R) dagger
-Desc : "This is a totally wicked looking dagger. It's got awesome barbs on the back
-of the blade, a compass on the hilt, and myriad other embelishments that
-serve no functional purpose. You could totally be a deadly assassin with a
-sweet blade like this. Since it's so light, it won't encumber you. It's
-made out of polyurethane foam.
-Hit : 0
-Dodge : 10
-Defense : 0
-Weight : 1
-Speed : 2232358768
-Special : 0
-Value : 14
-Artifact Entry : 0x0
-Types : WEAPON
-Type bits : 0000000000000001
-Colors : MAGENTA
-Color bits : 00100000
-
-Item@0x7f14d2840ae0
-Name : a torch
-Desc : "A short wooden stick topped with an oil-soaked cloth, perfect for lighting
-your way through the dungeon.
-Hit : 0
-Dodge : 0
-Defense : 0
-Weight : 3
-Speed : 0
-Special : 8
-Value : 3
-Artifact Entry : 0x0
-Types : LIGHT
-Type bits : 0000010000000000
-Colors : BLACK
-Color bits : 00000001
-
-Item@0x7f14d2841ed0
-Name : a chainmail coif
-Desc : "A heavy chainmail head covering.
-Hit : 0
-Dodge : 0
-Defense : 17
-Weight : 8
-Speed : 446679077
-Special : 0
-Value : 56
-Artifact Entry : 0x0
-Types : HELMET
-Type bits : 0000000000010000
-Colors : BLACK
-Color bits : 00000001
-
-Item@0x7f14d28432c0
-Name : a chainmail coif
-Desc : "A heavy chainmail head covering.
-Hit : 0
-Dodge : 0
-Defense : 15
-Weight : 8
-Speed : 135176520
-Special : 0
-Value : 69
-Artifact Entry : 0x0
-Types : HELMET
-Type bits : 0000000000010000
-Colors : BLACK
-Color bits : 00000001
-
-Item@0x7f14d28446b0
-Name : a NERF(R) dagger
-Desc : "This is a totally wicked looking dagger. It's got awesome barbs on the back
-of the blade, a compass on the hilt, and myriad other embelishments that
-serve no functional purpose. You could totally be a deadly assassin with a
-sweet blade like this. Since it's so light, it won't encumber you. It's
-made out of polyurethane foam.
-Hit : 0
-Dodge : 10
-Defense : 0
-Weight : 1
-Speed : 4009648978
-Special : 0
-Value : 11
-Artifact Entry : 0x0
-Types : WEAPON
-Type bits : 0000000000000001
-Colors : MAGENTA
-Color bits : 00100000
-
-Item@0x7f14d2845aa0
-Name : a NERF(R) dagger
-Desc : "This is a totally wicked looking dagger. It's got awesome barbs on the back
-of the blade, a compass on the hilt, and myriad other embelishments that
-serve no functional purpose. You could totally be a deadly assassin with a
-sweet blade like this. Since it's so light, it won't encumber you. It's
-made out of polyurethane foam.
-Hit : 0
-Dodge : 10
-Defense : 0
-Weight : 1
-Speed : 1187185682
-Special : 0
-Value : 14
-Artifact Entry : 0x0
-Types : WEAPON
-Type bits : 0000000000000001
-Colors : MAGENTA
-Color bits : 00100000
-

@@ -64,7 +64,15 @@ protected:
         GWIN_NONE = 0,
         GWIN_MAP,
         GWIN_MLIST,
+        GWIN_INVENTORY,
         NUM_GWIN
+    };
+    enum
+    {
+        UMODE_MOVE = 0,
+        UMODE_LOOK,
+        UMODE_GOTO,
+        NUM_UMODE
     };
 
 protected:
@@ -178,7 +186,8 @@ protected:
     {
         uint8_t active_win : REQUIRED_BITS32(NUM_GWIN - 1);
         uint8_t displayed_win : REQUIRED_BITS32(NUM_GWIN - 1);
-        bool is_goto_ctrl{ false };
+        bool is_goto_ctrl{ false }; // TODO: remove
+        uint8_t user_mode : REQUIRED_BITS32(NUM_UMODE - 1);
 
         uint32_t seed;
         int nmon;

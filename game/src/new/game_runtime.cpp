@@ -1102,12 +1102,35 @@ int GameState::handle_action_cmd(int action_cmd)
         {
             this->inv_win.showInventory();
             NC_PRINT("Enter slot idx to equip (0-9), ESC to cancel:");
-            int c = getch();
-            uint8_t d;
-            while(!(d = UserInput::checkCarrySlot(c)) && !UserInput::checkEscape(c));
-            if(d)
-            {
 
+            for(;;)
+            {
+                int c;
+                uint8_t d;
+                do
+                {
+                    c = getch();
+                }
+                while(!(d = UserInput::checkCarrySlot(c)) && !UserInput::checkEscape(c));
+                if(d)
+                {
+                    if(const auto& iptr = this->level.pc_carry[d - 1]; iptr)
+                    {
+                        constexpr uint32_t EQUIP_MASK =
+                            ItemDescription::TYPE_WEAPON |
+                            ItemDescription::TYPE_OFFHAND |
+                            ItemDescription::TYPE_RANGED |
+                            ItemDescription::TYPE_ARMOR |
+                            ItemDescription::TYPE_HELMET |
+                            ItemDescription::TYPE_CLOAK;
+                        switch(iptr->type & )
+                    }
+                    else
+                    {
+                        NC_PRINT("Slot is empty. Enter slot idx to equip (0-9), ESC to cancel:")
+                    }
+                }
+                else break;
             }
             break;
         }
@@ -1115,9 +1138,14 @@ int GameState::handle_action_cmd(int action_cmd)
         {
             this->inv_win.showEquipment();
             NC_PRINT("Enter slot to uneqip (a-l), ESC to cancel:");
-            int c = getch();
+
+            int c;
             uint8_t d;
-            while(!(d = UserInput::checkEquipSlot(c)) && !UserInput::checkEscape(c));
+            do
+            {
+                c = getch();
+            }
+            while(!(d = UserInput::checkCarrySlot(c)) && !UserInput::checkEscape(c));
             if(d)
             {
 
@@ -1136,12 +1164,14 @@ int GameState::handle_action_cmd(int action_cmd)
         }
         case ACTION_CMD_INVENTORY:
         {
-            
+            this->inv_win.showInventory();
+            while(!UserInput::checkEscape(getch()));
             break;
         }
         case ACTION_CMD_EQUIPMENT:
         {
-            
+            this->inv_win.showEquipment();
+            while(!UserInput::checkEscape(getch()));
             break;
         }
         case ACTION_CMD_INSPECT:

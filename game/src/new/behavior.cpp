@@ -51,11 +51,11 @@ static uint8_t filter_open_cells(
     uint8_t x, y, r = 0;
     for(uint8_t i = 0; i < n; i++)
     {
-        x = pos.x + OFF_DIRECTIONS[i][0];
-        y = pos.y + OFF_DIRECTIONS[i][1];
+        x = pos.x + OFF_DIRECTIONS[valid_dirs[i]][0];
+        y = pos.y + OFF_DIRECTIONS[valid_dirs[i]][1];
         if(!d.entity_map[y][x])
         {
-            valid_dirs[r] = i;
+            valid_dirs[r] = valid_dirs[i];
             r++;
         }
     }
@@ -271,10 +271,24 @@ int DungeonLevel::handlePCMove(Vec2u8 to, bool is_goto)
             this->pc.state.pos = to;
             prev_slot = nullptr;
         }
-    }
 
-    if(has_moved)
-    {
+        {
+            uint32_t& item_idx = DungeonLevel::accessGridElem(this->item_idx_map, this->pc.state.pos);
+            if(item_idx)
+            {
+                const std::shared_ptr<Item>& iptr = this->items[item_idx - 1];
+                for(size_t i = 0; i < this->pc_carry.size(); i++)
+                {
+                    if(!this->pc_carry[i])
+                    {
+                        this->pc_carry[i] = iptr;
+                        item_idx = 0;
+                        break;
+                    }
+                }
+            }
+        }
+
         // PRINT_DEBUG("UPDATING TERRAIN %sCOSTS\n", flags.floor_updated ? "(and floor) " : "");
         this->copyVisCells();
         this->updateCosts(true);

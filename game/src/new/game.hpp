@@ -29,7 +29,8 @@ public:
     inline GameState() :
         level{},
         map_win{ this->level },
-        mlist_win{ this->level }
+        mlist_win{ this->level },
+        inv_win{ this->level }
     {}
 
 public:
@@ -76,46 +77,8 @@ protected:
     };
 
 protected:
-    class MListWindow : public NCWindow
-    {
-        using WindowBaseT = NCWindow;
-
-    public:
-        inline MListWindow(DungeonLevel& l)
-            : WindowBaseT(
-                MONLIST_WIN_Y_DIM,
-                MONLIST_WIN_X_DIM,
-                MONLIST_WIN_Y_OFF,
-                MONLIST_WIN_X_OFF ),
-            level{ &l },
-            prox_gradient{ MONLIST_PROXIMITY_GRADIENT }
-        {
-            this->setScrollable(true);
-        }
-        inline virtual ~MListWindow() {};
-
-    public:
-        void onShow();
-        void onScrollUp();
-        void onScrollDown();
-
-        void changeLevel(DungeonLevel& l);
-
-    protected:
-        void printEntry(const Entity& m, int line);
-
-    protected:
-        DungeonLevel* level;
-        NCGradient16<16> prox_gradient;
-
-        int scroll_amount{ 0 };
-
-    };
-
     class MapWindow : public NCWindow
     {
-        using WindowBaseT = NCWindow;
-
     public:
         enum
         {
@@ -128,7 +91,7 @@ protected:
 
     public:
         inline MapWindow(DungeonLevel& l)
-            : WindowBaseT(
+            : NCWindow(
                 DUNGEON_MAP_WIN_Y_DIM,
                 DUNGEON_MAP_WIN_X_DIM,
                 DUNGEON_MAP_WIN_Y_OFF,
@@ -170,11 +133,82 @@ protected:
 
     };
 
+    class MListWindow : public NCWindow
+    {
+    public:
+        inline MListWindow(DungeonLevel& l)
+            : NCWindow(
+                MONLIST_WIN_Y_DIM,
+                MONLIST_WIN_X_DIM,
+                MONLIST_WIN_Y_OFF,
+                MONLIST_WIN_X_OFF ),
+            level{ &l },
+            prox_gradient{ MONLIST_PROXIMITY_GRADIENT }
+        {
+            this->setScrollable(true);
+        }
+        inline virtual ~MListWindow() {}
+
+    public:
+        void onShow();
+        void onScrollUp();
+        void onScrollDown();
+
+        void changeLevel(DungeonLevel& l);
+
+    protected:
+        void printEntry(const Entity& m, int line);
+
+    protected:
+        DungeonLevel* level;
+        NCGradient16<16> prox_gradient;
+
+        int scroll_amount{ 0 };
+
+    };
+
+    class InventoryWindow : public NCWindow
+    {
+        // enum
+        // {
+        //     DISPLAY_EQUIPMENT = 0,
+        //     DISPLAY_CARRY
+        // };
+
+    public:
+        inline InventoryWindow(DungeonLevel& l)
+            : NCWindow(
+                INVENTORY_WIN_Y_DIM,
+                INVENTORY_WIN_X_DIM,
+                INVENTORY_WIN_Y_OFF,
+                INVENTORY_WIN_X_OFF ),
+            level{ &l }
+        {}
+        inline virtual ~InventoryWindow() {}
+
+    public:
+        void showEquipment();
+        void showInventory();
+
+        void changeLevel(DungeonLevel& l);
+
+    protected:
+        DungeonLevel* level;
+
+        // struct
+        // {
+        //     uint8_t dmode;
+        // }
+        // state;
+
+    };
+
 protected:
     DungeonLevel level;
 
     MapWindow map_win;
     MListWindow mlist_win;
+    InventoryWindow inv_win;
 
     std::vector<MonDescription> mon_desc;
     std::vector<ItemDescription> item_desc;

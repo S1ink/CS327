@@ -315,7 +315,7 @@ void DungeonLevel::reset()
 
     memset(this->visibility_map, ' ', sizeof(uint8_t) * DUNGEON_TOTAL_CELLS);
     memset(this->entity_map, 0x0, sizeof(Entity*) * DUNGEON_TOTAL_CELLS);
-    memset(this->item_map, 0x0, sizeof(Item*) * DUNGEON_TOTAL_CELLS);
+    memset(this->item_idx_map, 0x0, sizeof(uint32_t) * DUNGEON_TOTAL_CELLS);
     for(size_t y = 0; y < DUNGEON_Y_DIM; y++)
     {
         for(size_t x = 0; x < DUNGEON_X_DIM; x++)
@@ -600,8 +600,9 @@ void DungeonLevel::writeChar(WINDOW* win, Vec2u8 loc)
         wattroff(win, COLOR_PAIR(c));
     }
     else
-    if(Item* i = DungeonLevel::accessGridElem(this->item_map, loc); i)
+    if(uint32_t idx = DungeonLevel::accessGridElem(this->item_idx_map, loc); idx)
     {
+        Item* i = this->items[idx - 1].get();
         const short c = i->getColor();
         wattron(win, COLOR_PAIR(c));
         mvwaddch(win, loc.y, loc.x, i->getChar());

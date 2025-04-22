@@ -3,8 +3,10 @@
 #include <type_traits>
 #include <cstdint>
 #include <cstdio>
+#include <memory>
 #include <random>
 #include <vector>
+#include <array>
 #include <queue>
 
 #include <ncurses.h>
@@ -184,13 +186,16 @@ public:
     DungeonGrid<char> visibility_map;
 
     DungeonGrid<Entity*> entity_map;
-    DungeonGrid<Item*> item_map;
+    DungeonGrid<uint32_t> item_idx_map;
 
     std::priority_queue<EntityQueueNode> entity_queue;
 
     Entity pc;
     std::vector<Entity> npcs;
-    std::vector<Item> items;
+    std::vector<std::shared_ptr<Item>> items;
+
+    std::array<std::shared_ptr<Item>, 12> pc_equipment;
+    std::array<std::shared_ptr<Item>, 10> pc_carry;
 
     size_t npcs_remaining;
 

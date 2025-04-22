@@ -16,100 +16,6 @@
     refresh();
 
 
-void GameState::MListWindow::onShow()
-{
-    this->prox_gradient.applyForeground(COLOR_BLACK);
-
-    werase(this->win);
-    this->scroll_amount = 0;
-
-    size_t alive_i = 0;
-    for( auto m = this->level->npcs.begin();
-        m != this->level->npcs.end() && alive_i < MONLIST_WIN_Y_DIM;
-        m++ )
-    {
-        if(m->state.health > 0)
-        {
-            this->printEntry(*m, alive_i);
-
-            alive_i++;
-        }
-    }
-
-    this->refresh();
-}
-
-void GameState::MListWindow::onScrollUp()
-{
-    if((int)this->level->npcs_remaining - this->scroll_amount > MONLIST_WIN_Y_DIM)
-    {
-        this->scroll_amount += 1;
-        wscrl(this->win, 1);
-
-        const int target_mnum = (MONLIST_WIN_Y_DIM - 1) + this->scroll_amount;
-        auto m = this->level->npcs.begin();
-        for(int mon = 0; m->state.health <= 0 || mon < target_mnum; m++)
-        {
-            if(m->state.health) mon++;
-        }
-
-        this->printEntry(*m, (MONLIST_WIN_Y_DIM - 1));
-        this->refresh();
-    }
-}
-
-void GameState::MListWindow::onScrollDown()
-{
-    if(this->scroll_amount > 0)
-    {
-        this->scroll_amount -= 1;
-        wscrl(this->win, -1);
-
-        auto m = this->level->npcs.begin();
-        for(int mon = 0; !m->state.health || mon < this->scroll_amount; m++)
-        {
-            if(m->state.health) mon++;
-        }
-
-        this->printEntry(*m, 0);
-        this->refresh();
-    }
-}
-
-void GameState::MListWindow::changeLevel(DungeonLevel& l)
-{
-    this->level = &l;
-}
-
-void GameState::MListWindow::printEntry(const Entity& m, int line)
-{
-    const int
-        dx = (int)this->level->pc.state.pos.x - (int)m.state.pos.x,
-        dy = (int)this->level->pc.state.pos.y - (int)m.state.pos.y,
-        ds = m.config.can_tunnel ?
-            DungeonLevel::accessGridElem(this->level->terrain_costs, m.state.pos) :
-            DungeonLevel::accessGridElem(this->level->tunnel_costs, m.state.pos),
-        ci = (MIN(63, ds) >> 2);
-
-    // NC_PRINT("trav weight is %d", ds);
-
-    wmove(this->win, line, 0);
-    wclrtoeol(this->win);
-
-    this->prox_gradient.printf(
-        this->win, line, 0, ci, "[%s] : %d %s, %d %s",
-        m.config.name.data(),
-        abs(dx),
-        dx > 0 ? "West" : "East",
-        abs(dy),
-        dy > 0 ? "North" : "South" );
-
-}
-
-
-
-
-
 void GameState::MapWindow::onPlayerMove(Vec2u8 a, Vec2u8 b)
 {
     switch(this->state.map_mode)
@@ -293,7 +199,7 @@ void GameState::MapWindow::writeFogMap()
             const int8_t x = static_cast<int8_t>(this->level->pc.state.pos.x) + v[1];
 
             if( (y >= 1 && y < DUNGEON_Y_DIM - 1 && x >= 1 && x < DUNGEON_X_DIM - 1) )
-                // (this->level->entity_map[y][x] || this->level->item_map[y][x]) )
+                // (this->level->entity_map[y][x] || this->level->item_idx_map[y][x]) )
             {
                 this->level->writeChar(this->win, {x, y});
             }
@@ -360,6 +266,143 @@ void GameState::MapWindow::writeWeightMap(DungeonLevel::DungeonCostMap weights)
             }
         }
     }
+}
+
+
+
+
+
+
+void GameState::MListWindow::onShow()
+{
+    this->prox_gradient.applyForeground(COLOR_BLACK);
+
+    werase(this->win);
+    this->scroll_amount = 0;
+
+    size_t alive_i = 0;
+    for( auto m = this->level->npcs.begin();
+        m != this->level->npcs.end() && alive_i < MONLIST_WIN_Y_DIM;
+        m++ )
+    {
+        if(m->state.health > 0)
+        {
+            this->printEntry(*m, alive_i);
+
+            alive_i++;
+        }
+    }
+
+    this->refresh();
+}
+
+void GameState::MListWindow::onScrollUp()
+{
+    if((int)this->level->npcs_remaining - this->scroll_amount > MONLIST_WIN_Y_DIM)
+    {
+        this->scroll_amount += 1;
+        wscrl(this->win, 1);
+
+        const int target_mnum = (MONLIST_WIN_Y_DIM - 1) + this->scroll_amount;
+        auto m = this->level->npcs.begin();
+        for(int mon = 0; m->state.health <= 0 || mon < target_mnum; m++)
+        {
+            if(m->state.health) mon++;
+        }
+
+        this->printEntry(*m, (MONLIST_WIN_Y_DIM - 1));
+        this->refresh();
+    }
+}
+
+void GameState::MListWindow::onScrollDown()
+{
+    if(this->scroll_amount > 0)
+    {
+        this->scroll_amount -= 1;
+        wscrl(this->win, -1);
+
+        auto m = this->level->npcs.begin();
+        for(int mon = 0; !m->state.health || mon < this->scroll_amount; m++)
+        {
+            if(m->state.health) mon++;
+        }
+
+        this->printEntry(*m, 0);
+        this->refresh();
+    }
+}
+
+void GameState::MListWindow::changeLevel(DungeonLevel& l)
+{
+    this->level = &l;
+}
+
+void GameState::MListWindow::printEntry(const Entity& m, int line)
+{
+    const int
+        dx = (int)this->level->pc.state.pos.x - (int)m.state.pos.x,
+        dy = (int)this->level->pc.state.pos.y - (int)m.state.pos.y,
+        ds = m.config.can_tunnel ?
+            DungeonLevel::accessGridElem(this->level->terrain_costs, m.state.pos) :
+            DungeonLevel::accessGridElem(this->level->tunnel_costs, m.state.pos),
+        ci = (MIN(63, ds) >> 2);
+
+    // NC_PRINT("trav weight is %d", ds);
+
+    wmove(this->win, line, 0);
+    wclrtoeol(this->win);
+
+    this->prox_gradient.printf(
+        this->win, line, 0, ci, "[%s] : %d %s, %d %s",
+        m.config.name.data(),
+        abs(dx),
+        dx > 0 ? "West" : "East",
+        abs(dy),
+        dy > 0 ? "North" : "South" );
+
+}
+
+
+
+
+
+
+void GameState::InventoryWindow::showEquipment()
+{
+    werase(this->win);
+
+    for(size_t i = 0; i < this->level->pc_equipment.size(); i++)
+    {
+        Item* x = this->level->pc_equipment[i].get();
+        mvwprintw(this->win, i, 0, "%c : [%s]", static_cast<char>('a' + i), x ? x->name.data() : "n/a");
+    }
+
+    this->overwrite();
+
+    int c = getch();
+    (void)c;
+}
+
+void GameState::InventoryWindow::showInventory()
+{
+    werase(this->win);
+
+    for(size_t i = 0; i < this->level->pc_carry.size(); i++)
+    {
+        Item* x = this->level->pc_carry[i].get();
+        mvwprintw(this->win, i, 0, "%c : [%s]", static_cast<char>('0' + i), x ? x->name.data() : "n/a");
+    }
+
+    this->overwrite();
+
+    int c = getch();
+    (void)c;
+}
+
+void GameState::InventoryWindow::changeLevel(DungeonLevel& l)
+{
+    this->level = &l;
 }
 
 
@@ -1003,6 +1046,7 @@ int GameState::iterate_pc_cmd(int move_cmd, bool& was_nop)
 
                 this->map_win.changeLevel(this->level);
                 this->mlist_win.changeLevel(this->level);
+                this->inv_win.changeLevel(this->level);
             }
             break;
         }
@@ -1155,7 +1199,7 @@ bool GameState::initializeEntities()
     #define PC_POS this->level.pc.state.pos
     #define TERRAIN_MAP this->level.map
     #define ENTITY_MAP this->level.entity_map
-    #define ITEM_MAP this->level.item_map
+    #define ITEM_MAP this->level.item_idx_map
 
      this->level.pc.print(FileDebug::get());
      FileDebug::get() << "\n\n";
@@ -1251,14 +1295,14 @@ bool GameState::initializeEntities()
         const uint8_t rr = rarity_required_distribution(this->state.rgen);
         if(ItemDescription::Rarity(idesc) <= rr) continue;
 
-        this->level.items.emplace_back(idesc, this->state.rgen);
+        this->level.items.emplace_back(std::make_shared<Item>(idesc, this->state.rgen));
 
         if(ItemDescription::Artifact(idesc))
         {
             this->artifact_availability[&idesc] = false;
         }
 
-        this->level.items.back().print(FileDebug::get());
+        this->level.items.back()->print(FileDebug::get());
         FileDebug::get() << "\n\n";
 
         i++;
@@ -1280,7 +1324,7 @@ bool GameState::initializeEntities()
             trav -= (TERRAIN_MAP.terrain[y][x].type && !ITEM_MAP[y][x]);
         }
 
-        ITEM_MAP[y][x] = &this->level.items[i];
+        ITEM_MAP[y][x] = static_cast<uint32_t>(i) + 1;
 
         // PRINT_DEBUG( "Initialized monster {%d, %d, (%d, %d), %#x}\n",
         //     me->speed, me->priority, x, y, me->md.stats );
@@ -1352,6 +1396,29 @@ void GameState::run(const std::atomic<bool>& r)
         {
             this->handle_dbg_cmd(d);
             pc_nop = true;
+        }
+        else
+        if((d = UserInput::checkAction(c)))
+        {
+            switch(d)
+            {
+                case ACTION_CMD_EQUIPMENT :
+                {
+                    NC_PRINT("ACTION_CMD_EQUIPMENT");
+                    this->inv_win.showEquipment();
+                    this->state.displayed_win = GWIN_NONE;
+                    pc_nop = true;
+                    break;
+                }
+                case ACTION_CMD_INVENTORY :
+                {
+                    NC_PRINT("ACTION_CMD_INVENTORY");
+                    this->inv_win.showInventory();
+                    this->state.displayed_win = GWIN_NONE;
+                    pc_nop = true;
+                    break;
+                }
+            }
         }
         else
         {

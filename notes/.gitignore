@@ -3,3 +3,8 @@ c_func
 cpp_func
 *.o
 shape
+*.a
+*.so
+decorator
+dynamic_lib
+static_lib

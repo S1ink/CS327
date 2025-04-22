@@ -45,3 +45,20 @@ parens_puzzle : parens_puzzle.cpp
 
 algorithms : algorithms.cpp
 	g++ algorithms.cpp -o algorithms
+
+decorator : decorator.cpp
+	g++ decorator.cpp -o decorator
+
+static_string : string.cpp
+	g++ string.cpp -c -o string.o
+	ar -cvq libstring2.a string.o
+
+dynamic_string : string.cpp
+	g++ string.cpp -fPIC -c -o d_string.o
+	gcc -shared -Wl,-soname,libstring2.so -o libstring2.so d_string.o
+
+static_lib : static_lib.cpp libstring2.a
+	g++ static_lib.cpp -o static_lib -L. -lstring2
+
+dynamic_lib : static_lib.cpp libstring2.so
+	g++ static_lib.cpp -o dynamic_lib -L. -lstring2

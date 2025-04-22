@@ -186,7 +186,7 @@ std::istream& operator>>(std::istream& i, string2& s)
 
 
 #ifndef STRING2_MAIN
-#define STRING2_MAIN 1
+#define STRING2_MAIN 0
 #endif
 
 #if STRING2_MAIN

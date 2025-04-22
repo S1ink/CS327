@@ -380,8 +380,8 @@ void GameState::InventoryWindow::showEquipment()
 
     this->overwrite();
 
-    int c = getch();
-    (void)c;
+    // int c = getch();
+    // (void)c;
 }
 
 void GameState::InventoryWindow::showInventory()
@@ -396,8 +396,8 @@ void GameState::InventoryWindow::showInventory()
 
     this->overwrite();
 
-    int c = getch();
-    (void)c;
+    // int c = getch();
+    // (void)c;
 }
 
 void GameState::InventoryWindow::changeLevel(DungeonLevel& l)
@@ -627,6 +627,7 @@ class UserInput
 {
 public:
     static bool checkExit(int in);
+    static bool checkEscape(int in);
     static uint8_t checkMoveDir(int in);
     static uint8_t checkMove(int in);
     static uint8_t checkAction(int in);
@@ -641,6 +642,10 @@ public:
 bool UserInput::checkExit(int in)
 {
     return in == 'Q' || in == 03;   // Ctrl+C
+}
+bool UserInput::checkEscape(int in)
+{
+    return in == 033;
 }
 uint8_t UserInput::checkMoveDir(int in)
 {
@@ -1087,6 +1092,79 @@ int GameState::iterate_pc_cmd(int move_cmd, bool& was_nop)
     this->map_win.onRefresh(!this->state.is_goto_ctrl);
 
     return this->level.getWinLose();
+}
+
+int GameState::handle_action_cmd(int action_cmd)
+{
+    switch(action_cmd)
+    {
+        case ACTION_CMD_WEAR:
+        {
+            this->inv_win.showInventory();
+            NC_PRINT("Enter slot idx to equip (0-9), ESC to cancel:");
+            int c = getch();
+            uint8_t d;
+            while(!(d = UserInput::checkCarrySlot(c)) && !UserInput::checkEscape(c));
+            if(d)
+            {
+
+            }
+            break;
+        }
+        case ACTION_CMD_UNWEAR:
+        {
+            this->inv_win.showEquipment();
+            NC_PRINT("Enter slot to uneqip (a-l), ESC to cancel:");
+            int c = getch();
+            uint8_t d;
+            while(!(d = UserInput::checkEquipSlot(c)) && !UserInput::checkEscape(c));
+            if(d)
+            {
+
+            }
+            break;
+        }
+        case ACTION_CMD_DROP:
+        {
+            
+            break;
+        }
+        case ACTION_CMD_EXPUNGE:
+        {
+            
+            break;
+        }
+        case ACTION_CMD_INVENTORY:
+        {
+            
+            break;
+        }
+        case ACTION_CMD_EQUIPMENT:
+        {
+            
+            break;
+        }
+        case ACTION_CMD_INSPECT:
+        {
+            
+            break;
+        }
+        case ACTION_CMD_MLIST:
+        {
+            
+            break;
+        }
+        case ACTION_CMD_LOOK:
+        {
+            
+            break;
+        }
+        case ACTION_CMD_GOTO:
+        {
+            
+            break;
+        }
+    }
 }
 
 int GameState::handle_mlist_cmd(int mlist_cmd)

@@ -3,6 +3,8 @@
 #include <vector>
 
 
+#define randfloat(i) (i * (rand() + 1.) / RAND_MAX)
+
 class Shape
 {
 public:

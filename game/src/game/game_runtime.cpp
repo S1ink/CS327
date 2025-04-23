@@ -1352,8 +1352,8 @@ bool GameState::initializeEntities()
     #define ENTITY_MAP this->level.entity_map
     #define ITEM_MAP this->level.item_map
 
-     this->level.pc.print(FileDebug::get());
-     FileDebug::get() << "\n\n";
+    //  this->level.pc.print(FileDebug::get());
+    //  FileDebug::get() << "\n\n";
 
 // 1. generate monsters ---------------------------------------------------------------------
     if(this->state.nmon < 0)
@@ -1388,8 +1388,8 @@ bool GameState::initializeEntities()
             this->unique_availability[&mdesc] = false;
         }
 
-        this->level.npcs.back().print(FileDebug::get());
-        FileDebug::get() << "\n\n";
+        // this->level.npcs.back().print(FileDebug::get());
+        // FileDebug::get() << "\n\n";
 
         i++;
     }
@@ -1456,8 +1456,8 @@ bool GameState::initializeEntities()
             this->artifact_availability[&idesc] = false;
         }
 
-        items_buff.back()->print(FileDebug::get());
-        FileDebug::get() << "\n\n";
+        // items_buff.back()->print(FileDebug::get());
+        // FileDebug::get() << "\n\n";
 
         i++;
     }

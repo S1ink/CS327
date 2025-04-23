@@ -10,6 +10,10 @@
 #define ENABLE_DEBUG_PRINTS 0
 #endif
 
+#ifndef ENABLE_DEBUG_LOGGING
+#define ENABLE_DEBUG_LOGGING 0
+#endif
+
 #if ENABLE_DEBUG_PRINTS && 0
     #define PRINT_DEBUG(...) fprintf(stderr, __VA_ARGS__); fflush(stdout);
     #define IF_DEBUG(x) x
@@ -19,6 +23,7 @@
 #endif
 
 
+#if ENABLE_DEBUG_LOGGING
 class FileDebug
 {
 public:
@@ -28,6 +33,7 @@ protected:
     inline static std::ofstream of{ "debug.txt" };
 
 };
+#endif
 
 
 static inline uint32_t us_seed()

@@ -31,7 +31,6 @@ endif
 
 BIN := game
 SRCS := $(call rwildcard,$(SRC_DIR)/,*.cpp *.c)
-# SRCS := src/main.cpp src/new/items.cpp
 OBJS := $(SRCS:$(SRC_DIR)/%=$(OBJ_DIR)/%.o)
 HEADERS := $(call rwildcard,$(SRC_DIR)/,*.h *.hpp)
 OBJ_DIRS := $(sort $(dir $(OBJS)))

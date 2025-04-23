@@ -95,5 +95,26 @@
 4/14/25 5:00  PM -- Rewrote the vec2 class to be templated
 4/14/25 10:00 PM -- Upgraded the Dungeon (and dungeon map) classes
 4/15/25 4:00  PM -- Upgraded entity class to support new traits
-4/15/25 11:30 PM -- Add file parsing to game init procedure
-4/16/25 9:59  PM -- Basically added everything else, added color support, fixed bugs, etc, (im out of time here)
+4/15/25 11:30 PM -- Add entity/item spawning to dungeon init
+4/15/25 3:30  PM -- Upgrade dungeon class(s), pathfinding
+4/15/25 4:30  PM -- Finalize dungeon startup
+4/16/25 8:00  PM -- Add colored entity rendering
+4/16/25 9:00  PM -- Finish seeding support, random utlities
+4/16/25 9:30  PM -- debug priority queue, add file logging
+4/16/25 9:59  PM -- Ensure semi-stability, update readme, makefile
+
+4/17/25 5:00  PM -- Fix color order, add entity/item logging
+4/19/25 3:30  PM -- Fix entity queue ordering
+4/19/25 9:00  PM -- Add bolded visibility zone, fix speed, fix mlist scrolling, fix rendering bugs
+4/21/25 1:00  PM -- Add entity "shuffling" (bugged)
+4/21/25 2:00  PM -- Add new keybinds, skeleton handlers
+4/21/25 4:30  PM -- Add combat mechanics
+4/21/25 11:30 PM -- Add inventory windows, pc equipment slots
+4/22/25 12:30 AM -- Add item pickup
+4/22/25 12:30 PM -- Add item equip/unequip support
+4/22/25 7:00  PM -- Add item drop/expunge support, update item lifetime management
+4/22/25 8:00  PM -- Improve combat mechanics, add health/speed display
+4/22/25 9:00  PM -- Fix signed integer item/entity speed parsing
+4/22/25 10:00 PM -- Add monster look/target controls + display
+4/23/25 1:00  PM -- Change item speed attribute to be signed, add more status prints, general polish
+4/23/25 1:30  PM -- Update readme, makefile, changelog (DONE!)

@@ -1,4 +1,4 @@
-#include "new/game.hpp"
+#include "game/game.hpp"
 #include "util/debug.hpp"
 
 #include <atomic>
@@ -27,17 +27,12 @@ static inline void init_sig()
     signal(SIGPWR, handle_exit);
 }
 
-inline int main_108(int argc, char** argv)
+
+int main(int argc, char** argv)
 {
     init_sig();
     GameApplication g{ argc, argv, is_running };
     g.run();
 
     return 0;
-}
-
-
-int main(int argc, char** argv)
-{
-    return main_108(argc, argv);
 }

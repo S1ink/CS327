@@ -1,20 +1,25 @@
-Parses monster and item description files, initializes a dungeon, randomly spawns monsters,
-and starts a playable game (using ncurses). All controls listed in the 1.08 specification are implemented,
-as well as the following:
+Generates or loads a dungeon, initializes monsters/items based on supplied
+config files, and begins a playable game. All commands are implemented
+according to 1.09 assignment spec, including the following:
  1. Ctrl+C exits the program (as well as 'Q').
  2. 'H' displays the hardness map (in color).
  3. 'D' displays the floor weightmap (in color).
  4. 'T' displays the terrain weightmap (in color).
  5. 's' displays the default map, if another was being displayed.
-
-**PLEASE NOTE:** Monster AI is currently broken due to the fact that most of the code was rewritten.
+Please note that attempting to exit the game while viewing the inventory or
+targetting a monster has not been implemented and will not work.
 
 **BUILD**:
     Run `make`
 
 **USAGE**:
-    Run: `./game <--load> <--save> <--nummon #>`
+    Run: `./game <--load> <--save> <--nummon #> <--seed #>`
+
 *Flags*:
-    `--load`   : Loads the saved dungeon located at `$HOME/.rlg327/dungeon`. If nonexistent, exits with an error message.
-    `--save`   : Generates a new dungeon (unless the load flag is present), and saves it to `$HOME/.rlg327/dungeon`.
-    `--nummon` : Specify the number of monsters to spawn. Valid range is [0, 255] (256 overflows to 0, 0 results in an instant win).
+    `--load`   : Loads the saved dungeon located at `$HOME/.rlg327/dungeon`.
+                    If nonexistent, exits with an error message.
+    `--save`   : Generates a new dungeon (unless the load flag is present),
+                    and saves it to `$HOME/.rlg327/dungeon`.
+    `--nummon` : Specify the number of monsters to spawn. Valid range is
+                    [0, 255] (256 overflows to 0, 0 results in an instant win).
+    `--seed`   : Provide a seed to initialize the dungeon.

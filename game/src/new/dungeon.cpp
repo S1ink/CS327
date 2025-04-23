@@ -309,13 +309,27 @@ void DungeonLevel::TerrainMap::generate(uint32_t seed)
 
 
 
+DungeonLevel::~DungeonLevel()
+{
+    this->deleteItems();
+    for(Item* i : this->pc_carry)
+    {
+        if(i) delete i;
+    }
+    for(Item* i : this->pc_equipment)
+    {
+        if(i) delete i;
+    }
+}
+
 void DungeonLevel::reset()
 {
     this->map.reset();
+    this->deleteItems();
 
     memset(this->visibility_map, ' ', sizeof(uint8_t) * DUNGEON_TOTAL_CELLS);
     memset(this->entity_map, 0x0, sizeof(Entity*) * DUNGEON_TOTAL_CELLS);
-    memset(this->item_idx_map, 0x0, sizeof(uint32_t) * DUNGEON_TOTAL_CELLS);
+    memset(this->item_map, 0x0, sizeof(uint32_t) * DUNGEON_TOTAL_CELLS);
     for(size_t y = 0; y < DUNGEON_Y_DIM; y++)
     {
         for(size_t x = 0; x < DUNGEON_X_DIM; x++)
@@ -329,10 +343,25 @@ void DungeonLevel::reset()
 
     this->pc.state.target_pos = this->pc.state.pos.assign(0, 0);
     this->npcs.clear();
-    this->items.clear();
 
     this->npcs_remaining = 0;
 }
+
+void DungeonLevel::deleteItems()
+{
+    for(size_t y = 0; y < DUNGEON_Y_DIM; y++)
+    {
+        for(size_t x = 0; x < DUNGEON_X_DIM; x++)
+        {
+            if(this->item_map[y][x])
+            {
+                delete this->item_map[y][x];
+                this->item_map[y][x] = nullptr;
+            }
+        }
+    }
+}
+
 
 int DungeonLevel::loadTerrain(FILE* f)
 {
@@ -600,9 +629,8 @@ void DungeonLevel::writeChar(WINDOW* win, Vec2u8 loc)
         wattroff(win, COLOR_PAIR(c));
     }
     else
-    if(uint32_t idx = DungeonLevel::accessGridElem(this->item_idx_map, loc); idx)
+    if(Item* i = DungeonLevel::accessGridElem(this->item_map, loc); i)
     {
-        Item* i = this->items[idx - 1].get();
         const short c = i->getColor();
         wattron(win, COLOR_PAIR(c));
         mvwaddch(win, loc.y, loc.x, i->getChar());

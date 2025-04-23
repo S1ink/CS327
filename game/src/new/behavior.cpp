@@ -104,15 +104,14 @@ static int handle_entity_move(DungeonLevel& d, Entity& e, Vec2u8 to)
         {
             if(slot->config.is_pc)
             {
-                uint32_t a = e.config.attack_damage.roll(d.rroll);
-                if(slot->state.health < a)
+                slot->state.health -= e.config.attack_damage.roll(d.rroll);
+                if(slot->state.health <= 0)
                 {
-                    slot->state.health = 0;
                     e.state.pos = to;
+                    d.win_lose = -1;
                 }
                 else
                 {
-                    slot->state.health -= a;
                     flags.has_entity_moved = false;
                 }
             }
@@ -250,19 +249,15 @@ int DungeonLevel::handlePCMove(Vec2u8 to, bool is_goto)
         Entity*& slot = DungeonLevel::accessGridElem(this->entity_map, to);
         if(slot)   // previous entity
         {
-            uint32_t a = this->pc.config.attack_damage.roll(this->rroll);
-            if(a > slot->state.health)
+            slot->state.health -= this->rollPCDamage();
+            if(slot->state.health <= 0)
             {
-                slot->state.health = 0;
                 this->npcs_remaining--;
+                if(slot->config.is_boss) this->win_lose = 1;
 
                 slot = &this->pc;
                 this->pc.state.pos = to;
                 prev_slot = nullptr;
-            }
-            else
-            {
-                slot->state.health -= a;
             }
         }
         else
@@ -272,21 +267,11 @@ int DungeonLevel::handlePCMove(Vec2u8 to, bool is_goto)
             prev_slot = nullptr;
         }
 
+        Item*& iptr = DungeonLevel::accessGridElem(this->item_map, this->pc.state.pos);
+        if(size_t oi = this->getOpenCarrySlot(); oi < this->pc_carry.size() && iptr)
         {
-            uint32_t& item_idx = DungeonLevel::accessGridElem(this->item_idx_map, this->pc.state.pos);
-            if(item_idx)
-            {
-                const std::shared_ptr<Item>& iptr = this->items[item_idx - 1];
-                for(size_t i = 0; i < this->pc_carry.size(); i++)
-                {
-                    if(!this->pc_carry[i])
-                    {
-                        this->pc_carry[i] = iptr;
-                        item_idx = 0;
-                        break;
-                    }
-                }
-            }
+            this->pc_carry[oi] = iptr;
+            iptr = nullptr;
         }
 
         // PRINT_DEBUG("UPDATING TERRAIN %sCOSTS\n", flags.floor_updated ? "(and floor) " : "");
@@ -435,4 +420,104 @@ int DungeonLevel::iterateNPC(Entity& e)
     return handle_entity_move(*this, e, move_pos);
 
 #undef GET_MIN_COST_NEIGHBOR
+}
+
+
+
+size_t DungeonLevel::getEquipmentSlotIdx(const Item& i)
+{
+    constexpr uint32_t EQUIP_MASK =
+        ItemDescription::TYPE_WEAPON |
+        ItemDescription::TYPE_OFFHAND |
+        ItemDescription::TYPE_RANGED |
+        ItemDescription::TYPE_ARMOR |
+        ItemDescription::TYPE_HELMET |
+        ItemDescription::TYPE_CLOAK |
+        ItemDescription::TYPE_GLOVES |
+        ItemDescription::TYPE_BOOTS |
+        ItemDescription::TYPE_RING |
+        ItemDescription::TYPE_AMULET |
+        ItemDescription::TYPE_LIGHT;
+
+    switch(i.type & EQUIP_MASK)
+    {
+        case ItemDescription::TYPE_WEAPON: return 0;
+        case ItemDescription::TYPE_OFFHAND: return 1;
+        case ItemDescription::TYPE_RANGED: return 2;
+        case ItemDescription::TYPE_ARMOR: return 3;
+        case ItemDescription::TYPE_HELMET: return 4;
+        case ItemDescription::TYPE_CLOAK: return 5;
+        case ItemDescription::TYPE_GLOVES: return 6;
+        case ItemDescription::TYPE_BOOTS: return 7;
+        case ItemDescription::TYPE_AMULET: return 8;
+        case ItemDescription::TYPE_LIGHT: return 9;
+        case ItemDescription::TYPE_RING:
+        {
+            return (!this->pc_equipment[10] || (this->pc_equipment[10] && this->pc_equipment[11])) ? 10 : 11;
+        }
+        default: return 12;
+    }
+}
+
+int32_t DungeonLevel::rollPCDamage()
+{
+    int32_t ret = 0;
+
+    bool no_equip = true;
+    for(Item* i : this->pc_equipment)
+    {
+        if(!i) continue;
+        no_equip = false;
+        if(i->attack_damage.isStatic())
+        {
+            ret += i->attack_damage.getBase();
+        }
+        else
+        {
+            ret += i->attack_damage.roll(this->rroll);
+        }
+    }
+
+    return no_equip ? this->pc.config.attack_damage.roll(this->rroll) : ret;
+}
+
+int32_t DungeonLevel::getPCSpeed()
+{
+    int32_t ret = this->pc.config.speed;
+
+    for(const Item* i : this->pc_equipment)
+    {
+        if(i) ret += i->speed;
+    }
+
+    return ret;
+}
+
+size_t DungeonLevel::getOpenCarrySlot()
+{
+    for(size_t i = 0; i < this->pc_carry.size(); i++)
+    {
+        if(!this->pc_carry[i]) return i;
+    }
+    return this->pc_carry.size();
+}
+
+void DungeonLevel::handleItemDrop(Item& i)
+{
+    if(!DungeonLevel::accessGridElem(this->item_map, this->pc.state.pos))
+    {
+        DungeonLevel::accessGridElem(this->item_map, this->pc.state.pos) = &i;
+    }
+    else
+    {
+        DungeonLevel::accessGridElem(
+            this->item_map,
+            dungeon_dijkstra_nearest_open_drop(*this, this->pc.state.pos) ) = &i;
+    }
+}
+
+void DungeonLevel::handleItemDelete(size_t idx)
+{
+    delete this->pc_carry[idx];
+    this->pc_carry[idx] = nullptr;
 }

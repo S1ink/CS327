@@ -159,14 +159,13 @@ public:
     {
         this->reset();
     }
+    ~DungeonLevel();
 
     inline void setSeed(uint32_t s) { this->rgen.seed(s); }
-    inline int getWinLose()
-    {
-        return (this->pc.state.health <= 0) ? -1 : (this->npcs_remaining > 0 ? 0 : 1);
-    }
+    inline int getWinLose() const { return this->win_lose; }
 
     void reset();
+    void deleteItems();
 
     int loadTerrain(FILE* f);
     int saveTerrain(FILE* f);
@@ -178,6 +177,14 @@ public:
     int handlePCMove(Vec2u8 to, bool is_goto);
     int iterateNPC(Entity& e);
 
+    int32_t rollPCDamage();
+    int32_t getPCSpeed();
+
+    size_t getEquipmentSlotIdx(const Item& i);
+    size_t getOpenCarrySlot();
+    void handleItemDrop(Item& i);
+    void handleItemDelete(size_t idx);
+
     void writeChar(WINDOW* win, Vec2u8 loc);
 
 public:
@@ -186,18 +193,19 @@ public:
     DungeonGrid<char> visibility_map;
 
     DungeonGrid<Entity*> entity_map;
-    DungeonGrid<uint32_t> item_idx_map;
+    DungeonGrid<Item*> item_map;    // pointers here are OWNED!
 
     std::priority_queue<EntityQueueNode> entity_queue;
 
     Entity pc;
     std::vector<Entity> npcs;
-    std::vector<std::shared_ptr<Item>> items;
+    // std::vector<std::shared_ptr<Item>> items;
 
-    std::array<std::shared_ptr<Item>, 12> pc_equipment;
-    std::array<std::shared_ptr<Item>, 10> pc_carry;
+    std::array<Item*, 12> pc_equipment;
+    std::array<Item*, 10> pc_carry;
 
     size_t npcs_remaining;
+    int win_lose = 0;
 
     // uint32_t seed{ 0 };
     std::mt19937 rgen;
@@ -223,25 +231,34 @@ int init_pathing_buffer(PathFindingBuffer buff);
 
 int dungeon_dijkstra_single_path(
     PathFindingBuffer buff,
-    DungeonLevel::TerrainMap& map,
+    const DungeonLevel::TerrainMap& map,
     void* out,
     Vec2u8 from,
     Vec2u8 to,
     int(*should_use_cell)(const DungeonLevel::TerrainMap&, uint8_t x, uint8_t y),
     int32_t(*cell_weight)(const DungeonLevel::TerrainMap&, uint8_t x, uint8_t y),
     void(*on_cell_path)(void*, uint8_t x, uint8_t y),
-    int use_diag );
+    int use_diag = true );
 int dungeon_dijkstra_traverse_grid(
     PathFindingBuffer buff,
-    DungeonLevel::TerrainMap& map,
+    const DungeonLevel::TerrainMap& map,
     Vec2u8 from,
     int(*should_use_cell)(const DungeonLevel::TerrainMap&, uint8_t x, uint8_t y),
     int32_t(*cell_weight)(const DungeonLevel::TerrainMap&, uint8_t x, uint8_t y),
-    int use_diag );
+    int use_diag = true );
+Vec2u8 dungeon_dijkstra_find_nearest(
+    PathFindingBuffer buff,
+    const DungeonLevel& l,
+    Vec2u8 from,
+    int(*should_use_cell)(const DungeonLevel&, uint8_t x, uint8_t y),
+    int32_t(*cell_weight)(const DungeonLevel&, uint8_t x, uint8_t y),
+    bool(*does_qualify)(const DungeonLevel&, uint8_t x, uint8_t y),
+    int use_diag = true );
 
 int dungeon_dijkstra_corridor_path(DungeonLevel::TerrainMap& map, Vec2u8 from, Vec2u8 to);
 int dungeon_dijkstra_traverse_floor(DungeonLevel::TerrainMap& map, Vec2u8 from, PathFindingBuffer buff);
 int dungeon_dijkstra_traverse_terrain(DungeonLevel::TerrainMap& map, Vec2u8 from, PathFindingBuffer buff);
+Vec2u8 dungeon_dijkstra_nearest_open_drop(DungeonLevel& l, Vec2u8 from);
 
 int dungeon_dijkstra_floor_path(
     DungeonLevel::TerrainMap& map,

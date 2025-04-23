@@ -170,12 +170,6 @@ protected:
 
     class InventoryWindow : public NCWindow
     {
-        // enum
-        // {
-        //     DISPLAY_EQUIPMENT = 0,
-        //     DISPLAY_CARRY
-        // };
-
     public:
         inline InventoryWindow(DungeonLevel& l)
             : NCWindow(
@@ -190,17 +184,13 @@ protected:
     public:
         void showEquipment();
         void showInventory();
+        void showDescription(const Item* i);
+        void showDescription(const Entity* e);
 
         void changeLevel(DungeonLevel& l);
 
     protected:
         DungeonLevel* level;
-
-        // struct
-        // {
-        //     uint8_t dmode;
-        // }
-        // state;
 
     };
 

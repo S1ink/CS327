@@ -257,7 +257,7 @@ typename SequentialParser<T>::FunctorT SequentialParser<T>::makeRollableExtracto
             std::string seg;
 
             getlineAndTrim(line, seg, '+');
-            a(x).base = static_cast<uint32_t>( atoi(seg.c_str()) );
+            a(x).base = static_cast<int32_t>( atoi(seg.c_str()) );
 
             getlineAndTrim(line, seg, 'd');
             a(x).rolls = static_cast<uint16_t>( atoi(seg.c_str()) );

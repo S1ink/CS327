@@ -117,7 +117,7 @@ public:
     {
         std::string_view name{}, desc{};
         RollableNum attack_damage{ {} };
-        uint32_t speed{ 0 };
+        int32_t speed{ 0 };
         union
         {
             struct
@@ -147,7 +147,7 @@ public:
         Vec2u8 pos{ 0, 0 };
         Vec2u8 target_pos{ 0, 0 };
 
-        uint32_t health{ 0 };
+        int32_t health{ 0 };
     }
     state;
 

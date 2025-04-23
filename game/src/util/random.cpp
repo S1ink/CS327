@@ -1,7 +1,7 @@
 #include "random.hpp"
 
 
-uint32_t RollNum::roll(uint32_t seed) const
+int32_t RollNum::roll(uint32_t seed) const
 {
     return RollableNum{ *this, seed }.roll();
 }
@@ -34,16 +34,16 @@ inline RollableNum& RollableNum::setSeed(uint32_t s)
     return *this;
 }
 
-inline uint32_t RollableNum::roll()
+inline int32_t RollableNum::roll()
 {
     return this->roll(this->generator);
 }
 
-inline uint32_t RollableNum::rollArg(RollNumArgT n)
+inline int32_t RollableNum::rollArg(RollNumArgT n)
 {
     std::uniform_int_distribution<uint32_t> dist{ 1, n.sides };
-    uint32_t x;
-    for(uint32_t r = 0; r < n.rolls; r++) x += dist(this->generator);
+    int32_t x;
+    for(uint32_t r = 0; r < n.rolls; r++) x += static_cast<int32_t>(dist(this->generator));
     return x;
 }
 

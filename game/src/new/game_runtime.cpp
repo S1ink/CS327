@@ -15,6 +15,12 @@
     mvprintw((DUNGEON_Y_DIM + 1), 0, __VA_ARGS__); \
     refresh();
 
+#define NC_PRINT3(...) \
+    move((DUNGEON_Y_DIM + 2), 0); \
+    clrtoeol(); \
+    mvprintw((DUNGEON_Y_DIM + 2), 0, __VA_ARGS__); \
+    refresh();
+
 
 void GameState::MapWindow::onPlayerMove(Vec2u8 a, Vec2u8 b)
 {
@@ -71,7 +77,14 @@ void GameState::MapWindow::onGotoMove(Vec2u8 a, Vec2u8 b)
     {
         case MAP_FOG :
         {
-            mvwaddch(this->win, a.y, a.x, this->level->visibility_map[a.y][a.x]);   // TODO: doesn't handle items/monsters in current range
+            if((a.cast<int>() - this->level->pc.state.pos).lensquared() <= DungeonLevel::VIS_RADSQ)
+            {
+                this->level->writeChar(this->win, a);
+            }
+            else
+            {
+                mvwaddch(this->win, a.y, a.x, this->level->visibility_map[a.y][a.x]);
+            }
             mvwaddch(this->win, b.y, b.x, '*');
             break;
         }
@@ -374,14 +387,11 @@ void GameState::InventoryWindow::showEquipment()
 
     for(size_t i = 0; i < this->level->pc_equipment.size(); i++)
     {
-        Item* x = this->level->pc_equipment[i].get();
+        Item* x = this->level->pc_equipment[i];
         mvwprintw(this->win, i, 0, "%c : [%s]", static_cast<char>('a' + i), x ? x->name.data() : "n/a");
     }
 
-    this->overwrite();
-
-    // int c = getch();
-    // (void)c;
+    this->refresh();
 }
 
 void GameState::InventoryWindow::showInventory()
@@ -390,14 +400,25 @@ void GameState::InventoryWindow::showInventory()
 
     for(size_t i = 0; i < this->level->pc_carry.size(); i++)
     {
-        Item* x = this->level->pc_carry[i].get();
+        Item* x = this->level->pc_carry[i];
         mvwprintw(this->win, i, 0, "%c : [%s]", static_cast<char>('0' + i), x ? x->name.data() : "n/a");
     }
 
-    this->overwrite();
+    this->refresh();
+}
 
-    // int c = getch();
-    // (void)c;
+void GameState::InventoryWindow::showDescription(const Item* i)
+{
+    werase(this->win);
+    mvwprintw(this->win, 0, 0, "%s", i->desc.data());
+    this->refresh();
+}
+
+void GameState::InventoryWindow::showDescription(const Entity* e)
+{
+    werase(this->win);
+    mvwprintw(this->win, 0, 0, "%s", e->config.desc.data());
+    this->refresh();
 }
 
 void GameState::InventoryWindow::changeLevel(DungeonLevel& l)
@@ -755,167 +776,6 @@ uint8_t UserInput::checkCarrySlot(int in)
     return 0;
 }
 
-typedef struct
-{
-    uint8_t move_cmd : REQUIRED_BITS32(NUM_MOVE_CMD - 1);
-    uint8_t mlist_cmd : REQUIRED_BITS32(NUM_MLIST_CMD - 1);
-    uint8_t dbg_cmd : REQUIRED_BITS32(NUM_DBG_CMD - 1);
-    uint8_t exit : 1;
-}
-InputCommand;
-
-static inline InputCommand zeroed_input()
-{
-    InputCommand ic;
-    ic.move_cmd = 0;
-    ic.mlist_cmd = 0;
-    ic.dbg_cmd = 0;
-    ic.exit = 0;
-    return ic;
-}
-
-static inline InputCommand decode_input_command(int in)
-{
-    InputCommand cmd = zeroed_input();
-
-    switch(in)
-    {
-    // --- EXIT ------------------
-        case 'Q':
-        case 03:    // Ctrl+C
-        {
-            cmd.exit = 1;
-            break;
-        }
-    // --- MOVE COMMANDS ---------
-        case '7':
-        case 'y':
-        {
-            cmd.move_cmd = MOVE_CMD_UL;    // move up + left
-            break;
-        }
-        case '8':
-        case 'k':
-        {
-            cmd.move_cmd = MOVE_CMD_U;     // move up
-            break;
-        }
-        case '9':
-        case 'u':
-        {
-            cmd.move_cmd = MOVE_CMD_UR;    // move up + right
-            break;
-        }
-        case '6':
-        case 'l':
-        {
-            cmd.move_cmd = MOVE_CMD_R;     // move right
-            break;
-        }
-        case '3':
-        case 'n':
-        {
-            cmd.move_cmd = MOVE_CMD_DR;    // move down + right
-            break;
-        }
-        case '2':
-        case 'j':
-        {
-            cmd.move_cmd = MOVE_CMD_D;     // move down
-            break;
-        }
-        case '1':
-        case 'b':
-        {
-            cmd.move_cmd = MOVE_CMD_DL;    // move down + left
-            break;
-        }
-        case '4':
-        case 'h':
-        {
-            cmd.move_cmd = MOVE_CMD_L;     // move left
-            break;
-        }
-        case '>':
-        {
-            cmd.move_cmd = MOVE_CMD_DS;    // down stair
-            break;
-        }
-        case '<':
-        {
-            cmd.move_cmd = MOVE_CMD_US;    // up stair
-            break;
-        }
-        case '5':
-        case ' ':
-        case '.':
-        {
-            cmd.move_cmd = MOVE_CMD_SKIP;  // rest
-            break;
-        }
-        case 'g':
-        {
-            cmd.move_cmd = MOVE_CMD_GOTO;
-            break;
-        }
-        case 'r':
-        {
-            cmd.move_cmd = MOVE_CMD_RGOTO;
-            break;
-        }
-    // --- MONSTER LIST COMMANDS ----------
-        case 'm':
-        {
-            cmd.mlist_cmd = MLIST_CMD_SHOW;    // display map
-            break;
-        }
-        case KEY_UP:
-        {
-            cmd.mlist_cmd = MLIST_CMD_SU;      // scroll up
-            break;
-        }
-        case KEY_DOWN:
-        {
-            cmd.mlist_cmd = MLIST_CMD_SD;      // scroll down
-            break;
-        }
-        case 033:   // Esc key
-        {
-            cmd.mlist_cmd = MLIST_CMD_ESCAPE;    // escape
-            break;
-        }
-    // --- DEBUG COMMANDS -----------------
-        case 'f':
-        {
-            cmd.dbg_cmd = DBG_CMD_TOGGLE_FOG;
-            break;
-        }
-        case 's':
-        {
-            cmd.dbg_cmd = DBG_CMD_SHOW_DUNGEON;
-            break;
-        }
-        case 'H':
-        {
-            cmd.dbg_cmd = DBG_CMD_SHOW_HARDNESS;
-            break;
-        }
-        case 'D':
-        {
-            cmd.dbg_cmd = DBG_CMD_SHOW_FWEIGHTS;
-            break;
-        }
-        case 'T':
-        {
-            cmd.dbg_cmd = DBG_CMD_SHOW_TWEIGHTS;
-            break;
-        }
-        default: break;
-    }
-
-    return cmd;
-}
-
 
 int GameState::overwrite_changes()
 {
@@ -950,11 +810,16 @@ int GameState::iterate_next_pc()
         //     << ", priority : " << (int)qn.priority << std::endl;
         if(e->state.health > 0)
         {
-            qn.next_turn += (1000 / e->config.speed);
-            this->level.entity_queue.push(qn);
-
-            if(!e->config.is_pc)
+            if(e->config.is_pc)
             {
+                qn.next_turn += (1000 / MIN_CACHED(this->level.getPCSpeed(), 1000));
+                this->level.entity_queue.push(qn);
+            }
+            else
+            {
+                qn.next_turn += (1000 / e->config.speed);
+                this->level.entity_queue.push(qn);
+
                 Vec2u8 pre = e->state.pos;
                 if(this->level.iterateNPC(*e))
                 {
@@ -989,7 +854,7 @@ int GameState::iterate_pc_cmd(int move_cmd, bool& was_nop)
 {
     was_nop = true;
 
-    static const int8_t off[] = {
+    static constexpr int8_t off[] = {
         0, -1,
         0, +1,
        -1,  0,
@@ -1101,6 +966,7 @@ int GameState::handle_action_cmd(int action_cmd)
         case ACTION_CMD_WEAR:
         {
             this->inv_win.showInventory();
+            this->inv_win.overwrite();
             NC_PRINT("Enter slot idx to equip (0-9), ESC to cancel:");
 
             for(;;)
@@ -1114,87 +980,243 @@ int GameState::handle_action_cmd(int action_cmd)
                 while(!(d = UserInput::checkCarrySlot(c)) && !UserInput::checkEscape(c));
                 if(d)
                 {
-                    if(const auto& iptr = this->level.pc_carry[d - 1]; iptr)
+                    if(Item* iptr = this->level.pc_carry[d - 1]; iptr)
                     {
-                        constexpr uint32_t EQUIP_MASK =
-                            ItemDescription::TYPE_WEAPON |
-                            ItemDescription::TYPE_OFFHAND |
-                            ItemDescription::TYPE_RANGED |
-                            ItemDescription::TYPE_ARMOR |
-                            ItemDescription::TYPE_HELMET |
-                            ItemDescription::TYPE_CLOAK;
-                        switch(iptr->type & )
+                        size_t eqi = this->level.getEquipmentSlotIdx(*iptr);
+                        if(this->level.pc_equipment[eqi])
+                        {
+                            this->level.pc_carry[d - 1] = this->level.pc_equipment[eqi];
+                        }
+                        else
+                        {
+                            this->level.pc_carry[d - 1] = nullptr;
+                        }
+                        this->level.pc_equipment[eqi] = iptr;
+                        break;
                     }
                     else
                     {
-                        NC_PRINT("Slot is empty. Enter slot idx to equip (0-9), ESC to cancel:")
+                        NC_PRINT("Slot is empty. Enter slot idx to equip (0-9), ESC to cancel:");
                     }
                 }
                 else break;
             }
+            NC_PRINT(" ");
             break;
         }
         case ACTION_CMD_UNWEAR:
         {
             this->inv_win.showEquipment();
+            this->inv_win.overwrite();
             NC_PRINT("Enter slot to uneqip (a-l), ESC to cancel:");
 
-            int c;
-            uint8_t d;
-            do
+            for(;;)
             {
-                c = getch();
+                int c;
+                uint8_t d;
+                do
+                {
+                    c = getch();
+                }
+                while(!(d = UserInput::checkEquipSlot(c)) && !UserInput::checkEscape(c));
+                if(d)
+                {
+                    if(Item* iptr = this->level.pc_equipment[d - 1]; iptr)
+                    {
+                        size_t cri = this->level.getOpenCarrySlot();
+                        if(cri < this->level.pc_carry.size())
+                        {
+                            this->level.pc_carry[cri] = iptr;
+                        }
+                        else
+                        {
+                            this->level.handleItemDrop(*iptr);
+                        }
+                        this->level.pc_equipment[d - 1] = nullptr;
+                        break;
+                    }
+                    else
+                    {
+                        NC_PRINT("Slot is empty. Enter slot idx to equip (0-9), ESC to cancel:");
+                    }
+                }
+                else break;
             }
-            while(!(d = UserInput::checkCarrySlot(c)) && !UserInput::checkEscape(c));
-            if(d)
-            {
-
-            }
+            NC_PRINT(" ");
             break;
         }
         case ACTION_CMD_DROP:
         {
-            
+            this->inv_win.showInventory();
+            this->inv_win.overwrite();
+            NC_PRINT("Enter slot idx to drop (0-9), ESC to cancel:");
+
+            for(;;)
+            {
+                int c;
+                uint8_t d;
+                do
+                {
+                    c = getch();
+                }
+                while(!(d = UserInput::checkCarrySlot(c)) && !UserInput::checkEscape(c));
+                if(d)
+                {
+                    if(Item* iptr = this->level.pc_carry[d - 1]; iptr)
+                    {
+                        this->level.handleItemDrop(*iptr);
+                        this->level.pc_carry[d - 1] = nullptr;
+                        this->map_win.onRefresh(true);  // rerender to show dropped items
+                        break;
+                    }
+                    else
+                    {
+                        NC_PRINT("Slot is empty. Enter slot idx to drop (0-9), ESC to cancel:");
+                    }
+                }
+                else break;
+            }
+            NC_PRINT(" ");
             break;
         }
         case ACTION_CMD_EXPUNGE:
         {
-            
+            this->inv_win.showInventory();
+            this->inv_win.overwrite();
+            NC_PRINT("Enter slot idx to expunge (0-9), ESC to cancel:");
+
+            for(;;)
+            {
+                int c;
+                uint8_t d;
+                do
+                {
+                    c = getch();
+                }
+                while(!(d = UserInput::checkCarrySlot(c)) && !UserInput::checkEscape(c));
+                if(d)
+                {
+                    if(Item* iptr = this->level.pc_carry[d - 1]; iptr)
+                    {
+                        this->level.handleItemDelete(d - 1);
+                        break;
+                    }
+                    else
+                    {
+                        NC_PRINT("Slot is empty. Enter slot idx to expunge (0-9), ESC to cancel:");
+                    }
+                }
+                else break;
+            }
+            NC_PRINT(" ");
             break;
         }
         case ACTION_CMD_INVENTORY:
         {
             this->inv_win.showInventory();
+            this->inv_win.overwrite();
             while(!UserInput::checkEscape(getch()));
             break;
         }
         case ACTION_CMD_EQUIPMENT:
         {
             this->inv_win.showEquipment();
+            this->inv_win.overwrite();
             while(!UserInput::checkEscape(getch()));
             break;
         }
         case ACTION_CMD_INSPECT:
         {
-            
+            this->inv_win.showInventory();
+            this->inv_win.overwrite();
+            NC_PRINT("Enter slot idx to display (0-9), ESC to cancel:");
+
+            for(;;)
+            {
+                int c;
+                uint8_t d;
+                do
+                {
+                    c = getch();
+                }
+                while(!(d = UserInput::checkCarrySlot(c)) && !UserInput::checkEscape(c));
+                if(d)
+                {
+                    if(Item* iptr = this->level.pc_carry[d - 1]; iptr)
+                    {
+                        NC_PRINT("[%s]", iptr->name.data());
+                        this->inv_win.showDescription(iptr);
+                        while(!UserInput::checkEscape(getch()));
+                        break;
+                    }
+                    else
+                    {
+                        NC_PRINT("Slot is empty. Enter slot idx to display (0-9), ESC to cancel:");
+                    }
+                }
+                else break;
+            }
+            NC_PRINT(" ");
             break;
         }
         case ACTION_CMD_MLIST:
         {
-            
+            // too lazy to reimplement
             break;
         }
         case ACTION_CMD_LOOK:
         {
-            
+            this->level.pc.state.target_pos = this->level.pc.state.pos;
+            this->state.is_goto_ctrl = true;
+            NC_PRINT("Select monster and press \'t\' to display, ESC to cancel");
+            mvwaddch(this->map_win.win, this->level.pc.state.pos.y, this->level.pc.state.pos.x, '*');
+            this->map_win.refresh();
+
+            int c;
+            uint8_t d;
+            for(;;)
+            {
+                c = getch();
+                if(UserInput::checkEscape(c)) break;
+                else
+                if((d = UserInput::checkMoveDir(c)))
+                {
+                    bool x;
+                    this->iterate_pc_cmd(d, x);
+                    this->map_win.refresh();
+                }
+                else
+                if(c == 't')
+                {
+                    Entity* e = DungeonLevel::accessGridElem(this->level.entity_map, this->level.pc.state.target_pos);
+                    if(e)
+                    {
+                        NC_PRINT("[%s]", e->config.name.data());
+                        this->inv_win.showDescription(e);
+                        this->inv_win.overwrite();
+                        while(!UserInput::checkEscape(getch()));
+                        break;
+                    }
+                    else
+                    {
+                        NC_PRINT("No monster to target - press \'t\' to display, ESC to cancel");
+                    }
+                }
+            }
+
+            this->state.is_goto_ctrl = false;
+            this->map_win.onRefresh(true);
+            NC_PRINT(" ");
             break;
         }
         case ACTION_CMD_GOTO:
         {
-            
+            // too lazy to reimplement
             break;
         }
     }
+
+    return 0;
 }
 
 int GameState::handle_mlist_cmd(int mlist_cmd)
@@ -1307,7 +1329,7 @@ bool GameState::initializeEntities()
     #define PC_POS this->level.pc.state.pos
     #define TERRAIN_MAP this->level.map
     #define ENTITY_MAP this->level.entity_map
-    #define ITEM_MAP this->level.item_idx_map
+    #define ITEM_MAP this->level.item_map
 
      this->level.pc.print(FileDebug::get());
      FileDebug::get() << "\n\n";
@@ -1393,6 +1415,9 @@ bool GameState::initializeEntities()
     std::uniform_int_distribution<size_t>
         item_desc_idx_distribution{ 0, this->item_desc.size() - 1 };
 
+    std::vector<Item*> items_buff;
+    items_buff.reserve(num_items);
+
     for(size_t i = 0; i < num_items;)
     {
         ItemDescription& idesc = this->item_desc[item_desc_idx_distribution(this->state.rgen)];
@@ -1403,14 +1428,14 @@ bool GameState::initializeEntities()
         const uint8_t rr = rarity_required_distribution(this->state.rgen);
         if(ItemDescription::Rarity(idesc) <= rr) continue;
 
-        this->level.items.emplace_back(std::make_shared<Item>(idesc, this->state.rgen));
+        items_buff.push_back(new Item(idesc, this->state.rgen));
 
         if(ItemDescription::Artifact(idesc))
         {
             this->artifact_availability[&idesc] = false;
         }
 
-        this->level.items.back()->print(FileDebug::get());
+        items_buff.back()->print(FileDebug::get());
         FileDebug::get() << "\n\n";
 
         i++;
@@ -1432,7 +1457,7 @@ bool GameState::initializeEntities()
             trav -= (TERRAIN_MAP.terrain[y][x].type && !ITEM_MAP[y][x]);
         }
 
-        ITEM_MAP[y][x] = static_cast<uint32_t>(i) + 1;
+        ITEM_MAP[y][x] = items_buff[i];
 
         // PRINT_DEBUG( "Initialized monster {%d, %d, (%d, %d), %#x}\n",
         //     me->speed, me->priority, x, y, me->md.stats );
@@ -1457,7 +1482,6 @@ bool GameState::initializeEntities()
 void GameState::run(const std::atomic<bool>& r)
 {
     int status = 0;
-    // InputCommand ic = zeroed_input();
     bool pc_nop = false;
 
     this->state.active_win = GWIN_MAP;
@@ -1477,6 +1501,7 @@ void GameState::run(const std::atomic<bool>& r)
             (status = this->iterate_next_pc()) ) break;  // game done when iterate_next_pc() returns non-zero
 
         NC_PRINT2("HEALTH: %d", this->level.pc.state.health)
+        NC_PRINT3("SPEED: %d", this->level.getPCSpeed())
 
     // 3. accept user input
         int c = getch();
@@ -1508,25 +1533,10 @@ void GameState::run(const std::atomic<bool>& r)
         else
         if((d = UserInput::checkAction(c)))
         {
-            switch(d)
-            {
-                case ACTION_CMD_EQUIPMENT :
-                {
-                    NC_PRINT("ACTION_CMD_EQUIPMENT");
-                    this->inv_win.showEquipment();
-                    this->state.displayed_win = GWIN_NONE;
-                    pc_nop = true;
-                    break;
-                }
-                case ACTION_CMD_INVENTORY :
-                {
-                    NC_PRINT("ACTION_CMD_INVENTORY");
-                    this->inv_win.showInventory();
-                    this->state.displayed_win = GWIN_NONE;
-                    pc_nop = true;
-                    break;
-                }
-            }
+            this->handle_action_cmd(d);
+            // need to redraw map after item drop(s)
+            this->state.displayed_win = GWIN_NONE;
+            pc_nop = true;
         }
         else
         {

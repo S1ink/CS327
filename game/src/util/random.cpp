@@ -50,5 +50,5 @@ inline int32_t RollableNum::rollArg(RollNumArgT n)
 
 std::ostream& operator<<(std::ostream& out, const RollableNum& rn)
 {
-    return out << rn.base << '+' << rn.distribution.b() << 'd' << rn.rolls;
+    return out << rn.base << '+' << rn.rolls << 'd' << rn.distribution.b();
 }

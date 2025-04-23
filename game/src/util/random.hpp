@@ -86,6 +86,8 @@ public:
 
     inline bool isStatic() const { return this->rolls == 0; }
     inline int32_t getBase() const { return this->base; }
+    inline uint32_t getRolls() const { return this->rolls; }
+    inline uint32_t getSides() const { return this->distribution.b(); }
 
 protected:
     int32_t base;

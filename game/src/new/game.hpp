@@ -51,6 +51,7 @@ protected:
     }
 
     bool initializeEntities();
+    void handleItemPickup();
 
     int overwrite_changes();
 

@@ -1,5 +1,6 @@
 #include "dungeon.hpp"
 
+#include "status.h"
 #include "util/debug.hpp"
 #include "util/math.hpp"
 #include "util/heap.h"
@@ -249,9 +250,13 @@ int DungeonLevel::handlePCMove(Vec2u8 to, bool is_goto)
         Entity*& slot = DungeonLevel::accessGridElem(this->entity_map, to);
         if(slot)   // previous entity
         {
-            slot->state.health -= this->rollPCDamage();
+            int32_t a = this->rollPCDamage();
+            slot->state.health -= a;
+
             if(slot->state.health <= 0)
             {
+                NC_PRINT("Dealt %d damage to [%s (dead)]", a, slot->config.name.data());
+
                 this->npcs_remaining--;
                 if(slot->config.is_boss) this->win_lose = 1;
 
@@ -259,19 +264,16 @@ int DungeonLevel::handlePCMove(Vec2u8 to, bool is_goto)
                 this->pc.state.pos = to;
                 prev_slot = nullptr;
             }
+            else
+            {
+                NC_PRINT("Dealt %d damage to [%s (H: %d health)]", a, slot->config.name.data(), slot->state.health);
+            }
         }
         else
         {
             slot = &this->pc;
             this->pc.state.pos = to;
             prev_slot = nullptr;
-        }
-
-        Item*& iptr = DungeonLevel::accessGridElem(this->item_map, this->pc.state.pos);
-        if(size_t oi = this->getOpenCarrySlot(); oi < this->pc_carry.size() && iptr)
-        {
-            this->pc_carry[oi] = iptr;
-            iptr = nullptr;
         }
 
         // PRINT_DEBUG("UPDATING TERRAIN %sCOSTS\n", flags.floor_updated ? "(and floor) " : "");

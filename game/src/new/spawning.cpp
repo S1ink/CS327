@@ -432,11 +432,9 @@ Item::Item(Item&& i) :
     value{ i.value },
     type{ i.type },
     color{ i.color },
-    artifact_entry{ i.artifact_entry },
-    stack_next{ i.stack_next }
+    artifact_entry{ i.artifact_entry }
 {
     i.artifact_entry = nullptr;
-    i.stack_next = nullptr;
 }
 
 Item& Item::operator=(Item&& i)
@@ -454,10 +452,8 @@ Item& Item::operator=(Item&& i)
     this->type = i.type;
     this->color = i.color;
     this->artifact_entry = i.artifact_entry;
-    this->stack_next = i.stack_next;
 
     i.artifact_entry = nullptr;
-    i.stack_next = nullptr;
 
     return *this;
 }
@@ -499,7 +495,8 @@ void Item::print(std::ostream& out)
         << "\nSpeed : " << this->speed
         << "\nSpecial : " << this->special
         << "\nValue : " << this->value
-        << "\nArtifact Entry : 0x" << std::hex << this->artifact_entry << std::dec;
+        << "\nArtifact Entry : 0x" << std::hex << this->artifact_entry << std::dec
+        << "\nAttacl : " << this->attack_damage;
 
     out << "\nTypes :";
     for(size_t i = 0; i < sizeof(IDESC_TYPE_STRINGS) / sizeof(*IDESC_TYPE_STRINGS); i++)

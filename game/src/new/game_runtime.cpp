@@ -1,25 +1,7 @@
 #include "game.hpp"
 
+#include "status.h"
 #include "util/debug.hpp"
-
-
-#define NC_PRINT(...) \
-    move(0, 0); \
-    clrtoeol(); \
-    mvprintw(0, 0, __VA_ARGS__); \
-    refresh();
-
-#define NC_PRINT2(...) \
-    move((DUNGEON_Y_DIM + 1), 0); \
-    clrtoeol(); \
-    mvprintw((DUNGEON_Y_DIM + 1), 0, __VA_ARGS__); \
-    refresh();
-
-#define NC_PRINT3(...) \
-    move((DUNGEON_Y_DIM + 2), 0); \
-    clrtoeol(); \
-    mvprintw((DUNGEON_Y_DIM + 2), 0, __VA_ARGS__); \
-    refresh();
 
 
 void GameState::MapWindow::onPlayerMove(Vec2u8 a, Vec2u8 b)
@@ -366,9 +348,23 @@ void GameState::MListWindow::printEntry(const Entity& m, int line)
     wmove(this->win, line, 0);
     wclrtoeol(this->win);
 
+    if(m.isBoss())
+    {
+        mvwprintw(this->win, line, 0, "[");
+        wattron(this->win, COLOR_PAIR(COLOR_YELLOW));
+        wattron(this->win, A_BOLD);
+        wprintw(this->win, "%s", m.config.name.data());
+        wattroff(this->win, A_BOLD);
+        wattroff(this->win, COLOR_PAIR(COLOR_YELLOW));
+        wprintw(this->win, "] : ");
+    }
+    else
+    {
+        mvwprintw(this->win, line, 0, "[%s] : ", m.config.name.data());
+    }
+
     this->prox_gradient.printf(
-        this->win, line, 0, ci, "[%s] : %d %s, %d %s",
-        m.config.name.data(),
+        this->win, line, m.config.name.length() + 5, ci, "%d %s, %d %s",
         abs(dx),
         dx > 0 ? "West" : "East",
         abs(dy),
@@ -777,6 +773,21 @@ uint8_t UserInput::checkCarrySlot(int in)
 }
 
 
+
+void GameState::handleItemPickup()
+{
+    Item*& iptr = DungeonLevel::accessGridElem(this->level.item_map, this->level.pc.state.pos);
+    if(size_t oi = this->level.getOpenCarrySlot(); oi < this->level.pc_carry.size() && iptr)
+    {
+        this->level.pc_carry[oi] = iptr;
+        if(iptr->artifact_entry)
+        {
+            this->artifact_availability[iptr->artifact_entry] = true;
+        }
+        iptr = nullptr;
+    }
+}
+
 int GameState::overwrite_changes()
 {
     if(this->state.active_win != this->state.displayed_win)
@@ -897,6 +908,7 @@ int GameState::iterate_pc_cmd(int move_cmd, bool& was_nop)
                 from = pc.state.pos;
                 if( this->level.handlePCMove(static_cast<Vec2i8>(pc.state.pos) + d, false) )
                 {
+                    this->handleItemPickup();
                     this->map_win.onPlayerMove(from, pc.state.pos);
                     was_nop = false;
                 }
@@ -913,6 +925,7 @@ int GameState::iterate_pc_cmd(int move_cmd, bool& was_nop)
 
                 this->level.reset();
                 this->initDungeonRandom();  // TODO: handle unique item resets
+                NC_PRINT(" ");
 
                 this->map_win.changeLevel(this->level);
                 this->mlist_win.changeLevel(this->level);
@@ -926,6 +939,7 @@ int GameState::iterate_pc_cmd(int move_cmd, bool& was_nop)
             {
                 Vec2u8 from = pc.state.pos;
                 this->level.handlePCMove(pc.state.target_pos, true);
+                this->handleItemPickup();
                 this->map_win.onPlayerMove(from, pc.state.pos);
                 this->state.is_goto_ctrl = false;
             }
@@ -944,6 +958,7 @@ int GameState::iterate_pc_cmd(int move_cmd, bool& was_nop)
                 Vec2u8 from = pc.state.pos;
                 if( this->level.handlePCMove(this->level.map.randomRoomFloorPos(this->state.rgen), true) )
                 {
+                    this->handleItemPickup();
                     this->map_win.onPlayerMove(from, pc.state.pos);
                 }
                 this->state.is_goto_ctrl = false;
@@ -1191,7 +1206,13 @@ int GameState::handle_action_cmd(int action_cmd)
                     Entity* e = DungeonLevel::accessGridElem(this->level.entity_map, this->level.pc.state.target_pos);
                     if(e)
                     {
-                        NC_PRINT("[%s]", e->config.name.data());
+                        NC_PRINT(
+                            "[%s (H: %d, A: %d+%ud%u)]",
+                            e->config.name.data(),
+                            e->state.health,
+                            e->config.attack_damage.getBase(),
+                            e->config.attack_damage.getRolls(),
+                            e->config.attack_damage.getSides() );
                         this->inv_win.showDescription(e);
                         this->inv_win.overwrite();
                         while(!UserInput::checkEscape(getch()));

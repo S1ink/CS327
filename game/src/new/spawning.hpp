@@ -101,6 +101,7 @@ public:
     inline bool isAlive() const { return this->state.health > 0; }
     inline bool isDead() const { return !this->isAlive(); }
     inline bool isPC() const { return this->config.is_pc; }
+    inline bool isBoss() const { return this->config.is_boss; }
     inline char getChar() const { return this->config.symbol; }
     short getColor() const;
 
@@ -252,11 +253,11 @@ protected:
     Item& operator=(const Item&) = delete;
 
 public:
-    struct StackNode
-    {
-        Item* item{ nullptr };
-        StackNode* next{ nullptr };
-    };
+    // struct StackNode
+    // {
+    //     Item* item{ nullptr };
+    //     StackNode* next{ nullptr };
+    // };
 
 public:
     std::string_view name{}, desc{};
@@ -265,14 +266,14 @@ public:
     uint32_t dodge{ 0 };
     uint32_t defense{ 0 };
     uint32_t weight{ 0 };
-    uint32_t speed{ 0 };
+    int32_t speed{ 0 };
     uint32_t special{ 0 };
     uint32_t value{ 0 };
     uint32_t type{ 0 };
     uint8_t color{ 0 };
 
     const ItemDescription* artifact_entry{ nullptr };
-    Item* stack_next{ nullptr };
+    // Item* stack_next{ nullptr };
 
 };
 

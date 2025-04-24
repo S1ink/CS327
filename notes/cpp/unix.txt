@@ -1,0 +1,3 @@
+readn --> keep reading in the case of system interrupts
+writen --> keep writing in the case of system interrupts
+readline --> stop reading at the end of a buffer or at a newline

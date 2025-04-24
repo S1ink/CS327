@@ -8,3 +8,5 @@ shape
 decorator
 dynamic_lib
 static_lib
+colatz
+static

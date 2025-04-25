@@ -2,6 +2,62 @@
 #include "util/math.hpp"
 #include "util/grid.hpp"
 
+#include <vector>
+
+
+class FlipFluidSim
+{
+public:
+    using FloatT = float;
+
+    enum
+    {
+        CELLTYPE_FLUID = 0,
+        CELLTYPE_AIR,
+        CELLTYPE_SOLID
+    };
+
+    struct FluidCell
+    {
+        FloatT u;
+        FloatT v;
+        FloatT du;
+        FloatT dv;
+        FloatT prev_u;
+        FloatT prev_v;
+        FloatT p;
+        FloatT s;
+        FloatT density;
+
+        uint8_t type;
+    };
+
+    struct ParticleCell
+    {
+        uint32_t n_particles;
+        uint32_t first_idx;
+    };
+
+    struct Particle
+    {
+        Eigen::Vector2<FloatT> pos;
+        Eigen::Vector2<FloatT> vel;
+
+        size_t cell_id;
+    };
+
+protected:
+    FloatT density;
+    FloatT particle_rad;
+    FloatT fcell_spacing;
+    FloatT inverse_fcell_spacing;
+    FloatT inverse_pcell_spacing;
+
+    std::vector<Particle> particles;
+    GridBase<FluidCell> fluid_cells;
+    GridBase<ParticleCell> particle_cells;
+
+};
 
 int main(int argc, char** argv)
 {

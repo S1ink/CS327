@@ -61,6 +61,35 @@ namespace GridUtil
         return gridIdx<X_Major, IntT>(loc.x(), loc.y(), size);
     }
 
+    /** Same as gridIdx() but clamps input x,y to be inside the given dimensions */
+    template<bool X_Major = false, typename IntT = int>
+    inline static size_t clampedGridIdx(
+        IntT x,
+        IntT y,
+        const Eigen::Vector2<IntT>& size )
+    {
+        x = (x < 0) ? 0 : (x >= size.x()) ? (size.x() - 1) : x;
+        y = (y < 0) ? 0 : (y >= size.y()) ? (size.y() - 1) : y;
+
+        if constexpr(X_Major)
+        {
+            // see gridIdx<>()
+            return static_cast<size_t>(x) * size.y() + y;
+        }
+        else
+        {
+            // see gridIdx<>()
+            return static_cast<size_t>(y) * size.x() + x;
+        }
+    }
+    template<bool X_Major = false, typename IntT = int>
+    inline static size_t clampedGridIdx(
+        const Eigen::Vector2<IntT>& loc,
+        const Eigen::Vector2<IntT>& size )
+    {
+        return clampedGridIdx<X_Major, IntT>(loc.x(), loc.y(), size);
+    }
+
     /** Get the 2d location corresponding to a raw buffer idx for the provded grid size (templated on major-order) */
     template<bool X_Major = false, typename IntT = int>
     inline static Eigen::Vector2<IntT> gridLoc(
@@ -145,8 +174,8 @@ public:
     static constexpr bool
         X_Major_Order = X_Major;
     static constexpr size_t
-        Cell_Size = sizeof(Cell_T),
-        Max_Alloc_NCells = Max_Alloc_Bytes / Cell_Size;
+        Bytes_Per_Cell = sizeof(Cell_T),
+        Max_Alloc_NCells = Max_Alloc_Bytes / Bytes_Per_Cell;
 
     template<typename T>
     constexpr inline static const IntT literalI(T v) { return static_cast<IntT>(v); }
@@ -169,6 +198,23 @@ public:
         const Eigen::Vector2<IT>& size )
     {
         return GridUtil::gridIdx<This_T::X_Major_Order, IT>(loc, size);
+    }
+
+    template<typename IT = IntT>
+    inline static int64_t clampedGridIdx(
+        const IT x,
+        const IT y,
+        const Eigen::Vector2<IT>& size )
+    {
+        return GridUtil::clampedGridIdx<This_T::X_Major_Order, IT>(x, y, size);
+    }
+
+    template<typename IT = IntT>
+    inline static int64_t clampedGridIdx(
+        const Eigen::Vector2<IT>& loc,
+        const Eigen::Vector2<IT>& size )
+    {
+        return GridUtil::clampedGridIdx<This_T::X_Major_Order, IT>(loc, size);
     }
 
     template<typename IT = IntT>
@@ -204,7 +250,7 @@ public:
         {
             const int64_t a = this->area();
             this->grid = new Cell_T[a];
-            memcpy(this->grid, g.grid, a * Cell_Size);
+            memcpy(this->grid, g.grid, a * Bytes_Per_Cell);
         }
     }
     inline GridBase(GridBase&& g) :
@@ -230,7 +276,7 @@ public:
         {
             const int64_t a = this->area();
             this->grid = new Cell_T[a];
-            memcpy(this->grid, g.grid, a * Cell_Size);
+            memcpy(this->grid, g.grid, a * Bytes_Per_Cell);
         }
     }
     inline GridBase& operator=(GridBase&& g)
@@ -276,6 +322,10 @@ public:
     inline const int64_t cellIdxOf(FloatT x, FloatT y) const
     {
         return This_T::gridIdx<IntT>(this->boundingLoc(x, y), this->grid_size);
+    }
+    inline const int64_t clampedCellIdxOf(FloatT x, FloatT y) const
+    {
+        return This_T::clampedGridIdx<IntT>(this->boundingLoc(x, y), this->grid_size);
     }
 
 public:
@@ -329,6 +379,15 @@ public:
         return this->at(v);
     }
 
+    inline Cell_T* begin()
+    {
+        return this->grid;
+    }
+    inline Cell_T* end()
+    {
+        return this->grid + static_cast<size_t>(this->area()) * Bytes_Per_Cell;
+    }
+
 public:
     void reset(
         FloatT resolution = literalF(1),
@@ -376,7 +435,7 @@ public:
             Cell_T* _grid = new Cell_T[_area];
             if constexpr(NeedZeroed)
             {
-                memset(_grid, 0x00, _area * This_T::Cell_Size);
+                memset(_grid, 0x00, _area * This_T::Bytes_Per_Cell);
             }
 
             // by how many grid cells did the origin shift

@@ -3,6 +3,7 @@
 #include <cmath>
 #include <cstdint>
 // #include <limits>
+#include <algorithm>
 #include <type_traits>
 
 #include <Eigen/Core>
@@ -11,38 +12,100 @@
 /** Generic grid helpers */
 namespace GridUtil
 {
+    enum
+    {
+        Y_MAJOR_ORDER,
+        X_MAJOR_ORDER,
+    };
+    enum
+    {
+        GRID_STANDARD = 0,
+        GRID_USING_OFFSET = 1 << 0,
+        GRID_USING_VECRES = 1 << 1
+    };
+
+    template<int GridAttributes>
+    struct traits
+    {
+        static constexpr bool Using_Offset = (GridAttributes & GRID_USING_OFFSET);
+        static constexpr bool Using_VecRes = (GridAttributes & GRID_USING_VECRES);
+    };
+
+    template<typename T>
+    using Vec2 = Eigen::Vector2<T>;
+    template<int Dim, typename T>
+    using Vec = Eigen::Vector<T, Dim>;
+
+
+    template<typename T>
+    inline static T clamp(T v, T min, T max)
+    {
+        return (v < min) ? min : ((v > max) ? max : v);
+    }
+
+    template<typename T>
+    inline static Vec2<T> clamp(
+        const Vec2<T>& v,
+        const Vec2<T>& min,
+        const Vec2<T>& max )
+    {
+        return v.cwiseMin(max).cwiseMax(min);
+    }
+
+
+    /** Align a point to a box grid of the given resolution.
+     * Result may be negative if lower than current offset. */
+    template<typename IntT = int, typename FloatT = float>
+    inline static Vec2<IntT> gridAlign(
+        FloatT x,
+        FloatT y,
+        FloatT res )
+    {
+        return Vec2<IntT>{
+            static_cast<IntT>( std::floor(x / res) ),
+            static_cast<IntT>( std::floor(y / res) ) };
+    }
+
+    template<typename IntT = int, typename FloatT = float, int Dim = 2>
+    inline static Vec2<IntT> gridAlign(
+        const Vec<Dim, FloatT>& pt,
+        FloatT res )
+    {
+        return gridAlign<IntT, FloatT>(pt.x(), pt.y(), res);
+    }
+
     /** Align a point to a box grid of the given resolution and offset origin.
      * Result may be negative if lower than current offset. */
     template<typename IntT = int, typename FloatT = float>
-    inline static Eigen::Vector2<IntT> gridAlign(
+    inline static Vec2<IntT> gridAlign(
         FloatT x,
         FloatT y,
-        const Eigen::Vector2<FloatT>& off,
+        const Vec2<FloatT>& off,
         FloatT res )
     {
         // always floor since grid cells are indexed by their "bottom left" corner's raw position
-        return Eigen::Vector2<IntT>{
+        return Vec2<IntT>{
             static_cast<IntT>( std::floor((x - off.x()) / res) ),
             static_cast<IntT>( std::floor((y - off.y()) / res) ) };
     }
 
-    template<typename IntT = int, typename FloatT = float>
-    inline static Eigen::Vector2<IntT> gridAlign(
-        const Eigen::Vector4<FloatT>& pt,
-        const Eigen::Vector2<FloatT>& off,
+    template<typename IntT = int, typename FloatT = float, int Dim = 2>
+    inline static Vec2<IntT> gridAlign(
+        const Vec<Dim, FloatT>& pt,
+        const Vec2<FloatT>& off,
         FloatT res )
     {
         return gridAlign<IntT, FloatT>(pt.x(), pt.y(), off, res);
     }
 
     /** Get a raw buffer idx from a 2d index and buffer size (templated on major-order) */
-    template<bool X_Major = false, typename IntT = int>
+    template<int Ordering = Y_MAJOR_ORDER, typename IntT = int>
     inline static int64_t gridIdx(
         const IntT x,
         const IntT y,
-        const Eigen::Vector2<IntT>& size )
+        const Vec2<IntT>& size )
     {
-        if constexpr(X_Major)
+        if constexpr(Ordering == X_MAJOR_ORDER)
         {
             // x-major = "contiguous blocks along [parallel to] y-axis" --> idx = (x * ymax) + y
             return static_cast<int64_t>(x) * size.y() + y;
@@ -53,25 +116,25 @@ namespace GridUtil
             return static_cast<int64_t>(y) * size.x() + x;
         }
     }
-    template<bool X_Major = false, typename IntT = int>
+    template<int Ordering = Y_MAJOR_ORDER, typename IntT = int>
     inline static int64_t gridIdx(
-        const Eigen::Vector2<IntT>& loc,
-        const Eigen::Vector2<IntT>& size )
+        const Vec2<IntT>& loc,
+        const Vec2<IntT>& size )
     {
-        return gridIdx<X_Major, IntT>(loc.x(), loc.y(), size);
+        return gridIdx<Ordering, IntT>(loc.x(), loc.y(), size);
     }
 
     /** Same as gridIdx() but clamps input x,y to be inside the given dimensions */
-    template<bool X_Major = false, typename IntT = int>
+    template<int Ordering = Y_MAJOR_ORDER, typename IntT = int>
     inline static size_t clampedGridIdx(
         IntT x,
         IntT y,
-        const Eigen::Vector2<IntT>& size )
+        const Vec2<IntT>& size )
     {
         x = (x < 0) ? 0 : (x >= size.x()) ? (size.x() - 1) : x;
         y = (y < 0) ? 0 : (y >= size.y()) ? (size.y() - 1) : y;
 
-        if constexpr(X_Major)
+        if constexpr(Ordering == X_MAJOR_ORDER)
         {
             // see gridIdx<>()
             return static_cast<size_t>(x) * size.y() + y;
@@ -82,46 +145,50 @@ namespace GridUtil
             return static_cast<size_t>(y) * size.x() + x;
         }
     }
-    template<bool X_Major = false, typename IntT = int>
+    template<int Ordering = Y_MAJOR_ORDER, typename IntT = int>
     inline static size_t clampedGridIdx(
-        const Eigen::Vector2<IntT>& loc,
-        const Eigen::Vector2<IntT>& size )
+        const Vec2<IntT>& loc,
+        const Vec2<IntT>& size )
     {
-        return clampedGridIdx<X_Major, IntT>(loc.x(), loc.y(), size);
+        return clampedGridIdx<Ordering, IntT>(loc.x(), loc.y(), size);
     }
 
     /** Get the 2d location corresponding to a raw buffer idx for the provded grid size (templated on major-order) */
-    template<bool X_Major = false, typename IntT = int>
-    inline static Eigen::Vector2<IntT> gridLoc(
+    template<int Ordering = Y_MAJOR_ORDER, typename IntT = int>
+    inline static Vec2<IntT> gridLoc(
         const size_t idx,
-        const Eigen::Vector2<IntT>& size )
+        const Vec2<IntT>& size )
     {
-        if constexpr(X_Major)
+        if constexpr(Ordering == X_MAJOR_ORDER)
         {
             // x-major = "contiguous blocks along [parallel to] y-axis" --> x = idx / ymax, y = idx % ymax
-            return Eigen::Vector2<IntT>{
+            return Vec2<IntT>{
                 static_cast<IntT>(idx / size.y()),
                 static_cast<IntT>(idx % size.y()) };
         }
         else
         {
             // y-major = "contiguous blocks along [parallel to] x-axis" --> x = idx % xmax, y = idx / xmax
-            return Eigen::Vector2<IntT>{
+            return Vec2<IntT>{
                 static_cast<IntT>(idx % size.x()),
                 static_cast<IntT>(idx / size.x()) };
         }
     }
 
     /** Copy a 2d windows of elemens - expects element types to be POD (templated on major-order) */
-    template<typename T, bool X_Major = false, typename IntT = int, size_t T_Bytes = sizeof(T)>
+    template<
+        typename T,
+        int Ordering = Y_MAJOR_ORDER,
+        typename IntT = int,
+        size_t T_Bytes = sizeof(T) >
     static void memcpyWindow(
         T* dest,
         const T* src,
-        const Eigen::Vector2<IntT>& dest_size,
-        const Eigen::Vector2<IntT>& src_size,
-        const Eigen::Vector2<IntT>& diff )
+        const Vec2<IntT>& dest_size,
+        const Vec2<IntT>& src_size,
+        const Vec2<IntT>& diff )
     {
-        if constexpr(X_Major)
+        if constexpr(Ordering == X_MAJOR_ORDER)
         {
             // iterate through source "rows" of contiguous memory (along y -- for each x)
             for(int64_t _x = 0; _x < src_size.x(); _x++)
@@ -146,6 +213,445 @@ namespace GridUtil
     }
 
 };
+
+
+
+namespace agu_base
+{
+    struct Empty{};
+
+    template<typename T>
+    struct Offset{ Eigen::Vector2<T> grid_off{ 0, 0 }; };
+};
+
+template<
+    typename DimInt_T = int,
+    typename DimFloat_T = float,
+    int Ordering = GridUtil::Y_MAJOR_ORDER,
+    int Attributes = GridUtil::GRID_STANDARD >
+class AbstractGridUtil :
+    protected std::conditional<
+        (Attributes & GridUtil::GRID_USING_OFFSET),
+        agu_base::Offset<DimFloat_T>, agu_base::Empty >::type
+{
+    static_assert(std::is_integral<DimInt_T>::value);
+    static_assert(std::is_floating_point<DimFloat_T>::value);
+
+public:
+    using DimIntT = DimInt_T;
+    using DimFloatT = DimFloat_T;
+    using ThisT = AbstractGridUtil<DimIntT, DimFloatT, Ordering, Attributes>;
+
+    using IdxT = int64_t;
+    using UIdxT = size_t;
+
+    template<typename T>
+    using Vec2 = GridUtil::Vec2<T>;
+    template<int Dim, typename T>
+    using Vec = GridUtil::Vec<Dim, T>;
+
+    using DimVec2i = Vec2<DimIntT>;
+    using DimVec2f = Vec2<DimFloatT>;
+
+    using SpacingT = typename std::conditional<
+                            (Attributes & GridUtil::GRID_USING_VECRES),
+                            DimVec2f, DimFloatT >::type;
+    using SpacingArgT = typename std::conditional<
+                            (sizeof(SpacingT) >= sizeof(uintptr_t)),
+                            const SpacingT&,
+                            SpacingT >::type;
+
+public:
+    inline AbstractGridUtil(const DimVec2i& dim, SpacingArgT res)
+        { this->initialize(dim, res); }
+    inline AbstractGridUtil(const DimVec2f& size, SpacingArgT res)
+        { this->initialize(size, res); }
+    inline AbstractGridUtil(const DimVec2i& dim, SpacingArgT res, const DimVec2f& off)
+        { this->initialize(dim, res, off); }
+    inline AbstractGridUtil(const DimVec2f& size, SpacingArgT res, const DimVec2f& off)
+        { this->initialize(size, res, off); }
+
+public:
+    void initialize(const DimVec2i& dim, SpacingArgT res);
+    void initialize(const DimVec2f& size, SpacingArgT res);
+    void initialize(const DimVec2i& dim, SpacingArgT res, const DimVec2f& off);
+    void initialize(const DimVec2f& size, SpacingArgT res, const DimVec2f& off);
+
+    void resize(const DimVec2i& dim);
+    void resize(const DimVec2f& size);
+
+    // TODO: resize and realloc
+
+public:
+    inline const DimVec2i& dim() const { return this->grid_dim; }
+    inline const DimVec2f& size() const { return this->grid_size; }
+    inline const SpacingArgT cellSize() const { return this->grid_res; }
+    inline const SpacingArgT invCellSize() const { return this->inv_grid_res; }
+    inline const UIdxT numCells() const { return static_cast<UIdxT>(this->grid_dim.prod()); }
+    inline const DimFloatT area() const { return this->grid_size.prod(); }
+    inline const DimVec2i minCell() const { return DimVec2i::Zero(); }
+    inline const DimVec2i maxCell() const { return this->grid_dim - DimVec2i::Ones(); }
+    const DimVec2f minBound() const;
+    inline const DimVec2f maxBound() const { return this->minBound() + this->grid_size; }
+
+public:
+    // Clamp the coordinates to the grid's bounding coordinates
+    template<typename T>
+    DimVec2f clampToBounds(T x, T y) const;
+    template<typename T>
+    inline DimVec2f clampToBounds(const Vec2<T>& p) const { return this->clampToBounds(p.x(), p.y()); }
+
+    // Clamp the coordinates to the grid's local (cell)
+    template<typename T>
+    DimVec2i clampToLocalBounds(T x, T y) const;
+    template<typename T>
+    inline DimVec2i clampToLocalBounds(const Vec2<T>& p) const { return this->clampToLocalBounds(p.x(), p.y()); }
+
+    // Get the cell which contains the provided (x, y) -- may be out of bounds of the grid
+    template<typename T>
+    DimVec2i align(T x, T y) const;
+    template<typename T, int Dim = 2>
+    inline DimVec2i align(const Vec<Dim, T>& p) const { return this->align(p.x(), p.y()); }
+
+    // Get the cell which contains the clamped coordinates of the provided (x, y)
+    template<typename T>
+    inline DimVec2i clampedAlign(T x, T y) const { return this->align(this->clampToBounds(x, y)); }
+    template<typename T, int Dim = 2>
+    inline DimVec2i clampedAlign(const Vec<Dim, T>& p) const { return this->clampedAlign(p.x(), p.y()); }
+
+    // Gets the index of the cell which contains the provided (x, y) -- may be out of bounds of the grid
+    template<typename T>
+    inline IdxT cellIdx(T x, T y) const { return this->localIdx(this->align(x, y)); }
+    template<typename T, int Dim = 2>
+    inline IdxT cellIdx(const Vec<Dim, T>& c) const { return this->cellIdx(c.x(), c.y()); }
+
+    // Gets the index of the cell which contains the clamped coordinates of the provided (x, y)
+    template<typename T>
+    inline UIdxT clampedCellIdx(T x, T y) const { return this->clampedLocalIdx(this->align(x, y)); }
+    template<typename T, int Dim = 2>
+    inline UIdxT clampedCellIdx(const Vec<Dim, T>& c) const { return this->clampedCellIdx(c.x(), c.y()); }
+
+    // Gets the index of the cell which contains the provided (x, y) in grid space -- may be out of bounds of the grid
+    template<typename T>
+    IdxT localIdx(T x, T y) const;
+    template<typename T, int Dim = 2>
+    inline IdxT localIdx(const Vec<Dim, T>& c) const { return this->localIdx(c.x(), c.y()); }
+
+    // Gets the index of the cell which contains the clamped coordinates of the provided (x, y) in grid space
+    template<typename T>
+    UIdxT clampedLocalIdx(T x, T y) const;
+    template<typename T, int Dim = 2>
+    inline UIdxT clampedLocalIdx(const Vec<Dim, T>& c) const { return this->clampedLocalIdx(c.x(), c.y()); }
+
+    // Gets the cell coordinates for the provided index
+    DimVec2i cellCoords(UIdxT idx) const;
+
+protected:
+    inline DimFloatT resX() const
+    {
+        if constexpr(Attributes & GridUtil::GRID_USING_VECRES) return this->grid_res.x();
+        else return this->grid_res;
+    }
+    inline DimFloatT resY() const
+    {
+        if constexpr(Attributes & GridUtil::GRID_USING_VECRES) return this->grid_res.y();
+        else return this->grid_res;
+    }
+    inline DimFloatT invResX() const
+    {
+        if constexpr(Attributes & GridUtil::GRID_USING_VECRES) return this->inv_grid_res.x();
+        else return this->inv_grid_res;
+    }
+    inline DimFloatT invResY() const
+    {
+        if constexpr(Attributes & GridUtil::GRID_USING_VECRES) return this->inv_grid_res.y();
+        else return this->inv_grid_res;
+    }
+
+protected:
+    DimVec2i grid_dim;
+    DimVec2f grid_size;
+    SpacingT grid_res, inv_grid_res;
+
+};
+
+
+
+template<
+    typename DimInt_T,
+    typename DimFloat_T,
+    int Ordering,
+    int Attributes >
+void AbstractGridUtil<DimInt_T, DimFloat_T, Ordering, Attributes>::initialize(
+    const DimVec2i& dim,
+    SpacingArgT res )
+{
+    this->grid_dim = dim;
+    this->grid_res = res;
+    if constexpr(Attributes & GridUtil::GRID_USING_VECRES)
+    {
+        this->grid_size = dim.cwiseProduct(res);
+        this->inv_grid_res = DimVec2f::Ones().cwiseQuotient(res);
+    }
+    else
+    {
+        this->grid_size = dim * res;
+        this->inv_grid_res = 1 / res;
+    }
+}
+
+template<
+    typename DimInt_T,
+    typename DimFloat_T,
+    int Ordering,
+    int Attributes >
+void AbstractGridUtil<DimInt_T, DimFloat_T, Ordering, Attributes>::initialize(
+    const DimVec2f& size,
+    SpacingArgT res )
+{
+    this->grid_res = res;
+    if constexpr(Attributes & GridUtil::GRID_USING_VECRES)
+    {
+        this->inv_grid_res = DimVec2f::Ones().cwiseQuotient(res);
+        this->grid_dim.x() = static_cast<DimIntT>(std::ceil(size.x() * this->inv_grid_res.x()));
+        this->grid_dim.y() = static_cast<DimIntT>(std::ceil(size.y() * this->inv_grid_res.y()));
+        this->grid_size = this->grid_dim.template cast<DimFloatT>().cwiseProduct(res);
+    }
+    else
+    {
+        this->inv_grid_res = 1 / res;
+        this->grid_dim.x() = static_cast<DimIntT>(std::ceil(size.x() * this->inv_grid_res));
+        this->grid_dim.y() = static_cast<DimIntT>(std::ceil(size.y() * this->inv_grid_res));
+        this->grid_size = this->grid_dim.template cast<DimFloatT>() * res;
+    }
+}
+
+template<
+    typename DimInt_T,
+    typename DimFloat_T,
+    int Ordering,
+    int Attributes >
+void AbstractGridUtil<DimInt_T, DimFloat_T, Ordering, Attributes>::initialize(
+    const DimVec2i& dim,
+    SpacingArgT res,
+    const DimVec2f& off )
+{
+    this->initialize(dim, res);
+    if constexpr(Attributes & GridUtil::GRID_USING_OFFSET)
+    {
+        this->grid_off = off;
+    }
+}
+
+template<
+    typename DimInt_T,
+    typename DimFloat_T,
+    int Ordering,
+    int Attributes >
+void AbstractGridUtil<DimInt_T, DimFloat_T, Ordering, Attributes>::initialize(
+    const DimVec2f& size,
+    SpacingArgT res,
+    const DimVec2f& off )
+{
+    this->initialize(size, res);
+    if constexpr(Attributes & GridUtil::GRID_USING_OFFSET)
+    {
+        this->grid_off = off;
+    }
+}
+
+template<
+    typename DimInt_T,
+    typename DimFloat_T,
+    int Ordering,
+    int Attributes >
+void AbstractGridUtil<DimInt_T, DimFloat_T, Ordering, Attributes>::resize(const DimVec2i& dim)
+{
+    this->grid_dim = dim;
+    if constexpr(Attributes & GridUtil::GRID_USING_VECRES)
+    {
+        this->grid_size = dim.cwiseProduct(this->grid_res);
+    }
+    else
+    {
+        this->grid_size = dim * this->grid_res;
+    }
+}
+
+template<
+    typename DimInt_T,
+    typename DimFloat_T,
+    int Ordering,
+    int Attributes >
+void AbstractGridUtil<DimInt_T, DimFloat_T, Ordering, Attributes>::resize(const DimVec2f& size)
+{
+    if constexpr(Attributes & GridUtil::GRID_USING_VECRES)
+    {
+        this->grid_dim.x() = static_cast<DimIntT>(std::ceil(size.x() * this->inv_grid_res.x()));
+        this->grid_dim.y() = static_cast<DimIntT>(std::ceil(size.y() * this->inv_grid_res.y()));
+        this->grid_size = this->grid_dim.template cast<DimFloatT>().cwiseProduct(this->grid_res);
+    }
+    else
+    {
+        this->grid_dim.x() = static_cast<DimIntT>(std::ceil(size.x() * this->inv_grid_res));
+        this->grid_dim.y() = static_cast<DimIntT>(std::ceil(size.y() * this->inv_grid_res));
+        this->grid_size = this->grid_dim.template cast<DimFloatT>() * this->grid_res;
+    }
+}
+
+template<
+    typename DimInt_T,
+    typename DimFloat_T,
+    int Ordering,
+    int Attributes >
+const typename AbstractGridUtil<DimInt_T, DimFloat_T, Ordering, Attributes>::DimVec2f
+    AbstractGridUtil<DimInt_T, DimFloat_T, Ordering, Attributes>::minBound() const
+{
+    if constexpr(Attributes & GridUtil::GRID_USING_OFFSET)
+    {
+        return this->grid_off;
+    }
+    else
+    {
+        return DimVec2f::Zero();
+    }
+}
+
+template<
+    typename DimInt_T,
+    typename DimFloat_T,
+    int Ordering,
+    int Attributes >
+template<typename T>
+typename AbstractGridUtil<DimInt_T, DimFloat_T, Ordering, Attributes>::DimVec2f
+    AbstractGridUtil<DimInt_T, DimFloat_T, Ordering, Attributes>::clampToBounds(T x, T y) const
+{
+    const DimVec2f min = this->minBound();
+    const DimVec2f max = this->maxBound();
+
+    return DimVec2f{
+        std::clamp(static_cast<DimFloatT>(x), min.x(), max.x()),
+        std::clamp(static_cast<DimFloatT>(y), min.y(), max.y()) };
+}
+
+template<
+    typename DimInt_T,
+    typename DimFloat_T,
+    int Ordering,
+    int Attributes >
+template<typename T>
+typename AbstractGridUtil<DimInt_T, DimFloat_T, Ordering, Attributes>::DimVec2i
+    AbstractGridUtil<DimInt_T, DimFloat_T, Ordering, Attributes>::clampToLocalBounds(T x, T y) const
+{
+    return DimVec2i{
+        std::clamp(static_cast<DimIntT>(x), 0, this->grid_dim.x() - 1),
+        std::clamp(static_cast<DimIntT>(y), 0, this->grid_dim.y() - 1) };
+}
+
+template<
+    typename DimInt_T,
+    typename DimFloat_T,
+    int Ordering,
+    int Attributes >
+template<typename T>
+typename AbstractGridUtil<DimInt_T, DimFloat_T, Ordering, Attributes>::DimVec2i
+    AbstractGridUtil<DimInt_T, DimFloat_T, Ordering, Attributes>::align(T x, T y) const
+{
+    if constexpr(Attributes & GridUtil::GRID_USING_OFFSET)
+    {
+        return DimVec2i{
+            static_cast<DimIntT>( std::floor(x - this->grid_off.x()) * this->invResX() ),
+            static_cast<DimIntT>( std::floor(x - this->grid_off.y()) * this->invResY() ) };
+    }
+    else
+    {
+        return DimVec2i{
+            static_cast<DimIntT>( std::floor(x) * this->invResX() ),
+            static_cast<DimIntT>( std::floor(x) * this->invResY() ) };
+    }
+}
+
+// template<
+//     typename DimInt_T,
+//     typename DimFloat_T,
+//     int Ordering,
+//     int Attributes >
+// template<typename T>
+// AbstractGridUtil<DimInt_T, DimFloat_T, Ordering, Attributes>::DimVec2i
+//     AbstractGridUtil<DimInt_T, DimFloat_T, Ordering, Attributes>::clampedAlign(T x, T y) const
+// {
+//     return this->align(this->clampToBounds(x, y));
+// }
+
+template<
+    typename DimInt_T,
+    typename DimFloat_T,
+    int Ordering,
+    int Attributes >
+template<typename T>
+typename AbstractGridUtil<DimInt_T, DimFloat_T, Ordering, Attributes>::IdxT
+    AbstractGridUtil<DimInt_T, DimFloat_T, Ordering, Attributes>::localIdx(T x, T y) const
+{
+    if constexpr(Ordering == GridUtil::X_MAJOR_ORDER)
+    {
+        return static_cast<IdxT>(static_cast<DimIntT>(x) * this->grid_dim.y() + static_cast<DimIntT>(y));
+    }
+    else
+    {
+        return static_cast<IdxT>(static_cast<DimIntT>(y) * this->grid_dim.x() + static_cast<DimIntT>(x));
+    }
+}
+
+template<
+    typename DimInt_T,
+    typename DimFloat_T,
+    int Ordering,
+    int Attributes >
+template<typename T>
+typename AbstractGridUtil<DimInt_T, DimFloat_T, Ordering, Attributes>::UIdxT
+    AbstractGridUtil<DimInt_T, DimFloat_T, Ordering, Attributes>::clampedLocalIdx(T x, T y) const
+{
+    DimIntT x_ = std::clamp(static_cast<DimIntT>(x), 0, this->grid_dim.x() - 1);
+    DimIntT y_ = std::clamp(static_cast<DimIntT>(y), 0, this->grid_dim.y() - 1);
+
+    return this->localIdx(x_, y_);
+}
+
+template<
+    typename DimInt_T,
+    typename DimFloat_T,
+    int Ordering,
+    int Attributes >
+typename AbstractGridUtil<DimInt_T, DimFloat_T, Ordering, Attributes>::DimVec2i
+    AbstractGridUtil<DimInt_T, DimFloat_T, Ordering, Attributes>::cellCoords(UIdxT idx) const
+{
+    if constexpr(Ordering == GridUtil::X_MAJOR_ORDER)
+    {
+        // x-major = "contiguous blocks along [parallel to] y-axis" --> x = idx / ymax, y = idx % ymax
+        return DimVec2i{
+            static_cast<DimIntT>(idx / this->grid_dim.y()),
+            static_cast<DimIntT>(idx % this->grid_dim.y()) };
+    }
+    else
+    {
+        // y-major = "contiguous blocks along [parallel to] x-axis" --> x = idx % xmax, y = idx / xmax
+        return DimVec2i{
+            static_cast<DimIntT>(idx % this->grid_dim.x()),
+            static_cast<DimIntT>(idx / this->grid_dim.x()) };
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -305,6 +811,14 @@ public:
     inline const Vec2f& origin() const
     {
         return this->grid_origin;
+    }
+    inline const Vec2f& gridSpan() const
+    {
+        return (this->grid_size.template cast<FloatT>() * this->cell_res);
+    }
+    inline const Vec2f& maxBound() const
+    {
+        return this->grid_origin + this->gridSpan();
     }
     inline const FloatT cellRes() const
     {

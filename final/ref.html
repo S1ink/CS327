@@ -330,11 +330,11 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 				var x0 = Math.floor((x - h2) * h1);
 				var tx = ((x - h2) - x0 * h) * h1;
-				var x1 = Math.min(x0 + 1, this.fNumX-2);
+				var x1 = Math.min(x0 + 1, this.fNumX - 1);
 				
-				var y0 = Math.floor((y-h2)*h1);
-				var ty = ((y - h2) - y0*h) * h1;
-				var y1 = Math.min(y0 + 1, this.fNumY-2);
+				var y0 = Math.floor((y - h2) * h1);
+				var ty = ((y - h2) - y0 * h) * h1;
+				var y1 = Math.min(y0 + 1, this.fNumY - 1);
 
 				var sx = 1.0 - tx;
 				var sy = 1.0 - ty;

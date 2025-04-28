@@ -3,6 +3,9 @@
 #include "util/grid.hpp"
 
 #include <vector>
+#include <type_traits>
+
+#include <Eigen/Eigen>
 
 
 class FluidSim
@@ -49,7 +52,7 @@ public:
 
 public:
     FluidSim();
-    inline FluidSim() = default;
+    inline ~FluidSim() = default;
 
 protected:
     void stepParticles(float dt, const Vec2f& acc);
@@ -72,8 +75,12 @@ protected:
     FloatT particle_rest_density;
 
     std::vector<Particle> particles;
-    GridBase<FluidCell, IntT, FloatT> fluid_cells;
-    GridBase<ParticleCell, IntT, FloatT> particle_cells;
+    // GridBase<FluidCell, IntT, FloatT> fluid_cells;
+    // GridBase<ParticleCell, IntT, FloatT> particle_cells;
+    std::vector<FluidCell> fluid_cells;
+    std::vector<ParticleCell> particle_cells;
+    AbstractGridUtil<IntT, FloatT, GridUtil::Y_MAJOR_ORDER, GridUtil::GRID_USING_VECRES> fluid_grid;
+    AbstractGridUtil<IntT, FloatT, GridUtil::Y_MAJOR_ORDER, GridUtil::GRID_STANDARD> particle_grid;
 
 };
 
@@ -99,7 +106,7 @@ void FluidSim::pushParticles(size_t iters)
     for(Particle& p : this->particles)
     {
         this->particle_cells[
-            this->particle_cells.clampedCellIdxOf(p.pos.x(), p.pos.y()) ].n_particles++;
+            this->particle_grid.clampedCellIdx(p.pos) ].n_particles++;
     }
 
     // get max indices for each particle cell
@@ -115,7 +122,7 @@ void FluidSim::pushParticles(size_t iters)
         // assign indices of particles into slots within accumulated ranges for each particle cell
         cell_particle_ids[
             (this->particle_cells[
-                this->particle_cells.clampedCellIdxOf(p.pos.x(), p.pos.y()) ].first_idx--) ] = i;
+                this->particle_grid.clampedCellIdx(p.pos) ].first_idx--) ] = i;
 
         i++;
     }
@@ -130,20 +137,20 @@ void FluidSim::pushParticles(size_t iters)
         {
             // iterate over surrounding cells (3x3)
 
-            Vec2i pvi = this->particle_cells.boundingLoc(p.pos.x(), p.pos.y());
+            Vec2i pvi = this->particle_grid.clampedAlign(p.pos);
             const Vec2i
-                v0 = (pvi - Vec2i::Ones()).cwiseMax(Vec2i::Zero()),
-                v1 = (pvi + Vec2i::Ones()).cwiseMin(this->particle_cells.size() - Vec2i::Ones());
+                v0 = (pvi - Vec2i::Ones()).cwiseMax(this->particle_grid.minCell()),
+                v1 = (pvi + Vec2i::Ones()).cwiseMin(this->particle_grid.maxCell());
 
             for(IntT y = v0.y(); y < v1.y(); y++)
             {
                 for(IntT x = v0.x(); x < v1.x(); x++)
                 {
-                    const int64_t idx = this->particle_cells.gridIdx(x, y, this->particle_cells.size());
+                    const int64_t idx = this->particle_grid.localIdx(x, y);
 
                     size_t beg = this->particle_cells[idx].first_idx;
                     size_t end;
-                    if(i == this->particle_cells.area() - 1) end = n;
+                    if(i == this->particle_grid.numCells() - 1) end = n;
                     else end = this->particle_cells[idx + 1].first_idx;
 
                     for( auto pi = cell_particle_ids.begin() + beg;
@@ -175,10 +182,10 @@ void FluidSim::pushParticles(size_t iters)
 
 void FluidSim::handleParticleCollisions()
 {
-    const Vec2f min_bound = Vec2f::Constant(this->fluid_cells.cellRes() + this->particle_rad);
+    const Vec2f min_bound =
+        this->fluid_grid.cellSize() + Vec2f::Constant(this->particle_rad);
     const Vec2f max_bound =
-        (this->fluid_cells.size() - Vec2i::Ones()).template cast<FloatT>() *
-        Vec2f::Constant(this->fluid_cells.cellRes() - this->particle_rad);
+        this->fluid_grid.size() - this->fluid_grid.cellSize() - Vec2f::Constant(this->particle_rad);
 
     for(Particle& p : this->particles)
     {
@@ -213,11 +220,91 @@ void FluidSim::updateParticleDensity()
 {
     for(FluidCell& f : this->fluid_cells) f.density = 0.f;
 
+    const Vec2f& res = this->fluid_grid.cellSize();
+    const Vec2f& inv_res = this->fluid_grid.invCellSize();
+    const Vec2f half_res = res * 0.5;
+
     for(Particle& p : this->particles)
     {
-        
+        const Vec2f v = GridUtil::clamp(p.pos, res, Vec2f{ this->fluid_grid.size() - res} );
+        const Vec2f v_ = v - half_res;
+        const Vec2i v0 = this->fluid_grid.align(v_);
+        const Vec2i v1 = (v0 + Vec2i::Ones()).cwiseMin(this->fluid_grid.maxCell());
+        const Vec2f t = (v_ - v0.template cast<FloatT>().cwiseProduct(res)).cwiseProduct(inv_res);
+        const Vec2f s = Vec2f::Ones() - t;
+
+        this->fluid_cells[this->fluid_grid.localIdx(v0)].density += s.prod();
+        this->fluid_cells[this->fluid_grid.localIdx(v1)].density += t.prod();
+        this->fluid_cells[this->fluid_grid.localIdx(v0.x(), v1.y())].density += s.x() * t.y();
+        this->fluid_cells[this->fluid_grid.localIdx(v1.x(), v0.y())].density += t.x() * s.y();
+    }
+
+    if(this->particle_rest_density == 0.f)
+    {
+        double sum = 0.;
+        size_t n_fluid_cells = 0;
+
+        for(FluidCell& f : this->fluid_cells)
+        {
+            if(f.type == CELLTYPE_FLUID)
+            {
+                sum += static_cast<double>(f.density);
+                n_fluid_cells++;
+            }
+        }
+
+        if(n_fluid_cells > 0)
+        {
+            this->particle_rest_density = static_cast<FloatT>(sum / n_fluid_cells);
+        }
     }
 }
+
+void FluidSim::transferVelocities(bool direction, float ratio)
+{
+    // const Vec2f& res = this->fluid_grid.cellSize();
+    // const Vec2f& inv_res = this->fluid_grid.invCellSize();
+    // const Vec2f half_res = res * 0.5;
+
+    if(direction)
+    {
+        for(FluidCell& f : this->fluid_cells)
+        {
+            f.prev_u = f.u;
+            f.prev_v = f.v;
+            f.du = 0.f;
+            f.dv = 0.f;
+            f.u = 0.f;
+            f.v = 0.f;
+
+            f.type = (f.s == 0.f) ? CELLTYPE_SOLID : CELLTYPE_AIR;
+        }
+
+        for(Particle& p : this->particles)
+        {
+            FluidCell& f = this->fluid_cells[this->fluid_grid.clampedCellIdx(p.pos)];
+            if(f.type == CELLTYPE_AIR)
+            {
+                f.type = CELLTYPE_FLUID;
+            }
+        }
+    }
+
+    for(size_t compt = 0; compt < 2; compt++)
+    {
+
+    }
+}
+
+void FluidSim::solveIncompressibility(
+    size_t iters,
+    float dt,
+    float overrxn,
+    bool compensate_drift )
+{
+
+}
+
 
 
 int main(int argc, char** argv)
@@ -227,7 +314,7 @@ int main(int argc, char** argv)
     NCGradient grad{{0, 0, 0}, {100, 1000, 500}};
     grad.applyBackground();
 
-    GridBase<double> g;
+    // GridBase<double> g;
 
     {
         int c = 0;
@@ -236,7 +323,7 @@ int main(int argc, char** argv)
             const int wx = getmaxx(stdscr);
             const int wy = getmaxy(stdscr);
 
-            g.resizeToBounds(Eigen::Vector2f::Zero(), Eigen::Vector2f{ wx, wy });
+            // g.resizeToBounds(Eigen::Vector2f::Zero(), Eigen::Vector2f{ wx, wy });
 
             const float mrel = static_cast<float>(wx * wy);
             for(int y = 0; y < wy; y++)
@@ -252,10 +339,11 @@ int main(int argc, char** argv)
             // move(0, 0);
             // clrtoeol();
             mvprintw(0, 0, "Window size is %d x %d", wx, wy);
+            mvprintw(1, 0, "Normalized window size is %d x %d", wx, wy * 19 / 9);
             // move(1, 0);
             // clrtoeol();
-            mvprintw(1, 0, "Getch is %o", c);
-            mvprintw(2, 0, "Grid alloc is 0x%lx", reinterpret_cast<uintptr_t>(g.gridData()));
+            mvprintw(2, 0, "Getch is %o", c);
+            // mvprintw(2, 0, "Grid alloc is 0x%lx", reinterpret_cast<uintptr_t>(g.gridData()));
 
             refresh();
         }

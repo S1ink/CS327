@@ -25,12 +25,9 @@ public:
 
     struct FluidCell
     {
-        FloatT u;
-        FloatT v;
-        FloatT du;
-        FloatT dv;
-        FloatT prev_u;
-        FloatT prev_v;
+        Vec2f uv;
+        Vec2f duv;
+        Vec2f prev_uv;
         FloatT p;
         FloatT s;
         FloatT density;
@@ -59,7 +56,8 @@ protected:
     void pushParticles(size_t iters);
     void handleParticleCollisions();
     void updateParticleDensity();
-    void transferVelocities(bool direction, float ratio);
+    template<bool ToGrid>
+    void transferVelocities(float ratio);
     void solveIncompressibility(
         size_t iters,
         float dt,
@@ -226,7 +224,7 @@ void FluidSim::updateParticleDensity()
 
     for(Particle& p : this->particles)
     {
-        const Vec2f v = GridUtil::clamp(p.pos, res, Vec2f{ this->fluid_grid.size() - res} );
+        const Vec2f v = GridUtil::clamp(p.pos, res, Vec2f{ this->fluid_grid.size() - res });
         const Vec2f v_ = v - half_res;
         const Vec2i v0 = this->fluid_grid.align(v_);
         const Vec2i v1 = (v0 + Vec2i::Ones()).cwiseMin(this->fluid_grid.maxCell());
@@ -260,22 +258,20 @@ void FluidSim::updateParticleDensity()
     }
 }
 
-void FluidSim::transferVelocities(bool direction, float ratio)
+template<bool ToGrid>
+void FluidSim::transferVelocities<ToGrid>(float ratio)
 {
-    // const Vec2f& res = this->fluid_grid.cellSize();
-    // const Vec2f& inv_res = this->fluid_grid.invCellSize();
-    // const Vec2f half_res = res * 0.5;
+    const Vec2f& res = this->fluid_grid.cellSize();
+    const Vec2f& inv_res = this->fluid_grid.invCellSize();
+    const Vec2f half_res = res * 0.5;
 
-    if(direction)
+    if constexpr(ToGrid)
     {
         for(FluidCell& f : this->fluid_cells)
         {
-            f.prev_u = f.u;
-            f.prev_v = f.v;
-            f.du = 0.f;
-            f.dv = 0.f;
-            f.u = 0.f;
-            f.v = 0.f;
+            f.prev_uv = f.uv;
+            f.duv.setZero();
+            f.uv.setZero();
 
             f.type = (f.s == 0.f) ? CELLTYPE_SOLID : CELLTYPE_AIR;
         }
@@ -290,10 +286,124 @@ void FluidSim::transferVelocities(bool direction, float ratio)
         }
     }
 
-    for(size_t compt = 0; compt < 2; compt++)
+    for(size_t w = 0; w < 2; w++)
     {
+        const Vec2f& size = this->fluid_grid.size();
+        const Vec2i& dim = this->fluid_grid.dim();
 
+        const float dx = (float[]{ 0.f, inv_res.x() })[w];
+        const float dy = (float[]{ inv_res.y(), 0.f })[w];
+
+        for(Particle& p : this->particles)
+        {
+            const Vec2f v = GridUtil::clamp(p.pos, res, Vec2f{ size - res });
+
+            int x0 = std::min(std::floor((v.x() - dx) * inv_res.x()), dim.x() - 2);
+            float tx = ((v.x() - dx) - (x0 * res.x())) * inv_res.x();
+            int x1 = std::min(x0 + 1, dim.x() - 2);
+
+            int y0 = std::min(std::floor((v.y() - dy) * inv_res.y()), dim.y() - 2);
+            float ty = ((v.y() - dy) - (y0 * res.y())) * inv_res.y();
+            int y1 = std::min(y0 + 1, dim.y() - 2);
+
+            float sx = 1.f - tx;
+            float sy = 1.f - ty;
+
+            std::array<float, 4> d{
+                {
+                    (sx * sy),
+                    (tx * sy),
+                    (tx * ty),
+                    (sx * ty)
+                } };
+
+            std::array<int64_t, 4> nr{
+                {
+                    this->fluid_grid.localIdx(x0, y0),
+                    this->fluid_grid.localIdx(x1, y0),
+                    this->fluid_grid.localIdx(x1, y1),
+                    this->fluid_grid.localIdx(x0, y1)
+                } };
+
+            if constexpr(ToGrid)
+            {
+                for(size_t i = 0; i < 4; i++)
+                {
+                    FluidCell& f = this->fluid_cells[nr[i]];
+                    f.uv[w] += p.vel[w] * d[i];
+                    f.duv[w] += d[i];
+                }
+            }
+            else
+            {
+                int64_t off = (int64_t[]{ -dim.y(), 1 })[w];
+                float ds = 0.;
+                for(size_t i = 0; i < 4; i++)
+                {
+                    if( this->fluid_cells[nr[i]].type == CELLTYPE_AIR &&
+                        this->fluid_cells[nr[i] + off].type == CELLTYPE_AIR )
+                    {
+                        d[i] = 0;
+                    }
+
+                    ds += d[i];
+                }
+
+                if(ds > 0.f)
+                {
+                    float pic_v = 0.f;
+                    float corr = 0.f;
+                    for(size_t i = 0; i < 4; i++)
+                    {
+                        const FluidCell& f = this->fluid_cells[nr[i]];
+
+                        pic_v += d[i] * f.uv[w];
+                        corr += d[i] * (f.uv[w] - f.prev_uv[w]);
+                    }
+                    pic_v /= ds;
+                    corr /= ds;
+                    float flip_v = p.vel[w] + corr;
+
+                    p.vel[w] = pic_v * (1.f - ratio) + flip_v * ratio;
+                }
+            }
+        }
+
+        if constexpr(ToGrid)
+        {
+            for(FluidCell& f : this->fluid_cells)
+            {
+                if(f.duv[w] > 0.f)
+                {
+                    f.uv[w] /= f.duv[w];
+                }
+            }
+
+            for(int y = 0; y < dim.y(); y++)
+            {
+                for(int x = 0; x < dim.x(); x++)
+                {
+                    int64_t i = this->fluid_grid.localIdx(x, y);
+                    int64_t i2 = this->fluid_grid.localIdx(x - 1, y);
+                    int64_t i3 = this->fluid_grid.localIdx(x, y + 1);
+
+                    FluidCell& f = this->fluid_cells[i];
+
+                    if( f.type == CELLTYPE_SOLID || ((x > 0) &&
+                        this->fluid_cells[i2].type == CELLTYPE_SOLID) )
+                    {
+                        f.uv[0] = f.prev_uv[0];
+                    }
+                    if( f.type == CELLTYPE_SOLID || ((y < dim.y()) &&
+                        this->fluid_cells[i3].type == CELLTYPE_SOLID) )
+                    {
+                        f.uv[1] = f.prev_uv[1];
+                    }
+                }
+            }
+        }
     }
+
 }
 
 void FluidSim::solveIncompressibility(
@@ -302,7 +412,52 @@ void FluidSim::solveIncompressibility(
     float overrxn,
     bool compensate_drift )
 {
+    for(FluidCell& f : this->fluid_cells)
+    {
+        f.p = 0.f;
+        f.prev_uv = f.uv;
+    }
 
+    const Vec2i& dim = this->fluid_grid.dim();
+    Vec2f cp = this->fluid_grid.cellSize() / dt * this->density;
+
+    for(size_t iter = 0; iter < iters; iter++)
+    {
+        for(int y = 1; y < dim.y() - 1; y++)
+        {
+            for(int x = 1; x < dim.x() - 1; x++)
+            {
+                FluidCell& center = this->fluid_cells[this->fluid_grid.localIdx(x, y)];
+                FluidCell& left = this->fluid_cells[this->fluid_grid.localIdx(x - 1, y)];
+                FluidCell& right = this->fluid_cells[this->fluid_grid.localIdx(x + 1, y)];
+                FluidCell& bottom = this->fluid_cells[this->fluid_grid.localIdx(x, y + 1)];
+                FluidCell& top = this->fluid_cells[this->fluid_grid.localIdx(x, y - 1)];
+
+                if(center.type != CELLTYPE_FLUID) continue;
+
+                float s = left.s + right.s + bottom.s + top.s;
+                if(s == 0.f) continue;
+
+                float div = right.uv[0] - center.uv[0] + top.uv[1] - center.uv[1];
+
+                if(this->particle_rest_density > 0.f && compensate_drift)
+                {
+                    constexpr float k = 1.f;
+                    float cmp = center.density - this->particle_rest_density;
+                    if(cmp > 0.f) div = div - k * cmp;
+                }
+
+                float p = -div / s;
+                p *= overrxn;
+                center.p += (cp * p).norm();
+
+                center.uv[0] -= left.s * p;
+                right.uv[0] += right.s * p;
+                center.uv[1] -= left.s * p;
+                top.uv[1] += right.s * p;
+            }
+        }
+    }
 }
 
 

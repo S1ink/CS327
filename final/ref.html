@@ -430,8 +430,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 					var tx = ((x - dx) - x0 * h) * h1;
 					var x1 = Math.min(x0 + 1, this.fNumX-2);
 					
-					var y0 = Math.min(Math.floor((y-dy)*h1), this.fNumY-2);
-					var ty = ((y - dy) - y0*h) * h1;
+					var y0 = Math.min(Math.floor((y - dy) * h1), this.fNumY - 2);
+					var ty = ((y - dy) - y0 * h) * h1;
 					var y1 = Math.min(y0 + 1, this.fNumY-2);
 
 					var sx = 1.0 - tx;
@@ -506,10 +506,10 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 			var n = this.fNumY;
 			var cp = this.density * this.h / dt;
 
-			for (var i = 0; i < this.fNumCells; i++) {
-				var u = this.u[i];
-				var v = this.v[i];
-			}
+			// for (var i = 0; i < this.fNumCells; i++) {
+			// 	var u = this.u[i];
+			// 	var v = this.v[i];
+			// }
 
 			for (var iter = 0; iter < numIters; iter++) {
 

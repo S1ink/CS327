@@ -390,7 +390,7 @@ void AbstractGridUtil<DimInt_T, DimFloat_T, Ordering, Attributes>::initialize(
     this->grid_res = res;
     if constexpr(Attributes & GridUtil::GRID_USING_VECRES)
     {
-        this->grid_size = dim.cwiseProduct(res);
+        this->grid_size = dim.template cast<DimFloatT>().cwiseProduct(res);
         this->inv_grid_res = DimVec2f::Ones().cwiseQuotient(res);
     }
     else
@@ -470,11 +470,11 @@ void AbstractGridUtil<DimInt_T, DimFloat_T, Ordering, Attributes>::resize(const 
     this->grid_dim = dim;
     if constexpr(Attributes & GridUtil::GRID_USING_VECRES)
     {
-        this->grid_size = dim.cwiseProduct(this->grid_res);
+        this->grid_size = dim.template cast<DimFloatT>().cwiseProduct(this->grid_res);
     }
     else
     {
-        this->grid_size = dim * this->grid_res;
+        this->grid_size = dim.template cast<DimFloatT>() * this->grid_res;
     }
 }
 
@@ -560,14 +560,14 @@ typename AbstractGridUtil<DimInt_T, DimFloat_T, Ordering, Attributes>::DimVec2i
     if constexpr(Attributes & GridUtil::GRID_USING_OFFSET)
     {
         return DimVec2i{
-            static_cast<DimIntT>( std::floor(x - this->grid_off.x()) * this->invResX() ),
-            static_cast<DimIntT>( std::floor(x - this->grid_off.y()) * this->invResY() ) };
+            static_cast<DimIntT>( std::floor((x - this->grid_off.x()) * this->invResX()) ),
+            static_cast<DimIntT>( std::floor((y - this->grid_off.y()) * this->invResY()) ) };
     }
     else
     {
         return DimVec2i{
-            static_cast<DimIntT>( std::floor(x) * this->invResX() ),
-            static_cast<DimIntT>( std::floor(x) * this->invResY() ) };
+            static_cast<DimIntT>( std::floor(x * this->invResX()) ),
+            static_cast<DimIntT>( std::floor(y * this->invResY()) ) };
     }
 }
 

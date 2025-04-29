@@ -265,7 +265,12 @@ void FluidSim::writeBoundaryCells()
 
 void FluidSim::stepParticles(FloatT dt, const Vec2f& acc)
 {
-    for(Particle& p : this->particles) p.pos += (p.vel += acc * dt) * dt;
+    for(Particle& p : this->particles)
+    {
+        p.pos += (p.vel += (acc * dt)) * dt;
+
+        assert(!isnanf(p.pos.x()) && !isnanf(p.pos.y()));
+    }
 }
 
 void FluidSim::pushParticles(size_t iters)
@@ -284,6 +289,8 @@ void FluidSim::pushParticles(size_t iters)
     {
         this->particle_cells[
             this->particle_grid.clampedCellIdx(p.pos) ].n_particles++;
+
+        assert(!isnanf(p.pos.x()) && !isnanf(p.pos.y()));
     }
 
     // get max indices for each particle cell
@@ -298,8 +305,10 @@ void FluidSim::pushParticles(size_t iters)
     {
         // assign indices of particles into slots within accumulated ranges for each particle cell
         cell_particle_ids[
-            (this->particle_cells[
-                this->particle_grid.clampedCellIdx(p.pos) ].first_idx--) ] = i;
+            (--this->particle_cells[
+                this->particle_grid.clampedCellIdx(p.pos) ].first_idx) ] = i;
+
+        assert(!isnanf(p.pos.x()) && !isnanf(p.pos.y()));
 
         i++;
     }
@@ -338,16 +347,34 @@ void FluidSim::pushParticles(size_t iters)
 
                         Particle& p_ = this->particles[*pi];
 
+                        Vec2f pre_p = p.pos, pre_p_ = p_.pos;
+
                         Vec2f ds = p_.pos - p.pos;
                         const float d2 = ds.squaredNorm();
 
-                        if(d2 < min_dist_2 || d2 == 0.f) continue;
+                        if(d2 > min_dist_2 || d2 == 0.f) continue;
 
                         const float d = std::sqrt(d2);
                         ds *= (0.5f * (min_dist - d) / d);
 
                         p.pos -= ds;
                         p_.pos += ds;
+
+                        if(isnanf(p.pos.x()) || isnanf(p.pos.y()))
+                        {
+                            dbg << "PUSH PARTICLES ENCOUNTERED NAN:"
+                                "\n\tp : (" << pre_p.x() << ", " << pre_p.y() <<
+                                ")\n\tPVI: (" << pvi.x() << ", " << pvi.y() <<
+                                ")\n\tv0: (" << v0.x() << ", " << v0.y() <<
+                                ")\n\tv1: (" << v1.x() << ", " << v1.y() <<
+                                ")\n\tpi: " << *pi <<
+                                "\n\tp_: (" << pre_p_.x() << ", " << pre_p_.y() <<
+                                ")\n\tds: (" << ds.x() << ", " << ds.y() <<
+                                ")\n\td2: " << d2 <<
+                                "\n\td: " << d << std::endl;
+
+                            assert(false);
+                        }
                     }
                 }
             }
@@ -390,6 +417,8 @@ void FluidSim::handleParticleCollisions()
             v.y() = max_bound.y();
             p.vel.y() = 0.f;
         }
+
+        assert(!isnanf(v.x()) && !isnanf(v.y()));
     }
 }
 
@@ -419,6 +448,8 @@ void FluidSim::updateParticleDensity()
         this->fluid_cells[this->fluid_grid.localIdx(v1)].density += t.prod();
         this->fluid_cells[this->fluid_grid.localIdx(v0.x(), v1.y())].density += s.x() * t.y();
         this->fluid_cells[this->fluid_grid.localIdx(v1.x(), v0.y())].density += t.x() * s.y();
+
+        assert(!isnanf(p.pos.x()) && !isnanf(p.pos.y()));
     }
 
     if(this->particle_rest_density == 0.f)
@@ -449,6 +480,8 @@ void FluidSim::transferVelocities(FloatT ratio)
     const Vec2f& inv_res = this->fluid_grid.invCellSize();
     const Vec2f half_res = res * 0.5;
 
+    // dbg << "\ttransfer velocities <" << ToGrid << "> initializing" << std::endl;
+
     if constexpr(ToGrid)
     {
         for(FluidCell& f : this->fluid_cells)
@@ -460,6 +493,8 @@ void FluidSim::transferVelocities(FloatT ratio)
             f.type = (f.s == 0.f) ? CELLTYPE_SOLID : CELLTYPE_AIR;
         }
 
+        // dbg << "\ttogrid -- iterated fluid cells" << std::endl;
+
         for(Particle& p : this->particles)
         {
             FluidCell& f = this->fluid_cells[this->fluid_grid.clampedCellIdx(p.pos)];
@@ -467,11 +502,17 @@ void FluidSim::transferVelocities(FloatT ratio)
             {
                 f.type = CELLTYPE_FLUID;
             }
+
+            assert(!isnanf(p.pos.x()) && !isnanf(p.pos.y()));
         }
+
+        // dbg << "\ttogrid -- iterated particles" << std::endl;
     }
 
     for(size_t w = 0; w < 2; w++)
     {
+        // dbg << "\tbeginning iter " << w << std::endl;
+
         const Vec2f& size = this->fluid_grid.size();
         const Vec2i& dim = this->fluid_grid.dim();
 
@@ -480,7 +521,11 @@ void FluidSim::transferVelocities(FloatT ratio)
 
         for(Particle& p : this->particles)
         {
+            assert(!isnanf(p.pos.x()) && !isnanf(p.pos.y()));
+
             const Vec2f v = GridUtil::clamp(p.pos, res, Vec2f{ size - res });
+
+            // dbg << "particle (" << p.pos.x() << ", " << p.pos.y() << ") --> (" << v.x() << ", " << v.y() << ")" << std::endl;
 
             int x0 = std::min(static_cast<int>(std::floor((v.x() - dx) * inv_res.x())), dim.x() - 2);
             float tx = ((v.x() - dx) - (x0 * res.x())) * inv_res.x();
@@ -553,6 +598,8 @@ void FluidSim::transferVelocities(FloatT ratio)
             }
         }
 
+        // dbg << "\titerated particles" << std::endl;
+
         if constexpr(ToGrid)
         {
             for(FluidCell& f : this->fluid_cells)
@@ -562,6 +609,8 @@ void FluidSim::transferVelocities(FloatT ratio)
                     f.uv[w] /= f.duv[w];
                 }
             }
+
+            // dbg << "\ttogrid -- iterated cells" << std::endl;
 
             for(int y = 0; y < dim.y(); y++)
             {
@@ -585,6 +634,8 @@ void FluidSim::transferVelocities(FloatT ratio)
                     }
                 }
             }
+
+            // dbg << "\ttogrid -- iterated cells again" << std::endl;
         }
     }
 
@@ -656,8 +707,8 @@ int main(int argc, char** argv)
     int wx, wy;
     FluidSim f{
         Eigen::Vector2i{ wx = getmaxx(stdscr), wy = getmaxy(stdscr) },
-        Eigen::Vector2f{ 9.f, 19.f },
-        3.f,
+        Eigen::Vector2f{ 0.9f, 1.9f },
+        0.3f,
         1000.f };
 
     {
@@ -675,7 +726,7 @@ int main(int argc, char** argv)
                 f.resize(Eigen::Vector2i{ wx, wy });
             }
 
-            f.simulate(0.02f, Eigen::Vector2f{ 0.f, -9.8f }, 0.5, 50, 2, 1.9, true);
+            f.simulate(0.02f, Eigen::Vector2f{ 0.f, 9.8f }, 0.5, 50, 2, 1.9, false);
             f.render(stdscr, grad);
         }
         while((c = getch()) != 03);

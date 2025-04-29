@@ -40,7 +40,7 @@ public:
 
     inline static NCURSES_COLOR_T floatToIdx(float f)
     {
-        return static_cast<NCURSES_COLOR_T>(MAX(MIN(f, 1.), 0.) * GNum);
+        return static_cast<NCURSES_COLOR_T>(MAX(MIN(f, 1.), 0.) * (GNum - 1));
     }
 
 public:

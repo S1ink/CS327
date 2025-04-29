@@ -221,10 +221,12 @@ void FluidSim::render(WINDOW* w, NCGradient& grad)
             }
             else
             {
+                float weight = f.density;
+
                 grad.printChar(
                     w, y, x,
-                    grad.floatToIdx(f.uv.norm()),
-                    " .+#@"[MIN_CACHED(static_cast<size_t>(f.density), 4U)] );
+                    grad.floatToIdx(weight / 4),
+                    " .+#@"[MIN_CACHED(static_cast<size_t>(weight), 4U)] );
             }
             // const auto c = COLOR_PAIR(f.type == CELLTYPE_SOLID ? COLOR_MAGENTA : COLOR_GREEN);
 
@@ -235,11 +237,11 @@ void FluidSim::render(WINDOW* w, NCGradient& grad)
     }
     wrefresh(w);
 
-    mvwprintw(w, 0, 0, "FLUID GRID DIM IS %d x %d", this->fluid_grid.dim().x(), this->fluid_grid.dim().y());
-    mvwprintw(w, 1, 0, "FLUID GRID SIZE IS %f x %f", this->fluid_grid.size().x(), this->fluid_grid.size().y());
-    mvwprintw(w, 2, 0, "PARTICLE GRID DIM IS %d x %d", this->particle_grid.dim().x(), this->particle_grid.dim().y());
-    mvwprintw(w, 3, 0, "PARTICLE GRID SIZE IS %f x %f", this->particle_grid.size().x(), this->particle_grid.size().y());
-    wrefresh(w);
+    // mvwprintw(w, 0, 0, "FLUID GRID DIM IS %d x %d", this->fluid_grid.dim().x(), this->fluid_grid.dim().y());
+    // mvwprintw(w, 1, 0, "FLUID GRID SIZE IS %f x %f", this->fluid_grid.size().x(), this->fluid_grid.size().y());
+    // mvwprintw(w, 2, 0, "PARTICLE GRID DIM IS %d x %d", this->particle_grid.dim().x(), this->particle_grid.dim().y());
+    // mvwprintw(w, 3, 0, "PARTICLE GRID SIZE IS %f x %f", this->particle_grid.size().x(), this->particle_grid.size().y());
+    // wrefresh(w);
 }
 
 void FluidSim::writeBoundaryCells()
@@ -654,7 +656,8 @@ void FluidSim::solveIncompressibility(
     }
 
     const Vec2i& dim = this->fluid_grid.dim();
-    Vec2f cp = this->fluid_grid.cellSize() / dt * this->density;
+    FloatT h = std::sqrt(this->fluid_grid.cellSize().prod());
+    FloatT cp = h / dt * this->density;
 
     for(size_t iter = 0; iter < iters; iter++)
     {
@@ -684,7 +687,7 @@ void FluidSim::solveIncompressibility(
 
                 float p = -div / s;
                 p *= overrxn;
-                center.p += (cp * p).norm();
+                center.p += cp * p;
 
                 center.uv[0] -= left.s * p;
                 right.uv[0] += right.s * p;
@@ -708,11 +711,11 @@ int main(int argc, char** argv)
     FluidSim f{
         Eigen::Vector2i{ wx = getmaxx(stdscr), wy = getmaxy(stdscr) },
         Eigen::Vector2f{ 0.9f, 1.9f },
-        0.3f,
-        1000.f };
+        0.1f,
+        10.f };
 
     {
-        f.render(stdscr, grad);
+        // f.render(stdscr, grad);
         int c = 0;
         do
         {
@@ -726,7 +729,7 @@ int main(int argc, char** argv)
                 f.resize(Eigen::Vector2i{ wx, wy });
             }
 
-            f.simulate(0.02f, Eigen::Vector2f{ 0.f, 9.8f }, 0.5, 50, 2, 1.9, false);
+            f.simulate(0.2f, Eigen::Vector2f{ 0.f, 9.8f }, 0.5f, 100, 20, 1.9, true);
             f.render(stdscr, grad);
         }
         while((c = getch()) != 03);

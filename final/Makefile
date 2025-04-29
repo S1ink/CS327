@@ -21,8 +21,8 @@ CFLAGS += -g -O2
 CXXFLAGS += -g -O2
 LDFLAGS += -g
 else ifeq ($(OPT),debug)
-CFLAGS += -g -O2
-CXXFLAGS += -g -O2
+CFLAGS += -g
+CXXFLAGS += -g
 LDFLAGS += -g
 else
 CFLAGS += -O3

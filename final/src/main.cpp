@@ -17,6 +17,14 @@
 #include "util/nc_wrap.hpp"
 
 
+#ifndef USE_OMP
+#define USE_OMP 0
+#endif
+
+#if USE_OMP
+#include <omp.h>
+#endif
+
 // static std::ofstream dbg{ "./debug.txt" };
 
 /** Core functionality converted from https://github.com/matthias-research/pages/blob/master/tenMinutePhysics/18-flip.html */
@@ -142,6 +150,14 @@ FlipFluid::FlipFluid(
     numCellParticles.resize(pNumCells, 0);
     firstCellParticle.resize(pNumCells + 1, 0);
     cellParticleIds.resize(maxParticles, 0);
+
+    #if USE_OMP
+    int tt = std::thread::hardware_concurrency() - 1;
+    if(tt > 1)
+    {
+        omp_set_num_threads(tt);
+    }
+    #endif
 }
 
 void FlipFluid::simulate(
@@ -211,11 +227,14 @@ void FlipFluid::render(WINDOW* w, NCGradient& grad)
             }
         }
     }
-    wrefresh(w);
+    // wrefresh(w);
 }
 
 void FlipFluid::integrateParticles(float dt, float x_acc, float y_acc)
 {
+    #if USE_OMP
+    #pragma omp parallel for
+    #endif
     for(int i = 0; i < numParticles; ++i)
     {
         particleVel[2 * i] += dt * x_acc;
@@ -336,6 +355,9 @@ void FlipFluid::handleParticleCollisions(
     float minY = hLocal + r;
     float maxY = (fNumY - 1) * hLocal - r;
 
+    #if USE_OMP
+    #pragma omp parallel for
+    #endif
     for(int i = 0; i < numParticles; ++i)
     {
         float& x = particlePos[2 * i];
@@ -614,6 +636,9 @@ void FlipFluid::updateParticleColors()
     float s = 0.01f;
     float h1 = fInvSpacing;
 
+    #if USE_OMP
+    #pragma omp parallel for
+    #endif
     for(int i = 0; i < numParticles; ++i)
     {
         particleColor[3 * i] = clamp(particleColor[3 * i] - s, 0.0f, 1.0f);
@@ -642,6 +667,9 @@ void FlipFluid::updateParticleColors()
 
 void FlipFluid::updateCellColors()
 {
+    #if USE_OMP
+    #pragma omp parallel for
+    #endif
     for(int i = 0; i < fNumCells; ++i)
     {
         if(cellType[i] == SOLID_CELL)
@@ -726,8 +754,8 @@ int main(int argc, char** argv)
     NCGradient grad{{100, 800, 400}, {100, 200, 800}};
     grad.applyForeground(COLOR_BLACK);
 
-    constexpr float realtime_target = 10.f;
-    constexpr float defualt_dt = 1.f / 20.f;
+    constexpr float realtime_factor = 10.f;
+    constexpr float default_dt = 1.f / 20.f;
     constexpr float flipRatio = 0.5;
     constexpr int numPressureIters = 50;
     constexpr int numParticleIters = 2;
@@ -792,13 +820,12 @@ int main(int argc, char** argv)
 
     std::atomic<float> x_acc = 0.f;
     std::atomic<float> y_acc = 0.f;
+    std::atomic<float> sim_dt = default_dt * realtime_factor;
     std::mutex sim_mtx, tmp_mtx;
 
     std::thread sim_thread{
         [&]()
         {
-            float prev_dt = defualt_dt;
-
             // size_t iter = 0;
             while(running)
             {
@@ -807,7 +834,7 @@ int main(int argc, char** argv)
                 clock_t::time_point beg = clock_t::now();
                 sim_mtx.lock();
                 f.simulate(
-                    prev_dt,
+                    sim_dt.load(),
                     x_acc,
                     y_acc,
                     flipRatio,
@@ -817,7 +844,7 @@ int main(int argc, char** argv)
                     compensateDrift,
                     separateParticles );
                 sim_mtx.unlock();
-                prev_dt = std::chrono::duration<float>(clock_t::now() - beg).count() * realtime_target;
+                sim_dt = std::chrono::duration<float>(clock_t::now() - beg).count() * realtime_factor;
 
                 if(!sim_can_continue)
                 {
@@ -835,6 +862,7 @@ int main(int argc, char** argv)
         } };
 
     bool paused = false;
+    bool show_stats = true;
     while(running)
     {
         FD_ZERO(&set);
@@ -912,6 +940,11 @@ int main(int argc, char** argv)
                     }
                     break;
                 }
+                case 's' :
+                {
+                    show_stats = !show_stats;
+                    break;
+                }
             }
         }
 
@@ -926,8 +959,12 @@ int main(int argc, char** argv)
             // render
             sim_mtx.lock();
             f.render(stdscr, grad);
-            // mvprintw(0, 0, "ACC : <%f, %f>", x_acc.load(), y_acc.load());
-            // refresh();
+            if(show_stats)
+            {
+                mvprintw(0, 0, "Sim Timestep : %.3fs (%.1fms)", sim_dt.load(), sim_dt.load() / realtime_factor * 1000.f);
+                mvprintw(1, 0, "Acceleration : <%.3f, %.3f>", x_acc.load(), y_acc.load());
+            }
+            refresh();
             sim_mtx.unlock();
 
             sim_can_continue = true;

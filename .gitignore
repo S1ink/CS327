@@ -2,6 +2,6 @@
 */build/*
 */*.tar.gz
 */game
-*/final
+*/fluid
 */debug.txt
 *.ppm

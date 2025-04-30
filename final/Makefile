@@ -10,8 +10,8 @@ CC := gcc
 CXX := g++
 
 CFLAGS := -Wall -Werror -funroll-loops -Isrc
-CXXFLAGS := -std=c++17 -lstdc++ -Wall -Werror -Wno-narrowing -funroll-loops -Isrc -Iinclude/eigen
-LDFLAGS := -lm -lncurses
+CXXFLAGS := -std=c++17 -lstdc++ -Wall -Werror -Wno-narrowing -funroll-loops -Isrc -Iinclude/eigen #-fopenmp
+LDFLAGS := -lm -lncurses #-fopenmp
 
 SRC_DIR := src
 OBJ_DIR := build

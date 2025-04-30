@@ -29,7 +29,7 @@ CFLAGS += -O3
 CXXFLAGS += -O3
 endif
 
-BIN := final
+BIN := fluid
 SRCS := $(call rwildcard,$(SRC_DIR)/,*.cpp *.c)
 OBJS := $(SRCS:$(SRC_DIR)/%=$(OBJ_DIR)/%.o)
 HEADERS := $(call rwildcard,$(SRC_DIR)/,*.h *.hpp)

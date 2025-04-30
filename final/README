@@ -1,0 +1,14 @@
+Begins a simple, interactive fluid simulation using the FLIP method.
+(Note that this is meant to be more aesthetic than physically accurate)
+
+**BUILD**:
+    Run `make`
+
+**USAGE**:
+    Run: `./fluid`
+
+*Controls*:
+    - Acceleration direction is controlled by the arrow keys
+        (no acceleration when no keys are pressed)
+    - Spacebar pauses/unpauses the simulation
+    - 'q' or Ctrl+C closes terminates the program

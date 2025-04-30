@@ -1,738 +1,943 @@
-// #include "util/nc_wrap.hpp"
-// #include "util/math.hpp"
-// #include "util/grid.hpp"
-
-// #include <vector>
+#include <condition_variable>
+#include <algorithm>
 // #include <fstream>
-// #include <type_traits>
+#include <atomic>
+#include <chrono>
+#include <cstdio>
+#include <thread>
+#include <vector>
+#include <cmath>
+#include <mutex>
 
-// #include <Eigen/Eigen>
+#include <unistd.h>
+#include <sys/select.h>
+
+#include <ncurses.h>
+
+#include "util/nc_wrap.hpp"
 
 
 // static std::ofstream dbg{ "./debug.txt" };
 
-// class FluidSim
-// {
-// public:
-//     using IntT = int;
-//     using FloatT = float;
-//     using Vec2i = Eigen::Vector2<IntT>;
-//     using Vec2f = Eigen::Vector2<FloatT>;
-
-//     enum
-//     {
-//         CELLTYPE_FLUID = 0,
-//         CELLTYPE_AIR,
-//         CELLTYPE_SOLID
-//     };
-
-//     struct FluidCell
-//     {
-//         Vec2f uv{ 0.f, 0.f };
-//         Vec2f duv{ 0.f, 0.f };
-//         Vec2f prev_uv{ 0.f, 0.f };
-//         FloatT p{ 0.f };
-//         FloatT s{ 1.f };
-//         FloatT density{ 0.f };
-
-//         uint8_t type{ CELLTYPE_FLUID };
-//     };
-
-//     struct ParticleCell
-//     {
-//         size_t n_particles;
-//         size_t first_idx;
-//     };
-
-//     struct Particle
-//     {
-//         Vec2f pos;
-//         Vec2f vel;
-//     };
-
-// public:
-//     FluidSim(
-//         const Vec2i& dim,
-//         const Vec2f& cell_size,
-//         FloatT particle_radius,
-//         FloatT density );
-//     inline ~FluidSim() = default;
-
-//     void resize(const Vec2i& dim);
-//     void simulate(
-//         FloatT dt,
-//         const Vec2f& acc,
-//         FloatT ratio,
-//         size_t n_pressure_iters,
-//         size_t n_particle_iters,
-//         FloatT over_rxn,
-//         bool compensate_drift );
-
-//     void render(WINDOW* w, NCGradient& grad);
-
-// protected:
-//     void writeBoundaryCells();
-
-//     void stepParticles(FloatT dt, const Vec2f& acc);
-//     void pushParticles(size_t iters);
-//     void handleParticleCollisions();
-//     void updateParticleDensity();
-//     template<bool ToGrid>
-//     void transferVelocities(FloatT ratio);
-//     void solveIncompressibility(
-//         size_t iters,
-//         FloatT dt,
-//         FloatT over_rxn,
-//         bool compensate_drift = true );
-
-// protected:
-//     FloatT density;
-//     FloatT particle_rad;
-//     FloatT particle_rest_density;
-
-//     std::vector<Particle> particles;
-//     std::vector<FluidCell> fluid_cells;
-//     std::vector<ParticleCell> particle_cells;
-//     AbstractGridUtil<IntT, FloatT, GridUtil::Y_MAJOR_ORDER, GridUtil::GRID_USING_VECRES> fluid_grid;
-//     AbstractGridUtil<IntT, FloatT, GridUtil::Y_MAJOR_ORDER, GridUtil::GRID_STANDARD> particle_grid;
-
-// };
-
-
-
-// FluidSim::FluidSim(
-//     const Vec2i& dim,
-//     const Vec2f& cell_size,
-//     FloatT particle_radius,
-//     FloatT density )
-// :
-//     density{ density },
-//     particle_rad{ particle_radius },
-//     particle_rest_density{ 0.f },
-//     fluid_grid{ dim, cell_size },
-//     particle_grid{ Vec2f{ dim.template cast<FloatT>().cwiseProduct(cell_size) }, 2.2f * particle_radius }
-// {
-//     this->particles.reserve((dim - Vec2i::Constant(2)).prod());
-//     for(IntT y = 1; y < dim.y() - 1; y++)
-//     {
-//         for(IntT x = 1; x < dim.x() - 1; x++)
-//         {
-//             this->particles.emplace_back(
-//                 Particle{
-//                     .pos = Vec2f{ static_cast<FloatT>(x) + 0.5f, static_cast<FloatT>(y) + 0.5f }.cwiseProduct(cell_size),
-//                     .vel = Vec2f::Zero()
-//                 } );
-
-//             // Vec2f& pos = this->particles.back().pos;
-//             // Vec2i cell = this->fluid_grid.align(pos);
-//             // dbg << "\t(" << pos.x() << ", " << pos.y() << ") -- ( " << cell.x() << ", " << cell.y() << " )\n";
-//         }
-//     }
-
-//     this->fluid_cells.resize(this->fluid_grid.numCells(), FluidCell{});
-//     // for(FluidCell& f : this->fluid_cells)
-//     // {
-//     //     f.s = 1.f;
-//     //     f.type = CELLTYPE_FLUID;
-//     // }
-
-//     this->writeBoundaryCells();
-
-//     this->particle_cells.resize(this->particle_grid.numCells());
-// }
-
-// void FluidSim::resize(const Vec2i& dim)
-// {
-//     std::vector<FluidCell> fcell_swap;
-//     fcell_swap.resize(dim.prod(), FluidCell{});
-
-//     IntT ncols = std::min(dim.x(), this->fluid_grid.dim().x());
-//     IntT nrows = std::min(dim.y(), this->fluid_grid.dim().y());
-
-//     for(IntT row = 1; row < nrows - 1; row++)
-//     {
-//         int64_t swap_base = GridUtil::gridIdx<GridUtil::Y_MAJOR_ORDER>(0, row, dim);
-//         int64_t src_base = this->fluid_grid.localIdx(0, row);
-
-//         // memcpy(
-//         //     fcell_swap.data() + GridUtil::gridIdx<GridUtil::Y_MAJOR_ORDER>(1, row, dim),
-//         //     this->fluid_cells.data() + this->fluid_grid.localIdx(1, row),
-//         //     (ncols - 2) * sizeof(FluidCell) );
-//         for(IntT col = 1; col < ncols - 1; col++)
-//         {
-//             fcell_swap[swap_base + col] = this->fluid_cells[src_base + col];
-//         }
-//     }
-
-//     this->fluid_cells.swap(fcell_swap);
-//     this->fluid_grid.resize(dim);
-//     this->particle_cells.resize(dim.prod());
-//     this->particle_grid.resize(dim);
-
-//     this->writeBoundaryCells();
-// }
-
-// void FluidSim::simulate(
-//     FloatT dt,
-//     const Vec2f& acc,
-//     FloatT ratio,
-//     size_t n_pressure_iters,
-//     size_t n_particle_iters,
-//     FloatT over_rxn,
-//     bool compensate_drift )
-// {
-//     constexpr size_t sub_steps = 1;
-//     const FloatT sdt = dt / sub_steps;
-
-//     for(size_t step = 0; step < sub_steps; step++)
-//     {
-//         dbg << "begin sim iter " << step << std::endl;
-//         this->stepParticles(sdt, acc);
-//         dbg << "stepped particles" << std::endl;
-//         this->pushParticles(n_particle_iters);
-//         dbg << "pushed particles" << std::endl;
-//         this->handleParticleCollisions();
-//         dbg << "handled particle collisions" << std::endl;
-//         this->transferVelocities<true>(ratio);
-//         dbg << "transferred velocities" << std::endl;
-//         this->updateParticleDensity();
-//         dbg << "updated particle density" << std::endl;
-//         this->solveIncompressibility(n_pressure_iters, sdt, over_rxn, compensate_drift);
-//         dbg << "solved incompressibility" << std::endl;
-//         this->transferVelocities<false>(ratio);
-//         dbg << "transferred velocities -- done with iter\n" << std::endl;
-//     }
-// }
-
-// void FluidSim::render(WINDOW* w, NCGradient& grad)
-// {
-//     const IntT mx = std::min(getmaxx(w), this->fluid_grid.dim().x());
-//     const IntT my = std::min(getmaxy(w), this->fluid_grid.dim().y());
-
-//     for(IntT y = 0; y < my; y++)
-//     {
-//         for(IntT x = 0; x < mx; x++)
-//         {
-//             int64_t i = this->fluid_grid.localIdx(x, y);
-//             const FluidCell& f = this->fluid_cells[i];
-//             if(f.type == CELLTYPE_SOLID)
-//             {
-//                 mvwaddch(w, y, x, ' ');
-//             }
-//             else
-//             {
-//                 float weight = f.density;
-
-//                 grad.printChar(
-//                     w, y, x,
-//                     grad.floatToIdx(weight / 4),
-//                     " .+#@"[MIN_CACHED(static_cast<size_t>(weight), 4U)] );
-//             }
-//             // const auto c = COLOR_PAIR(f.type == CELLTYPE_SOLID ? COLOR_MAGENTA : COLOR_GREEN);
-
-//             // wattron(w, c);
-//             // mvwaddch(w, y, x, '*');
-//             // wattroff(w, c);
-//         }
-//     }
-//     wrefresh(w);
-
-//     // mvwprintw(w, 0, 0, "FLUID GRID DIM IS %d x %d", this->fluid_grid.dim().x(), this->fluid_grid.dim().y());
-//     // mvwprintw(w, 1, 0, "FLUID GRID SIZE IS %f x %f", this->fluid_grid.size().x(), this->fluid_grid.size().y());
-//     // mvwprintw(w, 2, 0, "PARTICLE GRID DIM IS %d x %d", this->particle_grid.dim().x(), this->particle_grid.dim().y());
-//     // mvwprintw(w, 3, 0, "PARTICLE GRID SIZE IS %f x %f", this->particle_grid.size().x(), this->particle_grid.size().y());
-//     // wrefresh(w);
-// }
-
-// void FluidSim::writeBoundaryCells()
-// {
-//     const IntT mx = this->fluid_grid.dim().x();
-//     const IntT my = this->fluid_grid.dim().y();
-
-//     for(IntT x = 0; x < mx; x++)
-//     {
-//         FluidCell& a = this->fluid_cells[this->fluid_grid.localIdx(x, 0)];
-//         FluidCell& b = this->fluid_cells[this->fluid_grid.localIdx(x, my - 1)];
-//         a.s = b.s = 0.f;
-//         a.type = b.type = CELLTYPE_SOLID;
-//     }
-//     for(IntT y = 1; y < my - 1; y++)
-//     {
-//         FluidCell& a = this->fluid_cells[this->fluid_grid.localIdx(0, y)];
-//         FluidCell& b = this->fluid_cells[this->fluid_grid.localIdx(mx - 1, y)];
-//         a.s = b.s = 0.f;
-//         a.type = b.type = CELLTYPE_SOLID;
-//     }
-// }
-
-// void FluidSim::stepParticles(FloatT dt, const Vec2f& acc)
-// {
-//     for(Particle& p : this->particles)
-//     {
-//         p.pos += (p.vel += (acc * dt)) * dt;
-
-//         assert(!isnanf(p.pos.x()) && !isnanf(p.pos.y()));
-//     }
-// }
-
-// void FluidSim::pushParticles(size_t iters)
-// {
-//     thread_local std::vector<size_t> cell_particle_ids;
-//     cell_particle_ids.resize(this->particles.size());
-
-//     // reset count
-//     for(ParticleCell& c : this->particle_cells)
-//     {
-//         c.n_particles = 0;
-//     }
-
-//     // count particles in each cell
-//     for(Particle& p : this->particles)
-//     {
-//         this->particle_cells[
-//             this->particle_grid.clampedCellIdx(p.pos) ].n_particles++;
-
-//         assert(!isnanf(p.pos.x()) && !isnanf(p.pos.y()));
-//     }
-
-//     // get max indices for each particle cell
-//     size_t n = 0;
-//     for(ParticleCell& c : this->particle_cells)
-//     {
-//         c.first_idx = (n += c.n_particles);
-//     }
-
-//     size_t i = 0;
-//     for(Particle& p : this->particles)
-//     {
-//         // assign indices of particles into slots within accumulated ranges for each particle cell
-//         cell_particle_ids[
-//             (--this->particle_cells[
-//                 this->particle_grid.clampedCellIdx(p.pos) ].first_idx) ] = i;
-
-//         assert(!isnanf(p.pos.x()) && !isnanf(p.pos.y()));
-
-//         i++;
-//     }
-
-//     const float min_dist = this->particle_rad * 2.f;
-//     const float min_dist_2 = min_dist * min_dist;
-
-//     for(size_t iter = 0; iter < iters; iter++)
-//     {
-//         i = 0;
-//         for(Particle& p : this->particles)
-//         {
-//             // iterate over surrounding cells (3x3)
-
-//             Vec2i pvi = this->particle_grid.clampedAlign(p.pos);
-//             const Vec2i
-//                 v0 = (pvi - Vec2i::Ones()).cwiseMax(this->particle_grid.minCell()),
-//                 v1 = (pvi + Vec2i::Ones()).cwiseMin(this->particle_grid.maxCell());
-
-//             for(IntT y = v0.y(); y < v1.y(); y++)
-//             {
-//                 for(IntT x = v0.x(); x < v1.x(); x++)
-//                 {
-//                     const int64_t idx = this->particle_grid.localIdx(x, y);
-
-//                     size_t beg = this->particle_cells[idx].first_idx;
-//                     size_t end;
-//                     if(i == this->particle_grid.numCells() - 1) end = n;
-//                     else end = this->particle_cells[idx + 1].first_idx;
-
-//                     for( auto pi = cell_particle_ids.begin() + beg;
-//                         pi < cell_particle_ids.begin() + end;
-//                         pi++ )
-//                     {
-//                         if(*pi == i) continue;
-
-//                         Particle& p_ = this->particles[*pi];
-
-//                         Vec2f pre_p = p.pos, pre_p_ = p_.pos;
-
-//                         Vec2f ds = p_.pos - p.pos;
-//                         const float d2 = ds.squaredNorm();
-
-//                         if(d2 > min_dist_2 || d2 == 0.f) continue;
-
-//                         const float d = std::sqrt(d2);
-//                         ds *= (0.5f * (min_dist - d) / d);
-
-//                         p.pos -= ds;
-//                         p_.pos += ds;
-
-//                         if(isnanf(p.pos.x()) || isnanf(p.pos.y()))
-//                         {
-//                             dbg << "PUSH PARTICLES ENCOUNTERED NAN:"
-//                                 "\n\tp : (" << pre_p.x() << ", " << pre_p.y() <<
-//                                 ")\n\tPVI: (" << pvi.x() << ", " << pvi.y() <<
-//                                 ")\n\tv0: (" << v0.x() << ", " << v0.y() <<
-//                                 ")\n\tv1: (" << v1.x() << ", " << v1.y() <<
-//                                 ")\n\tpi: " << *pi <<
-//                                 "\n\tp_: (" << pre_p_.x() << ", " << pre_p_.y() <<
-//                                 ")\n\tds: (" << ds.x() << ", " << ds.y() <<
-//                                 ")\n\td2: " << d2 <<
-//                                 "\n\td: " << d << std::endl;
-
-//                             assert(false);
-//                         }
-//                     }
-//                 }
-//             }
-
-//             i++;
-//         }
-//     }
-// }
-
-// void FluidSim::handleParticleCollisions()
-// {
-//     const Vec2f min_bound =
-//         this->fluid_grid.cellSize() + Vec2f::Constant(this->particle_rad);
-//     const Vec2f max_bound =
-//         this->fluid_grid.size() - this->fluid_grid.cellSize() - Vec2f::Constant(this->particle_rad);
-
-//     for(Particle& p : this->particles)
-//     {
-//         Vec2f& v = p.pos;
-
-//         if(v.x() < min_bound.x())
-//         {
-//             v.x() = min_bound.x();
-//             p.vel.x() = 0.f;
-//         }
-//         else
-//         if(v.x() > max_bound.x())
-//         {
-//             v.x() = max_bound.x();
-//             p.vel.x() = 0.f;
-//         }
-//         if(v.y() < min_bound.y())
-//         {
-//             v.y() = min_bound.y();
-//             p.vel.y() = 0.f;
-//         }
-//         else
-//         if(v.y() > max_bound.y())
-//         {
-//             v.y() = max_bound.y();
-//             p.vel.y() = 0.f;
-//         }
-
-//         assert(!isnanf(v.x()) && !isnanf(v.y()));
-//     }
-// }
-
-// void FluidSim::updateParticleDensity()
-// {
-//     // dbg << "\tupdating particle densities" << std::endl;
-//     for(FluidCell& f : this->fluid_cells) f.density = 0.f;
-
-//     const Vec2f& res = this->fluid_grid.cellSize();
-//     const Vec2f& inv_res = this->fluid_grid.invCellSize();
-//     const Vec2f half_res = res * 0.5;
-
-//     for(Particle& p : this->particles)
-//     {
-//         // dbg << "\tlooping particle at " << p.pos.x() << ", " << p.pos.y() << std::endl;
-
-//         const Vec2f v = GridUtil::clamp(p.pos, res, Vec2f{ this->fluid_grid.size() - res });
-//         const Vec2f v_ = v - half_res;
-//         const Vec2i v0 = this->fluid_grid.align(v_);
-//         const Vec2i v1 = (v0 + Vec2i::Ones()).cwiseMin(this->fluid_grid.maxCell());
-//         const Vec2f t = (v_ - v0.template cast<FloatT>().cwiseProduct(res)).cwiseProduct(inv_res);
-//         const Vec2f s = Vec2f::Ones() - t;
-
-//         // dbg << "v0 local idx : " << this->fluid_grid.localIdx(v0) << " (" << v0.x() << ", " << v0.y() << ")" << std::endl;
-
-//         this->fluid_cells[this->fluid_grid.localIdx(v0)].density += s.prod();
-//         this->fluid_cells[this->fluid_grid.localIdx(v1)].density += t.prod();
-//         this->fluid_cells[this->fluid_grid.localIdx(v0.x(), v1.y())].density += s.x() * t.y();
-//         this->fluid_cells[this->fluid_grid.localIdx(v1.x(), v0.y())].density += t.x() * s.y();
-
-//         assert(!isnanf(p.pos.x()) && !isnanf(p.pos.y()));
-//     }
-
-//     if(this->particle_rest_density == 0.f)
-//     {
-//         double sum = 0.;
-//         size_t n_fluid_cells = 0;
-
-//         for(FluidCell& f : this->fluid_cells)
-//         {
-//             if(f.type == CELLTYPE_FLUID)
-//             {
-//                 sum += static_cast<double>(f.density);
-//                 n_fluid_cells++;
-//             }
-//         }
-
-//         if(n_fluid_cells > 0)
-//         {
-//             this->particle_rest_density = static_cast<FloatT>(sum / n_fluid_cells);
-//         }
-//     }
-// }
-
-// template<bool ToGrid>
-// void FluidSim::transferVelocities(FloatT ratio)
-// {
-//     const Vec2f& res = this->fluid_grid.cellSize();
-//     const Vec2f& inv_res = this->fluid_grid.invCellSize();
-//     const Vec2f half_res = res * 0.5;
-
-//     // dbg << "\ttransfer velocities <" << ToGrid << "> initializing" << std::endl;
-
-//     if constexpr(ToGrid)
-//     {
-//         for(FluidCell& f : this->fluid_cells)
-//         {
-//             f.prev_uv = f.uv;
-//             f.duv.setZero();
-//             f.uv.setZero();
-
-//             f.type = (f.s == 0.f) ? CELLTYPE_SOLID : CELLTYPE_AIR;
-//         }
-
-//         // dbg << "\ttogrid -- iterated fluid cells" << std::endl;
-
-//         for(Particle& p : this->particles)
-//         {
-//             FluidCell& f = this->fluid_cells[this->fluid_grid.clampedCellIdx(p.pos)];
-//             if(f.type == CELLTYPE_AIR)
-//             {
-//                 f.type = CELLTYPE_FLUID;
-//             }
-
-//             assert(!isnanf(p.pos.x()) && !isnanf(p.pos.y()));
-//         }
-
-//         // dbg << "\ttogrid -- iterated particles" << std::endl;
-//     }
-
-//     for(size_t w = 0; w < 2; w++)
-//     {
-//         // dbg << "\tbeginning iter " << w << std::endl;
-
-//         const Vec2f& size = this->fluid_grid.size();
-//         const Vec2i& dim = this->fluid_grid.dim();
-
-//         const float dx = w ? 0.f : half_res.x();
-//         const float dy = w ? half_res.y() : 0.f;
-
-//         for(Particle& p : this->particles)
-//         {
-//             assert(!isnanf(p.pos.x()) && !isnanf(p.pos.y()));
-
-//             const Vec2f v = GridUtil::clamp(p.pos, res, Vec2f{ size - res });
-
-//             // dbg << "particle (" << p.pos.x() << ", " << p.pos.y() << ") --> (" << v.x() << ", " << v.y() << ")" << std::endl;
-
-//             int x0 = std::min(static_cast<int>(std::floor((v.x() - dx) * inv_res.x())), dim.x() - 2);
-//             float tx = ((v.x() - dx) - (x0 * res.x())) * inv_res.x();
-//             int x1 = std::min(x0 + 1, dim.x() - 2);
-
-//             int y0 = std::min(static_cast<int>(std::floor((v.y() - dy) * inv_res.y())), dim.y() - 2);
-//             float ty = ((v.y() - dy) - (y0 * res.y())) * inv_res.y();
-//             int y1 = std::min(y0 + 1, dim.y() - 2);
-
-//             float sx = 1.f - tx;
-//             float sy = 1.f - ty;
-
-//             std::array<float, 4> d{
-//                 {
-//                     (sx * sy),
-//                     (tx * sy),
-//                     (tx * ty),
-//                     (sx * ty)
-//                 } };
-
-//             std::array<int64_t, 4> nr{
-//                 {
-//                     this->fluid_grid.localIdx(x0, y0),
-//                     this->fluid_grid.localIdx(x1, y0),
-//                     this->fluid_grid.localIdx(x1, y1),
-//                     this->fluid_grid.localIdx(x0, y1)
-//                 } };
-
-//             if constexpr(ToGrid)
-//             {
-//                 for(size_t i = 0; i < 4; i++)
-//                 {
-//                     FluidCell& f = this->fluid_cells[nr[i]];
-//                     f.uv[w] += p.vel[w] * d[i];
-//                     f.duv[w] += d[i];
-//                 }
-//             }
-//             else
-//             {
-//                 int64_t off = w ? -dim.y() : 1;
-//                 float ds = 0.;
-//                 for(size_t i = 0; i < 4; i++)
-//                 {
-//                     if( this->fluid_cells[nr[i]].type == CELLTYPE_AIR &&
-//                         this->fluid_cells[nr[i] + off].type == CELLTYPE_AIR )
-//                     {
-//                         d[i] = 0;
-//                     }
-
-//                     ds += d[i];
-//                 }
-
-//                 if(ds > 0.f)
-//                 {
-//                     float pic_v = 0.f;
-//                     float corr = 0.f;
-//                     for(size_t i = 0; i < 4; i++)
-//                     {
-//                         const FluidCell& f = this->fluid_cells[nr[i]];
-
-//                         pic_v += d[i] * f.uv[w];
-//                         corr += d[i] * (f.uv[w] - f.prev_uv[w]);
-//                     }
-//                     pic_v /= ds;
-//                     corr /= ds;
-//                     float flip_v = p.vel[w] + corr;
-
-//                     p.vel[w] = pic_v * (1.f - ratio) + flip_v * ratio;
-//                 }
-//             }
-//         }
-
-//         // dbg << "\titerated particles" << std::endl;
-
-//         if constexpr(ToGrid)
-//         {
-//             for(FluidCell& f : this->fluid_cells)
-//             {
-//                 if(f.duv[w] > 0.f)
-//                 {
-//                     f.uv[w] /= f.duv[w];
-//                 }
-//             }
-
-//             // dbg << "\ttogrid -- iterated cells" << std::endl;
-
-//             for(int y = 0; y < dim.y(); y++)
-//             {
-//                 for(int x = 0; x < dim.x(); x++)
-//                 {
-//                     int64_t i = this->fluid_grid.localIdx(x, y);
-//                     int64_t i2 = this->fluid_grid.localIdx(x - 1, y);
-//                     int64_t i3 = this->fluid_grid.localIdx(x, y + 1);
-
-//                     FluidCell& f = this->fluid_cells[i];
-
-//                     if( f.type == CELLTYPE_SOLID || ((x > 0) &&
-//                         this->fluid_cells[i2].type == CELLTYPE_SOLID) )
-//                     {
-//                         f.uv[0] = f.prev_uv[0];
-//                     }
-//                     if( f.type == CELLTYPE_SOLID || ((y < dim.y()) &&
-//                         this->fluid_cells[i3].type == CELLTYPE_SOLID) )
-//                     {
-//                         f.uv[1] = f.prev_uv[1];
-//                     }
-//                 }
-//             }
-
-//             // dbg << "\ttogrid -- iterated cells again" << std::endl;
-//         }
-//     }
-
-// }
-
-// void FluidSim::solveIncompressibility(
-//     size_t iters,
-//     FloatT dt,
-//     FloatT overrxn,
-//     bool compensate_drift )
-// {
-//     for(FluidCell& f : this->fluid_cells)
-//     {
-//         f.p = 0.f;
-//         f.prev_uv = f.uv;
-//     }
-
-//     const Vec2i& dim = this->fluid_grid.dim();
-//     FloatT h = std::sqrt(this->fluid_grid.cellSize().prod());
-//     FloatT cp = h / dt * this->density;
-
-//     for(size_t iter = 0; iter < iters; iter++)
-//     {
-//         for(int y = 1; y < dim.y() - 1; y++)
-//         {
-//             for(int x = 1; x < dim.x() - 1; x++)
-//             {
-//                 FluidCell& center = this->fluid_cells[this->fluid_grid.localIdx(x, y)];
-//                 FluidCell& left = this->fluid_cells[this->fluid_grid.localIdx(x - 1, y)];
-//                 FluidCell& right = this->fluid_cells[this->fluid_grid.localIdx(x + 1, y)];
-//                 FluidCell& bottom = this->fluid_cells[this->fluid_grid.localIdx(x, y + 1)];
-//                 FluidCell& top = this->fluid_cells[this->fluid_grid.localIdx(x, y - 1)];
-
-//                 if(center.type != CELLTYPE_FLUID) continue;
-
-//                 float s = left.s + right.s + bottom.s + top.s;
-//                 if(s == 0.f) continue;
-
-//                 float div = right.uv[0] - center.uv[0] + top.uv[1] - center.uv[1];
-
-//                 if(this->particle_rest_density > 0.f && compensate_drift)
-//                 {
-//                     constexpr float k = 1.f;
-//                     float cmp = center.density - this->particle_rest_density;
-//                     if(cmp > 0.f) div = div - k * cmp;
-//                 }
-
-//                 float p = -div / s;
-//                 p *= overrxn;
-//                 center.p += cp * p;
-
-//                 center.uv[0] -= left.s * p;
-//                 right.uv[0] += right.s * p;
-//                 center.uv[1] -= left.s * p;
-//                 top.uv[1] += right.s * p;
-//             }
-//         }
-//     }
-// }
-
-
-
-// int main(int argc, char** argv)
-// {
-//     NCInitializer::use();
-
-//     NCGradient grad{{0, 0, 0}, {100, 1000, 500}};
-//     grad.applyBackground();
-
-//     int wx, wy;
-//     FluidSim f{
-//         Eigen::Vector2i{ wx = getmaxx(stdscr), wy = getmaxy(stdscr) },
-//         Eigen::Vector2f{ 0.9f, 1.9f },
-//         0.1f,
-//         10.f };
-
-//     {
-//         // f.render(stdscr, grad);
-//         int c = 0;
-//         do
-//         {
-//             const int wx_ = getmaxx(stdscr);
-//             const int wy_ = getmaxy(stdscr);
-
-//             if(wx_ != wx || wy_ != wy)
-//             {
-//                 wx = wx_;
-//                 wy = wy_;
-//                 f.resize(Eigen::Vector2i{ wx, wy });
-//             }
-
-//             f.simulate(0.2f, Eigen::Vector2f{ 0.f, 9.8f }, 0.5f, 100, 20, 1.9, true);
-//             f.render(stdscr, grad);
-//         }
-//         while((c = getch()) != 03);
-//     }
-//     NCInitializer::shutdown();
-// }
+/** Core functionality converted from https://github.com/matthias-research/pages/blob/master/tenMinutePhysics/18-flip.html */
+class FlipFluid
+{
+public:
+    enum CellType
+    {
+        FLUID_CELL = 0,
+        AIR_CELL = 1,
+        SOLID_CELL = 2
+    };
+
+    // Fluid parameters
+    float density;
+    int fNumX, fNumY, fNumCells;
+    float h, fInvSpacing;
+    std::vector<float> u, v, du, dv, prevU, prevV, p, s, cellColor;
+    std::vector<int> cellType;
+
+    // Particle parameters
+    int maxParticles;
+    int numParticles = 0;
+    float particleRadius, pInvSpacing;
+    int pNumX, pNumY, pNumCells;
+    float particleRestDensity = 0.0f;
+    std::vector<float> particlePos, particleVel, particleColor, particleDensity;
+    std::vector<int> numCellParticles, firstCellParticle, cellParticleIds;
+
+public:
+    FlipFluid(
+        float density_,
+        float width,
+        float height,
+        float spacing,
+        float particleRadius_,
+        int maxParticles_ );
+    inline ~FlipFluid() = default;
+
+    void simulate(
+        float dt,
+        float x_acc,
+        float y_acc,
+        float flipRatio,
+        int numPressureIters,
+        int numParticleIters,
+        float overRelaxation,
+        bool compensateDrift,
+        bool separateParticles );
+
+    void render(WINDOW* w, NCGradient& grad);
+
+public:
+    void integrateParticles(float dt, float x_acc, float y_acc);
+    void pushParticlesApart(int numIters);
+    void handleParticleCollisions(/*float obstacleX, float obstacleY, float obstacleRadius*/);
+    void updateParticleDensity();
+    void transferVelocities(bool toGrid, float flipRatio);
+    void solveIncompressibility(
+        int numIters,
+        float dt,
+        float overRelaxation,
+        bool compensateDrift = true );
+    void updateParticleColors();
+    void updateCellColors();
+    void setSciColor(int cellNr, float val, float minVal, float maxVal);
+
+private:
+    inline float clamp(float x, float minVal, float maxVal)
+    {
+        return std::max(minVal, std::min(x, maxVal));
+    }
+
+};
+
+
+
+FlipFluid::FlipFluid(
+    float density_,
+    float width,
+    float height,
+    float spacing,
+    float particleRadius_,
+    int maxParticles_ )
+:
+    density(density_),
+    maxParticles(maxParticles_),
+    particleRadius(particleRadius_)
+{
+
+    fNumX = static_cast<int>(width / spacing) + 1;
+    fNumY = static_cast<int>(height / spacing) + 1;
+    h = std::max(width / fNumX, height / fNumY);
+    fInvSpacing = 1.0f / h;
+    fNumCells = fNumX * fNumY;
+
+    u.resize(fNumCells, 0);
+    v.resize(fNumCells, 0);
+    du.resize(fNumCells, 0);
+    dv.resize(fNumCells, 0);
+    prevU.resize(fNumCells, 0);
+    prevV.resize(fNumCells, 0);
+    p.resize(fNumCells, 0);
+    s.resize(fNumCells, 0);
+    cellType.resize(fNumCells, 0);
+    cellColor.resize(3 * fNumCells, 0);
+
+    particlePos.resize(2 * maxParticles, 0);
+    particleVel.resize(2 * maxParticles, 0);
+    particleColor.resize(3 * maxParticles, 0);
+    for(int i = 0; i < maxParticles; ++i)
+    {
+        particleColor[3 * i + 2] = 1.0f;
+    }
+
+    particleDensity.resize(fNumCells, 0);
+
+    pInvSpacing = 1.0f / (2.2f * particleRadius);
+    pNumX = static_cast<int>(width * pInvSpacing) + 1;
+    pNumY = static_cast<int>(height * pInvSpacing) + 1;
+    pNumCells = pNumX * pNumY;
+
+    numCellParticles.resize(pNumCells, 0);
+    firstCellParticle.resize(pNumCells + 1, 0);
+    cellParticleIds.resize(maxParticles, 0);
+}
+
+void FlipFluid::simulate(
+    float dt,
+    float x_acc,
+    float y_acc,
+    float flipRatio,
+    int numPressureIters,
+    int numParticleIters,
+    float overRelaxation,
+    bool compensateDrift,
+    bool separateParticles )
+{
+    constexpr int numSubSteps = 1;
+    float sdt = dt / numSubSteps;
+
+    for(int step = 0; step < numSubSteps; step++)
+    {
+        this->integrateParticles(sdt, x_acc, y_acc);
+        if(separateParticles)
+        {
+            this->pushParticlesApart(numParticleIters);
+        }
+        this->handleParticleCollisions();
+        this->transferVelocities(true, flipRatio);
+        this->updateParticleDensity();
+        this->solveIncompressibility(numPressureIters, sdt, overRelaxation, compensateDrift);
+        this->transferVelocities(false, flipRatio);
+    }
+
+    this->updateParticleColors();
+    this->updateCellColors();
+}
+
+void FlipFluid::render(WINDOW* w, NCGradient& grad)
+{
+    const int mx = std::min(getmaxx(w), fNumX - 2);
+    const int my = std::min(getmaxy(w), fNumY / 2 - 2);
+
+    for(int y = my - 1; y >= 0; y--)
+    {
+        for(int x = 0; x < mx; x++)
+        {
+            int i0 = (x + 1) * fNumY + ((y + 1) * 2);
+            int i1 = (x + 1) * fNumY + ((y + 1) * 2 + 1);
+            if( (cellType[i0] == SOLID_CELL && cellType[i1]) ||
+                (cellType[i0] == AIR_CELL && cellType[i1]) )
+            {
+                attron(COLOR_PAIR(COLOR_BLACK));
+                mvwaddch(w, my - y - 1, x, ' ');
+                attron(COLOR_PAIR(COLOR_BLACK));
+            }
+            else
+            {
+                float density =
+                    (cellColor[i0 * 3] + cellColor[i0 * 3 + 1] + cellColor[i0 * 3 + 2] +
+                        cellColor[i1 * 3] + cellColor[i1 * 3 + 1] + cellColor[i1 * 3 + 2]) / 6.f;
+
+                // // float u = (this->du[i0] + this->du[i1]);
+                // // float v = (this->dv[i0] + this->dv[1]);
+                // float weight = std::abs((p[i0] + p[i1]) * 0.5f);
+
+                grad.printChar(
+                    w, my - y - 1, x,
+                    grad.floatToIdx(density * 3.f - 1.f),    // <-- density: use d * 3 - 1
+                    " .,*+#@"[MIN_CACHED(static_cast<size_t>((1.f - density) * 11.f - 2.5f), 7U)] );
+            }
+        }
+    }
+    wrefresh(w);
+}
+
+void FlipFluid::integrateParticles(float dt, float x_acc, float y_acc)
+{
+    for(int i = 0; i < numParticles; ++i)
+    {
+        particleVel[2 * i] += dt * x_acc;
+        particleVel[2 * i + 1] += dt * y_acc;
+        particlePos[2 * i] += particleVel[2 * i] * dt;
+        particlePos[2 * i + 1] += particleVel[2 * i + 1] * dt;
+    }
+}
+
+void FlipFluid::pushParticlesApart(int numIters)
+{
+    float colorDiffusionCoeff = 0.001f;
+    std::fill(numCellParticles.begin(), numCellParticles.end(), 0);
+
+    for(int i = 0; i < numParticles; ++i)
+    {
+        float x = particlePos[2 * i];
+        float y = particlePos[2 * i + 1];
+        int xi = static_cast<int>(clamp(std::floor(x * pInvSpacing), 0.0f, static_cast<float>(pNumX - 1)));
+        int yi = static_cast<int>(clamp(std::floor(y * pInvSpacing), 0.0f, static_cast<float>(pNumY - 1)));
+        int cellNr = xi * pNumY + yi;
+        numCellParticles[cellNr]++;
+    }
+
+    int first = 0;
+    for(int i = 0; i < pNumCells; ++i)
+    {
+        first += numCellParticles[i];
+        firstCellParticle[i] = first;
+    }
+    firstCellParticle[pNumCells] = first;
+
+    for(int i = 0; i < numParticles; ++i)
+    {
+        float x = particlePos[2 * i];
+        float y = particlePos[2 * i + 1];
+        int xi = static_cast<int>(clamp(std::floor(x * pInvSpacing), 0.0f, static_cast<float>(pNumX - 1)));
+        int yi = static_cast<int>(clamp(std::floor(y * pInvSpacing), 0.0f, static_cast<float>(pNumY - 1)));
+        int cellNr = xi * pNumY + yi;
+        firstCellParticle[cellNr]--;
+        cellParticleIds[firstCellParticle[cellNr]] = i;
+    }
+
+    float minDist = 2.0f * particleRadius;
+    float minDist2 = minDist * minDist;
+
+    for(int iter = 0; iter < numIters; ++iter)
+    {
+        for(int i = 0; i < numParticles; ++i)
+        {
+            float px = particlePos[2 * i];
+            float py = particlePos[2 * i + 1];
+            int pxi = static_cast<int>(px * pInvSpacing);
+            int pyi = static_cast<int>(py * pInvSpacing);
+            int x0 = std::max(pxi - 1, 0);
+            int y0 = std::max(pyi - 1, 0);
+            int x1 = std::min(pxi + 1, pNumX - 1);
+            int y1 = std::min(pyi + 1, pNumY - 1);
+
+            for(int xi = x0; xi <= x1; ++xi)
+            {
+                for(int yi = y0; yi <= y1; ++yi)
+                {
+                    int cellNr = xi * pNumY + yi;
+                    int first = firstCellParticle[cellNr];
+                    int last = firstCellParticle[cellNr + 1];
+
+                    for(int j = first; j < last; ++j)
+                    {
+                        int id = cellParticleIds[j];
+                        if(id == i) continue;
+
+                        float qx = particlePos[2 * id];
+                        float qy = particlePos[2 * id + 1];
+                        float dx = qx - px;
+                        float dy = qy - py;
+                        float d2 = dx * dx + dy * dy;
+                        if(d2 > minDist2 || d2 == 0.0f) continue;
+
+                        float d = std::sqrt(d2);
+                        float s = 0.5f * (minDist - d) / d;
+                        dx *= s;
+                        dy *= s;
+
+                        particlePos[2 * i] -= dx;
+                        particlePos[2 * i + 1] -= dy;
+                        particlePos[2 * id] += dx;
+                        particlePos[2 * id + 1] += dy;
+
+                        for(int k = 0; k < 3; ++k)
+                        {
+                            float color0 = particleColor[3 * i + k];
+                            float color1 = particleColor[3 * id + k];
+                            float color = 0.5f * (color0 + color1);
+                            particleColor[3 * i + k] += (color - color0) * colorDiffusionCoeff;
+                            particleColor[3 * id + k] += (color - color1) * colorDiffusionCoeff;
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+void FlipFluid::handleParticleCollisions(
+    /*float obstacleX,
+    float obstacleY,
+    float obstacleRadius*/ )
+{
+    float hLocal = 1.0f / fInvSpacing;
+    float r = particleRadius;
+    // float or2 = obstacleRadius * obstacleRadius;
+    // float minDist = obstacleRadius + r;
+    // float minDist2 = minDist * minDist;
+
+    float minX = hLocal + r;
+    float maxX = (fNumX - 1) * hLocal - r;
+    float minY = hLocal + r;
+    float maxY = (fNumY - 1) * hLocal - r;
+
+    for(int i = 0; i < numParticles; ++i)
+    {
+        float& x = particlePos[2 * i];
+        float& y = particlePos[2 * i + 1];
+
+        // float dx = x - obstacleX;
+        // float dy = y - obstacleY;
+        // float d2 = dx * dx + dy * dy;
+
+        // if(d2 < minDist2)
+        // {
+        //     particleVel[2 * i] = 0.0f;  // Assume obstacle velocity is 0 for simplicity
+        //     particleVel[2 * i + 1] = 0.0f;
+        // }
+
+        if(x < minX)
+        {
+            x = minX;
+            particleVel[2 * i] = 0.0f;
+        }
+        if(x > maxX)
+        {
+            x = maxX;
+            particleVel[2 * i] = 0.0f;
+        }
+        if(y < minY)
+        {
+            y = minY;
+            particleVel[2 * i + 1] = 0.0f;
+        }
+        if(y > maxY)
+        {
+            y = maxY;
+            particleVel[2 * i + 1] = 0.0f;
+        }
+    }
+}
+
+void FlipFluid::updateParticleDensity()
+{
+    int n = fNumY;
+    float h2 = 0.5f * h;
+    float h1 = fInvSpacing;
+
+    std::fill(particleDensity.begin(), particleDensity.end(), 0.0f);
+
+    for(int i = 0; i < numParticles; ++i)
+    {
+        float x = clamp(particlePos[2 * i], h, (fNumX - 1) * h);
+        float y = clamp(particlePos[2 * i + 1], h, (fNumY - 1) * h);
+
+        int x0 = static_cast<int>((x - h2) * h1);
+        float tx = ((x - h2) - x0 * h) * h1;
+        int x1 = std::min(x0 + 1, fNumX - 1);
+
+        int y0 = static_cast<int>((y - h2) * h1);
+        float ty = ((y - h2) - y0 * h) * h1;
+        int y1 = std::min(y0 + 1, fNumY - 1);
+
+        float sx = 1.0f - tx;
+        float sy = 1.0f - ty;
+
+        if(x0 < fNumX && y0 < fNumY) particleDensity[x0 * n + y0] += sx * sy;
+        if(x1 < fNumX && y0 < fNumY) particleDensity[x1 * n + y0] += tx * sy;
+        if(x1 < fNumX && y1 < fNumY) particleDensity[x1 * n + y1] += tx * ty;
+        if(x0 < fNumX && y1 < fNumY) particleDensity[x0 * n + y1] += sx * ty;
+    }
+
+    if(particleRestDensity == 0.0f)
+    {
+        float sum = 0.0f;
+        int numFluidCells = 0;
+        for(int i = 0; i < fNumCells; ++i)
+        {
+            if(cellType[i] == FLUID_CELL)
+            {
+                sum += particleDensity[i];
+                ++numFluidCells;
+            }
+        }
+
+        if(numFluidCells > 0)
+        {
+            particleRestDensity = sum / numFluidCells;
+        }
+    }
+}
+
+void FlipFluid::transferVelocities(bool toGrid, float flipRatio)
+{
+    int n = fNumY;
+    float h1 = fInvSpacing;
+    float h2 = 0.5f * h;
+
+    if(toGrid)
+    {
+        prevU = u;
+        prevV = v;
+        std::fill(du.begin(), du.end(), 0.0f);
+        std::fill(dv.begin(), dv.end(), 0.0f);
+        std::fill(u.begin(), u.end(), 0.0f);
+        std::fill(v.begin(), v.end(), 0.0f);
+
+        for(int i = 0; i < fNumCells; ++i)
+        {
+            cellType[i] = (s[i] == 0.0f) ? SOLID_CELL : AIR_CELL;
+        }
+
+        for(int i = 0; i < numParticles; ++i)
+        {
+            int xi = static_cast<int>(clamp(std::floor(particlePos[2 * i] * h1), 0.0f, static_cast<float>(fNumX - 1)));
+            int yi = static_cast<int>(clamp(std::floor(particlePos[2 * i + 1] * h1), 0.0f, static_cast<float>(fNumY - 1)));
+            int cellNr = xi * n + yi;
+            if(cellType[cellNr] == AIR_CELL)
+            {
+                cellType[cellNr] = FLUID_CELL;
+            }
+        }
+    }
+
+    for(int component = 0; component < 2; ++component)
+    {
+        float dx = (component == 0) ? 0.0f : h2;
+        float dy = (component == 0) ? h2 : 0.0f;
+
+        std::vector<float>& f = (component == 0) ? u : v;
+        std::vector<float>& prevF = (component == 0) ? prevU : prevV;
+        std::vector<float>& d = (component == 0) ? du : dv;
+
+        for(int i = 0; i < numParticles; ++i)
+        {
+            float x = clamp(particlePos[2 * i], h, (fNumX - 1) * h);
+            float y = clamp(particlePos[2 * i + 1], h, (fNumY - 1) * h);
+
+            int x0 = std::min(static_cast<int>((x - dx) * h1), fNumX - 2);
+            float tx = ((x - dx) - x0 * h) * h1;
+            int x1 = std::min(x0 + 1, fNumX - 2);
+
+            int y0 = std::min(static_cast<int>((y - dy) * h1), fNumY - 2);
+            float ty = ((y - dy) - y0 * h) * h1;
+            int y1 = std::min(y0 + 1, fNumY - 2);
+
+            float sx = 1.0f - tx;
+            float sy = 1.0f - ty;
+
+            float d0 = sx * sy;
+            float d1 = tx * sy;
+            float d2 = tx * ty;
+            float d3 = sx * ty;
+
+            int nr0 = x0 * n + y0;
+            int nr1 = x1 * n + y0;
+            int nr2 = x1 * n + y1;
+            int nr3 = x0 * n + y1;
+
+            if(toGrid)
+            {
+                float pv = particleVel[2 * i + component];
+                f[nr0] += pv * d0;  d[nr0] += d0;
+                f[nr1] += pv * d1;  d[nr1] += d1;
+                f[nr2] += pv * d2;  d[nr2] += d2;
+                f[nr3] += pv * d3;  d[nr3] += d3;
+            }
+            else
+            {
+                int offset = (component == 0) ? n : 1;
+                float valid0 = (cellType[nr0] != AIR_CELL || cellType[nr0 - offset] != AIR_CELL) ? 1.0f : 0.0f;
+                float valid1 = (cellType[nr1] != AIR_CELL || cellType[nr1 - offset] != AIR_CELL) ? 1.0f : 0.0f;
+                float valid2 = (cellType[nr2] != AIR_CELL || cellType[nr2 - offset] != AIR_CELL) ? 1.0f : 0.0f;
+                float valid3 = (cellType[nr3] != AIR_CELL || cellType[nr3 - offset] != AIR_CELL) ? 1.0f : 0.0f;
+
+                float v0 = particleVel[2 * i + component];
+                float dSum = valid0 * d0 + valid1 * d1 + valid2 * d2 + valid3 * d3;
+
+                if(dSum > 0.0f)
+                {
+                    float picV = (valid0 * d0 * f[nr0] + valid1 * d1 * f[nr1] +
+                                  valid2 * d2 * f[nr2] + valid3 * d3 * f[nr3]) / dSum;
+                    float corr = (valid0 * d0 * (f[nr0] - prevF[nr0]) + valid1 * d1 * (f[nr1] - prevF[nr1]) +
+                                  valid2 * d2 * (f[nr2] - prevF[nr2]) + valid3 * d3 * (f[nr3] - prevF[nr3])) / dSum;
+                    float flipV = v0 + corr;
+                    particleVel[2 * i + component] = (1.0f - flipRatio) * picV + flipRatio * flipV;
+                }
+            }
+        }
+
+        if(toGrid)
+        {
+            for(size_t i = 0; i < f.size(); ++i)
+            {
+                if(d[i] > 0.0f)
+                {
+                    f[i] /= d[i];
+                }
+            }
+
+            for(int i = 0; i < fNumX; ++i)
+            {
+                for(int j = 0; j < fNumY; ++j)
+                {
+                    bool solid = (cellType[i * n + j] == SOLID_CELL);
+                    if(solid || (i > 0 && cellType[(i - 1) * n + j] == SOLID_CELL))
+                    {
+                        u[i * n + j] = prevU[i * n + j];
+                    }
+                    if(solid || (j > 0 && cellType[i * n + j - 1] == SOLID_CELL))
+                    {
+                        v[i * n + j] = prevV[i * n + j];
+                    }
+                }
+            }
+        }
+    }
+}
+
+void FlipFluid::solveIncompressibility(
+    int numIters,
+    float dt,
+    float overRelaxation,
+    bool compensateDrift )
+{
+    std::fill(p.begin(), p.end(), 0.0f);
+    prevU = u;
+    prevV = v;
+
+    int n = fNumY;
+    float cp = density * h / dt;
+
+    for(int iter = 0; iter < numIters; ++iter)
+    {
+        for(int i = 1; i < fNumX - 1; ++i)
+        {
+            for(int j = 1; j < fNumY - 1; ++j)
+            {
+                int center = i * n + j;
+                if (cellType[center] != FLUID_CELL) continue;
+
+                int left = (i - 1) * n + j;
+                int right = (i + 1) * n + j;
+                int bottom = i * n + j - 1;
+                int top = i * n + j + 1;
+
+                float sx0 = s[left];
+                float sx1 = s[right];
+                float sy0 = s[bottom];
+                float sy1 = s[top];
+
+                float sumS = sx0 + sx1 + sy0 + sy1;
+                if(sumS == 0.0f) continue;
+
+                float div = u[right] - u[center] + v[top] - v[center];
+
+                if(particleRestDensity > 0.0f && compensateDrift)
+                {
+                    float compression = particleDensity[center] - particleRestDensity;
+                    if(compression > 0.0f)
+                    {
+                        div -= compression;
+                    }
+                }
+
+                float pressure = -div / sumS * overRelaxation;
+                p[center] += cp * pressure;
+
+                u[center] -= sx0 * pressure;
+                u[right] += sx1 * pressure;
+                v[center] -= sy0 * pressure;
+                v[top] += sy1 * pressure;
+            }
+        }
+    }
+}
+
+void FlipFluid::updateParticleColors()
+{
+    float s = 0.01f;
+    float h1 = fInvSpacing;
+
+    for(int i = 0; i < numParticles; ++i)
+    {
+        particleColor[3 * i] = clamp(particleColor[3 * i] - s, 0.0f, 1.0f);
+        particleColor[3 * i + 1] = clamp(particleColor[3 * i + 1] - s, 0.0f, 1.0f);
+        particleColor[3 * i + 2] = clamp(particleColor[3 * i + 2] + s, 0.0f, 1.0f);
+
+        float x = particlePos[2 * i];
+        float y = particlePos[2 * i + 1];
+        int xi = static_cast<int>(clamp(std::floor(x * h1), 1.0f, static_cast<float>(fNumX - 1)));
+        int yi = static_cast<int>(clamp(std::floor(y * h1), 1.0f, static_cast<float>(fNumY - 1)));
+        int cellNr = xi * fNumY + yi;
+
+        if(particleRestDensity > 0.0f)
+        {
+            float relDensity = particleDensity[cellNr] / particleRestDensity;
+            if(relDensity < 0.7f)
+            {
+                float c = 0.8f;
+                particleColor[3 * i] = c;
+                particleColor[3 * i + 1] = c;
+                particleColor[3 * i + 2] = 1.0f;
+            }
+        }
+    }
+}
+
+void FlipFluid::updateCellColors()
+{
+    for(int i = 0; i < fNumCells; ++i)
+    {
+        if(cellType[i] == SOLID_CELL)
+        {
+            cellColor[3 * i] = 0.5f;
+            cellColor[3 * i + 1] = 0.5f;
+            cellColor[3 * i + 2] = 0.5f;
+        }
+        else
+        if(cellType[i] == FLUID_CELL)
+        {
+            float d = particleDensity[i];
+            if(particleRestDensity > 0.0f)
+            {
+                d /= particleRestDensity;
+            }
+            setSciColor(i, d, 0.0f, 2.0f);
+        }
+    }
+}
+
+void FlipFluid::setSciColor(int cellNr, float val, float minVal, float maxVal)
+{
+    val = std::min(std::max(val, minVal), maxVal - 0.0001f);
+    float d = maxVal - minVal;
+    val = d == 0.0f ? 0.5f : (val - minVal) / d;
+    int num = static_cast<int>(val / 0.25f);
+    float s = (val - num * 0.25f) / 0.25f;
+    float r, g, b;
+
+    switch(num)
+    {
+        case 0:
+        {
+            r = 0.0f;
+            g = s;
+            b = 1.0f;
+            break;
+        }
+        case 1:
+        {
+            r = 0.0f;
+            g = 1.0f;
+            b = 1.0f - s;
+            break;
+        }
+        case 2:
+        {
+            r = s;
+            g = 1.0f;
+            b = 0.0f;
+            break;
+        }
+        case 3:
+        {
+            r = 1.0f;
+            g = 1.0f - s;
+            b = 0.0f;
+            break;
+        }
+        default:
+        {
+            r = g = b = 0.0f;
+            break;
+        }
+    }
+
+    cellColor[3 * cellNr] = r;
+    cellColor[3 * cellNr + 1] = g;
+    cellColor[3 * cellNr + 2] = b;
+}
+
+
+
+int main(int argc, char** argv)
+{
+    NCInitializer::use();
+    
+    // {500, 100, 800}, {100, 1000, 500}
+    // {700, 0, 600}, {200, 1000, 400}
+    // {400, 100, 1000}, {400, 1000, 100}
+    NCGradient grad{{100, 800, 400}, {100, 200, 800}};
+    grad.applyForeground(COLOR_BLACK);
+
+    constexpr float realtime_target = 10.f;
+    constexpr float defualt_dt = 1.f / 20.f;
+    constexpr float flipRatio = 0.5;
+    constexpr int numPressureIters = 50;
+    constexpr int numParticleIters = 2;
+    constexpr float overRelaxation = 1.9;
+    constexpr float compensateDrift = true;
+    constexpr float separateParticles = true;
+
+    // constexpr float res = 100.f;
+    constexpr float density = 1000.f;
+    float tankHeight = static_cast<float>(getmaxy(stdscr) * 2 + 4);
+    float tankWidth = static_cast<float>(getmaxx(stdscr) + 2);
+    constexpr float h = 1;
+
+    constexpr float relWaterHeight = 1.f;
+    constexpr float relWaterWidth = 0.3f;
+
+    float r = 0.3f * h;
+    float dx = 2.f * r;
+    float dy = std::sqrt(3.f) / 2.f * dx;
+
+    int numX = static_cast<int>(std::floor((relWaterWidth * tankWidth - 2.f * h - 2.f * r) / dx));
+    int numY = static_cast<int>(std::floor((relWaterHeight * tankHeight - 2.f * h - 2.f * r) / dy));
+    // int numX = static_cast<int>(tankWidth - 2);
+    // int numY = static_cast<int>(tankHeight - 2);
+    int maxParticles = numX * numY;
+
+    FlipFluid f{ density, tankWidth, tankHeight, h, r, maxParticles };
+
+    f.numParticles = numX * numY;
+    int p = 0;
+    for(int i = 0; i < numX; i++)
+    {
+        for(int j = 0; j < numY; j++)
+        {
+            f.particlePos[p++] = h + r + dx * i + (j % 2 == 0 ? 0.f : r);
+            f.particlePos[p++] = h + r + dy * j;
+            // f.particlePos[p++] = (i + 1.5f) * h;
+            // f.particlePos[p++] = (j + 1.5f) * h;
+        }
+    }
+
+    int n = f.fNumY;
+    for(int i = 0; i < f.fNumX; i++)
+    {
+        for(int j = 0; j < f.fNumY; j++)
+        {
+            float s = 1.f;
+            if(i == 0 || i == f.fNumX - 1 || j == 0 || j == f.fNumY - 1)
+            {
+                s = 0.f;
+            }
+            f.s[i * n + j] = s;
+        }
+    }
+
+    std::atomic<bool> running = true;
+    std::atomic<bool> sim_can_continue = true;
+    std::condition_variable sim_notifier;
+
+    fd_set set;
+    struct timeval tv;
+
+    std::atomic<float> x_acc = 0.f;
+    std::atomic<float> y_acc = 0.f;
+    std::mutex sim_mtx, tmp_mtx;
+
+    std::thread sim_thread{
+        [&]()
+        {
+            float prev_dt = defualt_dt;
+
+            // size_t iter = 0;
+            while(running)
+            {
+                using clock_t = std::chrono::system_clock;
+
+                clock_t::time_point beg = clock_t::now();
+                sim_mtx.lock();
+                f.simulate(
+                    prev_dt,
+                    x_acc,
+                    y_acc,
+                    flipRatio,
+                    numPressureIters,
+                    numParticleIters,
+                    overRelaxation,
+                    compensateDrift,
+                    separateParticles );
+                sim_mtx.unlock();
+                prev_dt = std::chrono::duration<float>(clock_t::now() - beg).count() * realtime_target;
+
+                if(!sim_can_continue)
+                {
+                    // wait for signal to continue;
+                    std::unique_lock<std::mutex> l{ tmp_mtx };
+                    while(running && !sim_can_continue)
+                    {
+                        sim_notifier.wait(l);
+                    }
+                    sim_can_continue = true;
+                }
+
+                // iter++;
+            }
+        } };
+
+    bool paused = false;
+    while(running)
+    {
+        FD_ZERO(&set);
+        FD_SET(STDIN_FILENO, &set);
+        tv.tv_sec = 0;
+        tv.tv_usec = 50000;
+        bool acc_updated = false;
+
+        int x = select(1, &set, NULL, NULL, &tv);
+        sim_can_continue = false;   // signal sim thread to wait for render after next iteration
+
+        if(x)
+        {
+            int c = getch();
+
+            switch(c)
+            {
+                case 03 :
+                case 'q' :
+                {
+                    running = false;
+                    continue;
+                }
+                case KEY_UP :
+                {
+                    if(!paused)
+                    {
+                        x_acc = 0.f;
+                        y_acc = 10.f;
+                        acc_updated = true;
+                    }
+                    break;
+                }
+                case KEY_DOWN :
+                {
+                    if(!paused)
+                    {
+                        x_acc = 0.f;
+                        y_acc = -10.f;
+                        acc_updated = true;
+                    }
+                    break;
+                }
+                case KEY_RIGHT :
+                {
+                    if(!paused)
+                    {
+                        x_acc = 10.f;
+                        y_acc = 0.f;
+                        acc_updated = true;
+                    }
+                    break;
+                }
+                case KEY_LEFT :
+                {
+                    if(!paused)
+                    {
+                        x_acc = -10.f;
+                        y_acc = 0.;
+                        acc_updated = true;
+                    }
+                    break;
+                }
+                case ' ' :
+                {
+                    paused = !paused;
+                    if(paused)
+                    {
+                        sim_can_continue = false;
+                    }
+                    else
+                    {
+                        sim_can_continue = true;
+                        sim_notifier.notify_all();
+                    }
+                    break;
+                }
+            }
+        }
+
+        if(!paused)
+        {
+            if(!acc_updated)
+            {
+                x_acc = x_acc * 0.75f;
+                y_acc = y_acc * 0.75f;
+            }
+
+            // render
+            sim_mtx.lock();
+            f.render(stdscr, grad);
+            // mvprintw(0, 0, "ACC : <%f, %f>", x_acc.load(), y_acc.load());
+            // refresh();
+            sim_mtx.unlock();
+
+            sim_can_continue = true;
+            sim_notifier.notify_all();
+        }
+    }
+
+    sim_can_continue = true;
+    sim_notifier.notify_all();
+    sim_thread.join();
+
+    NCInitializer::shutdown();
+}

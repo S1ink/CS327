@@ -1,0 +1,14 @@
+4/23/25 11:30 PM -- Create project, add grid utilities, test ncurses window resizing
+4/25/25 3:30  PM -- Add FluidSim class skeleton
+4/25/25 11:00 PM -- Add nested structs, add dynamics and particle collision handling methods
+4/27/25 11:00 PM -- Add abstract grid utilities, change storage members
+4/27/25 11:45 PM -- Update fluid sim methods, add particle density and velocity steps
+4/28/25 5:00  PM -- Finish fluid sim methods
+4/29/25 1:00  AM -- Add rendering and resizing functionality, very buggy
+4/29/25 1:00  PM -- Add nan checks, attempt to debug
+4/29/25 6:00  PM -- Fix some issues but still unstable
+4/29/25 9:00  PM -- Simplify impelementation, mostly working
+4/29/25 10:00 PM -- Update rendering colors and scaling
+4/29/25 11:30 PM -- Add user input handling and simulate in separate thread
+4/30/25 12:30 AM -- Tuning, add dynamic timestepping
+4/30/25 12:30 PM -- Add changelog, readme, cleanup project

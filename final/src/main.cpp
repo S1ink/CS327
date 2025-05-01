@@ -223,7 +223,7 @@ void FlipFluid::render(WINDOW* w, NCGradient& grad)
                 grad.printChar(
                     w, my - y - 1, x,
                     grad.floatToIdx(density * 3.f - 1.f),    // <-- density: use d * 3 - 1
-                    " .,*+#@"[MIN_CACHED(static_cast<size_t>((1.f - density) * 11.f - 2.5f), 7U)] );
+                    " .,:+#@"[MIN_CACHED(static_cast<size_t>((1.f - density) * 15.f - 4.f), 7U)] );
             }
         }
     }
@@ -747,6 +747,7 @@ void FlipFluid::setSciColor(int cellNr, float val, float minVal, float maxVal)
 int main(int argc, char** argv)
 {
     NCInitializer::use();
+    attron(A_BOLD);
     
     // {500, 100, 800}, {100, 1000, 500}
     // {700, 0, 600}, {200, 1000, 400}
@@ -976,5 +977,6 @@ int main(int argc, char** argv)
     sim_notifier.notify_all();
     sim_thread.join();
 
+    attroff(A_BOLD);
     NCInitializer::shutdown();
 }

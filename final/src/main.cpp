@@ -51,7 +51,7 @@ public:
     float particleRadius, pInvSpacing;
     int pNumX, pNumY, pNumCells;
     float particleRestDensity = 0.0f;
-    std::vector<float> particlePos, particleVel, particleColor, particleDensity;
+    std::vector<float> particlePos, particleVel, particleDensity; //, particleColor;
     std::vector<int> numCellParticles, firstCellParticle, cellParticleIds;
 
 public:
@@ -75,6 +75,7 @@ public:
         bool compensateDrift,
         bool separateParticles );
 
+    void resize(float width, float height, float spacing = 1.f);
     void render(WINDOW* w, NCGradient& grad);
 
 public:
@@ -88,7 +89,7 @@ public:
         float dt,
         float overRelaxation,
         bool compensateDrift = true );
-    void updateParticleColors();
+    // void updateParticleColors();
     void updateCellColors();
     void setSciColor(int cellNr, float val, float minVal, float maxVal);
 
@@ -115,8 +116,8 @@ FlipFluid::FlipFluid(
     particleRadius(particleRadius_)
 {
 
-    fNumX = static_cast<int>(width / spacing) + 1;
-    fNumY = static_cast<int>(height / spacing) + 1;
+    fNumX = static_cast<int>(std::ceil(width / spacing));
+    fNumY = static_cast<int>(std::ceil(height / spacing));
     h = std::max(width / fNumX, height / fNumY);
     fInvSpacing = 1.0f / h;
     fNumCells = fNumX * fNumY;
@@ -128,17 +129,17 @@ FlipFluid::FlipFluid(
     prevU.resize(fNumCells, 0);
     prevV.resize(fNumCells, 0);
     p.resize(fNumCells, 0);
-    s.resize(fNumCells, 0);
-    cellType.resize(fNumCells, 0);
+    s.resize(fNumCells, 1);
+    cellType.resize(fNumCells, FLUID_CELL);
     cellColor.resize(3 * fNumCells, 0);
 
     particlePos.resize(2 * maxParticles, 0);
     particleVel.resize(2 * maxParticles, 0);
-    particleColor.resize(3 * maxParticles, 0);
-    for(int i = 0; i < maxParticles; ++i)
-    {
-        particleColor[3 * i + 2] = 1.0f;
-    }
+    // particleColor.resize(3 * maxParticles, 0);
+    // for(int i = 0; i < maxParticles; ++i)
+    // {
+    //     particleColor[3 * i + 2] = 1.0f;
+    // }
 
     particleDensity.resize(fNumCells, 0);
 
@@ -188,8 +189,72 @@ void FlipFluid::simulate(
         this->transferVelocities(false, flipRatio);
     }
 
-    this->updateParticleColors();
+    // this->updateParticleColors();
     this->updateCellColors();
+}
+
+void FlipFluid::resize(float width, float height, float spacing)
+{
+    FlipFluid f{ density, width, height, spacing, particleRadius, maxParticles };
+
+    int mx = std::min(fNumX, f.fNumX) - 1;
+    int my = std::min(fNumY, f.fNumY) - 1;
+
+    // copy fluid cells in range
+    for(int x = 1; x < mx; x++)
+    {
+        for(int y = 1; y < my; y++)
+        {
+            int i_src = x * fNumY + y;
+            int i_dest = x * f.fNumY + y;
+
+            f.u[i_dest] = u[i_src];
+            f.v[i_dest] = v[i_src];
+            f.du[i_dest] = du[i_src];
+            f.dv[i_dest] = dv[i_src];
+            f.prevU[i_dest] = prevU[i_src];
+            f.prevV[i_dest] = prevV[i_src];
+            f.s[i_dest] = s[i_src];
+            f.p[i_dest] = p[i_src];
+            f.cellType[i_dest] = cellType[i_src];
+            // f.cellColor[i_dest] = cellColor[i_src];
+            f.particleDensity[i_dest] = particleDensity[i_src];
+        }
+    }
+
+    for(int x = 0; x < f.fNumX; x++)
+    {
+        f.s[x * f.fNumY + 0] = 0.f;
+        f.s[(x + 1) * f.fNumY - 1] = 0.f;
+    }
+    for(int y = 1; y < f.fNumY - 1; y++)
+    {
+        f.s[y] = 0.f;
+        f.s[(f.fNumX - 1) * f.fNumY + y] = 0.f;
+    }
+
+    fNumX = f.fNumX;
+    fNumY = f.fNumY;
+    h = f.h;
+    fInvSpacing = f.fInvSpacing;
+    fNumCells = f.fNumCells;
+
+    u.swap(f.u);
+    v.swap(f.v);
+    du.swap(f.du);
+    dv.swap(f.dv);
+    prevU.swap(f.prevU);
+    prevV.swap(f.prevV);
+    p.swap(f.p);
+    s.swap(f.s);
+    cellType.swap(f.cellType);
+    cellColor.swap(f.cellColor);
+    pNumX = f.pNumX;
+    pNumY = f.pNumY;
+    pNumCells = f.pNumCells;
+    numCellParticles.swap(f.numCellParticles);
+    firstCellParticle.swap(f.firstCellParticle);
+    cellParticleIds.swap(f.cellParticleIds);
 }
 
 void FlipFluid::render(WINDOW* w, NCGradient& grad)
@@ -246,7 +311,7 @@ void FlipFluid::integrateParticles(float dt, float x_acc, float y_acc)
 
 void FlipFluid::pushParticlesApart(int numIters)
 {
-    float colorDiffusionCoeff = 0.001f;
+    // float colorDiffusionCoeff = 0.001f;
     std::fill(numCellParticles.begin(), numCellParticles.end(), 0);
 
     for(int i = 0; i < numParticles; ++i)
@@ -324,14 +389,14 @@ void FlipFluid::pushParticlesApart(int numIters)
                         particlePos[2 * id] += dx;
                         particlePos[2 * id + 1] += dy;
 
-                        for(int k = 0; k < 3; ++k)
-                        {
-                            float color0 = particleColor[3 * i + k];
-                            float color1 = particleColor[3 * id + k];
-                            float color = 0.5f * (color0 + color1);
-                            particleColor[3 * i + k] += (color - color0) * colorDiffusionCoeff;
-                            particleColor[3 * id + k] += (color - color1) * colorDiffusionCoeff;
-                        }
+                        // for(int k = 0; k < 3; ++k)
+                        // {
+                        //     float color0 = particleColor[3 * i + k];
+                        //     float color1 = particleColor[3 * id + k];
+                        //     float color = 0.5f * (color0 + color1);
+                        //     particleColor[3 * i + k] += (color - color0) * colorDiffusionCoeff;
+                        //     particleColor[3 * id + k] += (color - color1) * colorDiffusionCoeff;
+                        // }
                     }
                 }
             }
@@ -631,39 +696,39 @@ void FlipFluid::solveIncompressibility(
     }
 }
 
-void FlipFluid::updateParticleColors()
-{
-    float s = 0.01f;
-    float h1 = fInvSpacing;
+// void FlipFluid::updateParticleColors()
+// {
+//     float s = 0.01f;
+//     float h1 = fInvSpacing;
 
-    #if USE_OMP
-    #pragma omp parallel for
-    #endif
-    for(int i = 0; i < numParticles; ++i)
-    {
-        particleColor[3 * i] = clamp(particleColor[3 * i] - s, 0.0f, 1.0f);
-        particleColor[3 * i + 1] = clamp(particleColor[3 * i + 1] - s, 0.0f, 1.0f);
-        particleColor[3 * i + 2] = clamp(particleColor[3 * i + 2] + s, 0.0f, 1.0f);
+//     #if USE_OMP
+//     #pragma omp parallel for
+//     #endif
+//     for(int i = 0; i < numParticles; ++i)
+//     {
+//         particleColor[3 * i] = clamp(particleColor[3 * i] - s, 0.0f, 1.0f);
+//         particleColor[3 * i + 1] = clamp(particleColor[3 * i + 1] - s, 0.0f, 1.0f);
+//         particleColor[3 * i + 2] = clamp(particleColor[3 * i + 2] + s, 0.0f, 1.0f);
 
-        float x = particlePos[2 * i];
-        float y = particlePos[2 * i + 1];
-        int xi = static_cast<int>(clamp(std::floor(x * h1), 1.0f, static_cast<float>(fNumX - 1)));
-        int yi = static_cast<int>(clamp(std::floor(y * h1), 1.0f, static_cast<float>(fNumY - 1)));
-        int cellNr = xi * fNumY + yi;
+//         float x = particlePos[2 * i];
+//         float y = particlePos[2 * i + 1];
+//         int xi = static_cast<int>(clamp(std::floor(x * h1), 1.0f, static_cast<float>(fNumX - 1)));
+//         int yi = static_cast<int>(clamp(std::floor(y * h1), 1.0f, static_cast<float>(fNumY - 1)));
+//         int cellNr = xi * fNumY + yi;
 
-        if(particleRestDensity > 0.0f)
-        {
-            float relDensity = particleDensity[cellNr] / particleRestDensity;
-            if(relDensity < 0.7f)
-            {
-                float c = 0.8f;
-                particleColor[3 * i] = c;
-                particleColor[3 * i + 1] = c;
-                particleColor[3 * i + 2] = 1.0f;
-            }
-        }
-    }
-}
+//         if(particleRestDensity > 0.0f)
+//         {
+//             float relDensity = particleDensity[cellNr] / particleRestDensity;
+//             if(relDensity < 0.7f)
+//             {
+//                 float c = 0.8f;
+//                 particleColor[3 * i] = c;
+//                 particleColor[3 * i + 1] = c;
+//                 particleColor[3 * i + 2] = 1.0f;
+//             }
+//         }
+//     }
+// }
 
 void FlipFluid::updateCellColors()
 {
@@ -755,8 +820,12 @@ int main(int argc, char** argv)
     NCGradient grad{{100, 800, 400}, {100, 200, 800}};
     grad.applyForeground(COLOR_BLACK);
 
+    int wx = getmaxx(stdscr);
+    int wy = getmaxy(stdscr);
+
     constexpr float realtime_factor = 10.f;
-    constexpr float default_dt = 1.f / 20.f;
+    constexpr float default_dt = 0.05f;
+    constexpr float max_sim_dt = 0.5f;
     constexpr float flipRatio = 0.5;
     constexpr int numPressureIters = 50;
     constexpr int numParticleIters = 2;
@@ -766,8 +835,8 @@ int main(int argc, char** argv)
 
     // constexpr float res = 100.f;
     constexpr float density = 1000.f;
-    float tankHeight = static_cast<float>(getmaxy(stdscr) * 2 + 4);
-    float tankWidth = static_cast<float>(getmaxx(stdscr) + 2);
+    float tankHeight = static_cast<float>(wy * 2 + 4);
+    float tankWidth = static_cast<float>(wx + 2);
     constexpr float h = 1;
 
     constexpr float relWaterHeight = 1.f;
@@ -798,18 +867,15 @@ int main(int argc, char** argv)
         }
     }
 
-    int n = f.fNumY;
-    for(int i = 0; i < f.fNumX; i++)
+    for(int x = 0; x < f.fNumX; x++)
     {
-        for(int j = 0; j < f.fNumY; j++)
-        {
-            float s = 1.f;
-            if(i == 0 || i == f.fNumX - 1 || j == 0 || j == f.fNumY - 1)
-            {
-                s = 0.f;
-            }
-            f.s[i * n + j] = s;
-        }
+        f.s[x * f.fNumY + 0] = 0.f;
+        f.s[(x + 1) * f.fNumY - 1] = 0.f;
+    }
+    for(int y = 1; y < f.fNumY - 1; y++)
+    {
+        f.s[y] = 0.f;
+        f.s[(f.fNumX - 1) * f.fNumY + y] = 0.f;
     }
 
     std::atomic<bool> running = true;
@@ -845,7 +911,9 @@ int main(int argc, char** argv)
                     compensateDrift,
                     separateParticles );
                 sim_mtx.unlock();
-                sim_dt = std::chrono::duration<float>(clock_t::now() - beg).count() * realtime_factor;
+                sim_dt = std::min(
+                    max_sim_dt,
+                    std::chrono::duration<float>(clock_t::now() - beg).count() * realtime_factor );
 
                 if(!sim_can_continue)
                 {
@@ -862,8 +930,17 @@ int main(int argc, char** argv)
             }
         } };
 
-    bool paused = false;
-    bool show_stats = true;
+    struct
+    {
+        uint8_t paused : 1;
+        uint8_t show_stats : 1;
+        uint8_t resized : 1;
+    }
+    state;
+    state.paused = state.show_stats = state.resized = 0;
+    
+    // bool paused = false;
+    // bool show_stats = true;
     while(running)
     {
         FD_ZERO(&set);
@@ -889,7 +966,7 @@ int main(int argc, char** argv)
                 }
                 case KEY_UP :
                 {
-                    if(!paused)
+                    if(!state.paused)
                     {
                         x_acc = 0.f;
                         y_acc = 10.f;
@@ -899,7 +976,7 @@ int main(int argc, char** argv)
                 }
                 case KEY_DOWN :
                 {
-                    if(!paused)
+                    if(!state.paused)
                     {
                         x_acc = 0.f;
                         y_acc = -10.f;
@@ -909,7 +986,7 @@ int main(int argc, char** argv)
                 }
                 case KEY_RIGHT :
                 {
-                    if(!paused)
+                    if(!state.paused)
                     {
                         x_acc = 10.f;
                         y_acc = 0.f;
@@ -919,7 +996,7 @@ int main(int argc, char** argv)
                 }
                 case KEY_LEFT :
                 {
-                    if(!paused)
+                    if(!state.paused)
                     {
                         x_acc = -10.f;
                         y_acc = 0.;
@@ -929,8 +1006,8 @@ int main(int argc, char** argv)
                 }
                 case ' ' :
                 {
-                    paused = !paused;
-                    if(paused)
+                    state.paused = !state.paused;
+                    if(state.paused)
                     {
                         sim_can_continue = false;
                     }
@@ -943,13 +1020,19 @@ int main(int argc, char** argv)
                 }
                 case 's' :
                 {
-                    show_stats = !show_stats;
+                    state.show_stats = !state.show_stats;
                     break;
+                }
+                case KEY_RESIZE :
+                {
+                    wx = getmaxx(stdscr);
+                    wy = getmaxy(stdscr);
+                    state.resized = true;
                 }
             }
         }
 
-        if(!paused)
+        if(!state.paused)
         {
             if(!acc_updated)
             {
@@ -960,12 +1043,17 @@ int main(int argc, char** argv)
             // render
             sim_mtx.lock();
             f.render(stdscr, grad);
-            if(show_stats)
+            if(state.show_stats)
             {
                 mvprintw(0, 0, "Sim Timestep : %.3fs (%.1fms)", sim_dt.load(), sim_dt.load() / realtime_factor * 1000.f);
                 mvprintw(1, 0, "Acceleration : <%.3f, %.3f>", x_acc.load(), y_acc.load());
+                mvprintw(2, 0, "Win Size : (%d, %d)", wx, wy);
             }
             refresh();
+            if(state.resized)
+            {
+                f.resize(static_cast<float>(wx + 2), static_cast<float>(wy * 2 + 4));
+            }
             sim_mtx.unlock();
 
             sim_can_continue = true;

@@ -24,6 +24,11 @@ void write_ppm(char* fname, IMAGE_T image)
     fclose(f);
 }
 
+void read_ppm(char* fname, IMAGE_T image)
+{
+    
+}
+
 int main(int argc, char** argv)
 {
     int x, y;
@@ -35,7 +40,7 @@ int main(int argc, char** argv)
         {
             img[y][x][R] = (y >> 2);
             img[y][x][G] = 255 - (y >> 2);
-            img[y][x][B] = (y >> 2);
+            img[y][x][B] = (x >> 2);
         }
     }
 

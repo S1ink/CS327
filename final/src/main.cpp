@@ -55,7 +55,10 @@ public:
         int inner_y_dim,
         float cell_res = 1.f );
 
-    void render(WINDOW* w, NCGradient& grad);
+    template<NCURSES_COLOR_T GNum, NCURSES_COLOR_T Off>
+    void render(WINDOW* w, const NCGradient_<GNum, Off>& grad);
+    template<NCURSES_COLOR_T GNum, NCURSES_COLOR_T Off>
+    void overlay(WINDOW* w, int y, int x, const char* str, const NCGradient_<GNum, Off>& grad);
 
     template<bool Separate_Particles = true>
     void simulate(
@@ -242,10 +245,13 @@ void FlipFluid::resize(
     // copy fluid cells in range
     for(int x = 1; x < mx; x++)
     {
+        int i_src = x * fNumY + src_y_off;
+        int i_dest = x * f_swap.fNumY + dest_y_off;
+
         for(int y = 1; y < my; y++)
         {
-            int i_src = x * fNumY + y + src_y_off;
-            int i_dest = x * f_swap.fNumY + y + dest_y_off;
+            i_src++;
+            i_dest++;
 
             f_swap.u[i_dest] = u[i_src];
             f_swap.v[i_dest] = v[i_src];
@@ -285,18 +291,19 @@ void FlipFluid::resize(
     this->initializeParticleCells(tank_width, tank_height, this->particleRadius);
 }
 
-void FlipFluid::render(WINDOW* w, NCGradient& grad)
+template<NCURSES_COLOR_T GNum, NCURSES_COLOR_T Off>
+void FlipFluid::render(WINDOW* w, const NCGradient_<GNum, Off>& grad)
 {
     const int mx = std::min(getmaxx(w), fNumX - 2);
     const int my = std::min(getmaxy(w), (fNumY - 2) / 2);
 
-    for(int y = my - 1; y >= 0; y--)
+    for(int x = 0; x < mx; x++)
     {
-        for(int x = 0; x < mx; x++)
-        {
-            int i0 = (x + 1) * fNumY + ((y * 2 + 1));
-            int i1 = (x + 1) * fNumY + ((y * 2 + 1) + 1);
+        int i0 = (x + 1) * fNumY + (((my - 1) * 2 + 1));
+        int i1 = (x + 1) * fNumY + (((my - 1) * 2 + 1) + 1);
 
+        for(int y = my - 1; y >= 0; y--)
+        {
             if( (cellType[i0] == SOLID_CELL && cellType[i1] == SOLID_CELL) ||
                 (cellType[i0] == AIR_CELL && cellType[i1] == AIR_CELL) )
             {
@@ -311,11 +318,54 @@ void FlipFluid::render(WINDOW* w, NCGradient& grad)
                 grad.printChar(
                     w, my - y - 1, x,
                     grad.floatToIdx(density),
-                    " .,:+#@"[MIN_CACHED(static_cast<size_t>(density * 6.f), 6U)] );
+                    " .,:+#@"[std::min<size_t>(density * 6, 6U)] );
             }
+
+            i0 -= 2;
+            i1 -= 2;
         }
     }
     // wrefresh(w);
+}
+
+template<NCURSES_COLOR_T GNum, NCURSES_COLOR_T Off>
+void FlipFluid::overlay(
+    WINDOW* w,
+    int y,
+    int x,
+    const char* str,
+    const NCGradient_<GNum, Off>& grad )
+{
+    const int my = (fNumY - 2) / 2;
+    if(y < my)
+    {
+        int i0 = (x + 1) * fNumY + (((my - 1 - y) * 2 + 1));
+        int i1 = (x + 1) * fNumY + (((my - 1 - y) * 2 + 1) + 1);
+
+        for(const char* c = str; *c && x < (fNumX - 2); c++)
+        {
+            if( (cellType[i0] == SOLID_CELL && cellType[i1] == SOLID_CELL) ||
+                (cellType[i0] == AIR_CELL && cellType[i1] == AIR_CELL) )
+            {
+                attron(COLOR_PAIR(COLOR_BLACK));
+                mvwaddch(w, y, x, *c);
+                attron(COLOR_PAIR(COLOR_BLACK));
+            }
+            else
+            {
+                float density = (particleDensity[i0] + particleDensity[i1]) / (particleRestDensity * 2);
+
+                grad.printChar(
+                    w, y, x,
+                    grad.floatToIdx(density),
+                    *c );
+            }
+
+            x++;
+            i0 += fNumY;
+            i1 += fNumY;
+        }
+    }
 }
 
 
@@ -747,8 +797,10 @@ int main(int argc, char** argv)
     // {700, 0, 600}, {200, 1000, 400}
     // {400, 100, 1000}, {400, 1000, 100}
     // {100, 800, 400}, {100, 200, 800}
-    NCGradient grad{ {100, 200, 800}, {100, 800, 400} };
-    grad.applyForeground(COLOR_BLACK);
+    NCGradient fluid_grad{ {100, 200, 800}, {100, 800, 400} };
+    NCGradient64<64> overlay_grad{ {60, 120, 480}, {60, 480, 240} };
+    fluid_grad.applyForeground(COLOR_BLACK);
+    overlay_grad.applyBackground();
 
     int wx = getmaxx(stdscr);
     int wy = getmaxy(stdscr);
@@ -918,6 +970,7 @@ int main(int argc, char** argv)
                         wx = getmaxx(stdscr);
                         wy = getmaxy(stdscr);
                         state.resized = true;
+                        break;
                     }
                 }
             }
@@ -938,29 +991,43 @@ int main(int argc, char** argv)
 
             // render
             sim_mtx.lock();
-            f.render(stdscr, grad);
+            f.render(stdscr, fluid_grad);
             if(state.show_stats)
             {
+                // V1 ---------------
                 // mvprintw(0, 0, "Sim Timestep : %.1fms (%.3fs)", sim_dt.load() / (SIM_REALTIME_FACTOR * 1e-3f), sim_dt.load());
                 // mvprintw(1, 0, "UI Timestep  : %.1fms", ui_dt * 1e3f);
                 // mvprintw(2, 0, "Acceleration : <%.3f, %.3f>", x_acc.load(), y_acc.load());
                 // mvprintw(3, 0, "Window Size  : %d x %d", wx, wy);
 
-                mvprintw(0, 0, "Sim Timestep");
-                mvaddch(0, 13, ':');
-                mvprintw(0, 15, "%.1fms (%.3fs)", sim_dt.load() / (SIM_REALTIME_FACTOR * 1e-3f), sim_dt.load());
+                // V2 ---------------
+                // mvprintw(0, 0, "Sim Timestep");
+                // mvaddch(0, 13, ':');
+                // mvprintw(0, 15, "%.1fms (%.3fs)", sim_dt.load() / (SIM_REALTIME_FACTOR * 1e-3f), sim_dt.load());
 
-                mvprintw(1, 0, "UI Timestep");
-                mvaddch(1, 13, ':');
-                mvprintw(1, 15, "%.1fms", ui_dt * 1e3f);
+                // mvprintw(1, 0, "UI Timestep");
+                // mvaddch(1, 13, ':');
+                // mvprintw(1, 15, "%.1fms", ui_dt * 1e3f);
 
-                mvprintw(2, 0, "Acceleration");
-                mvaddch(2, 13, ':');
-                mvprintw(2, 15, "<%.3f, %.3f>", x_acc.load(), y_acc.load());
+                // mvprintw(2, 0, "Acceleration");
+                // mvaddch(2, 13, ':');
+                // mvprintw(2, 15, "<%.3f, %.3f>", x_acc.load(), y_acc.load());
 
-                mvprintw(3, 0, "Window Size");
-                mvaddch(3, 13, ':');
-                mvprintw(3, 15, "%d x %d", wx, wy);
+                // mvprintw(3, 0, "Window Size");
+                // mvaddch(3, 13, ':');
+                // mvprintw(3, 15, "%d x %d", wx, wy);
+
+                // V3 ---------------
+                char buff[40];
+                snprintf(buff, 39, "Sim Timestep : %.1fms (%.3fs)", sim_dt.load() / (SIM_REALTIME_FACTOR * 1e-3f), sim_dt.load());
+                f.overlay(stdscr, 0, 0, buff, overlay_grad);
+                snprintf(buff, 39, "UI Timestep  : %.1fms", ui_dt * 1e3f);
+                f.overlay(stdscr, 1, 0, buff, overlay_grad);
+                snprintf(buff, 39, "Acceleration : <%.3f, %.3f>", x_acc.load(), y_acc.load());
+                f.overlay(stdscr, 2, 0, buff, overlay_grad);
+                snprintf(buff, 39, "Window Size  : %d x %d", wx, wy);
+                f.overlay(stdscr, 3, 0, buff, overlay_grad);
+
             }
             refresh();
             if(state.resized)

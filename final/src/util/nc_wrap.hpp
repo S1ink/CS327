@@ -155,14 +155,14 @@ public:
         }
     }
 
-    void printChar(WINDOW* w, int y, int x, NCURSES_PAIRS_T idx, chtype c)
+    void printChar(WINDOW* w, int y, int x, NCURSES_PAIRS_T idx, chtype c) const
     {
         wattron(w, COLOR_PAIR(PairOff + idx));
         mvwaddch(w, y, x, c);
         wattroff(w, COLOR_PAIR(PairOff + idx));
     }
     template<typename... ArgT>
-    void printf(WINDOW* w, int y, int x, NCURSES_PAIRS_T idx, const char* fmt, ArgT ...args)
+    void printf(WINDOW* w, int y, int x, NCURSES_PAIRS_T idx, const char* fmt, ArgT ...args) const
     {
         wattron(w, COLOR_PAIR(PairOff + idx));
         mvwprintw(w, y, x, fmt, args...);

@@ -294,21 +294,26 @@ void FlipFluid::resize(
 template<NCURSES_COLOR_T GNum, NCURSES_COLOR_T Off>
 void FlipFluid::render(WINDOW* w, const NCGradient_<GNum, Off>& grad)
 {
-    const int mx = std::min(getmaxx(w), fNumX - 2);
-    const int my = std::min(getmaxy(w), (fNumY - 2) / 2);
+    const int wx = getmaxx(w);
+    const int wy = getmaxy(w);
+    const int mx = std::min(wx, fNumX - 2);
+    const int my = std::min(wy, (fNumY - 2) / 2);
+    // const int y_diff =  wy - ((fNumY - 2) / 2);
+    // const int src_y_off = std::max(-y_diff, 0);
+    // const int dest_y_off = std::max(y_diff, 0);
 
     for(int x = 0; x < mx; x++)
     {
-        int i0 = (x + 1) * fNumY + (((my - 1) * 2 + 1));
-        int i1 = (x + 1) * fNumY + (((my - 1) * 2 + 1) + 1);
+        int i0 = (x + 1) * fNumY + (((my - 1) * 2 + 1)); // + (src_y_off * 2);
+        int i1 = (x + 1) * fNumY + (((my - 1) * 2 + 1) + 1); // + (src_y_off * 2);
 
-        for(int y = my - 1; y >= 0; y--)
+        for(int y = 0; y < my; y++)
         {
             if( (cellType[i0] == SOLID_CELL && cellType[i1] == SOLID_CELL) ||
                 (cellType[i0] == AIR_CELL && cellType[i1] == AIR_CELL) )
             {
                 attron(COLOR_PAIR(COLOR_BLACK));
-                mvwaddch(w, my - y - 1, x, ' ');
+                mvwaddch(w, y, x, ' ');
                 attron(COLOR_PAIR(COLOR_BLACK));
             }
             else
@@ -316,7 +321,7 @@ void FlipFluid::render(WINDOW* w, const NCGradient_<GNum, Off>& grad)
                 float density = (particleDensity[i0] + particleDensity[i1]) / (particleRestDensity * 2);
 
                 grad.printChar(
-                    w, my - y - 1, x,
+                    w, y, x,
                     grad.floatToIdx(density),
                     " .,:+#@"[std::min<size_t>(density * 6, 6U)] );
             }
@@ -786,28 +791,51 @@ void FlipFluid::solveIncompressibility(
 
 
 
+constexpr char const HELP_MESSAGE[][58] =
+{
+    "+-CONTROLS----------------------------------------------+",
+    "| Arrow Keys    : Hold to apply acceleration            |",
+    "| SPACE or \'p\'  : Play/pause the simulation             |",
+    "| \'h\' or \'?\'    : Show/hide this help message           |",
+    "| \'s\'           : Show/hide statistics                  |",
+    "| \'l\'           : Toggle light/dark mode (for weirdos)  |",
+    "| Ctrl+C or \'q\' : Quit                                  |",
+    "|                                                       |",
+    "+-USAGE-------------------------------------------------+",
+    "| * The fluid is simluated \"free-floating\" by default.  |",
+    "| * Directional acceleration can be applied by pressing |",
+    "|   (and holding) the arrow keys.                       |",
+    "| * The window can be resized to make the fluid         |",
+    "|   interact with the updated boundaries.               |",
+    "+-------------------------------------------------------+"
+};
+constexpr int HELP_MESSAGE_COLS = sizeof(*HELP_MESSAGE) / sizeof(**HELP_MESSAGE) - 1;
+constexpr int HELP_MESSAGE_ROWS = sizeof(HELP_MESSAGE) / (sizeof(*HELP_MESSAGE) / sizeof(**HELP_MESSAGE));
+
 int main(int argc, char** argv)
 {
     using clock_t = std::chrono::system_clock;
 
     NCInitializer::use();
     attron(A_BOLD);
-    
+
     // {500, 100, 800}, {100, 1000, 500}
     // {700, 0, 600}, {200, 1000, 400}
     // {400, 100, 1000}, {400, 1000, 100}
     // {100, 800, 400}, {100, 200, 800}
     NCGradient fluid_grad{ {100, 200, 800}, {100, 800, 400} };
     NCGradient64<64> overlay_grad{ {60, 120, 480}, {60, 480, 240} };
+    NCGradient32<32> overlay_dark_grad{ {30, 60, 240}, {30, 240, 120} };
     fluid_grad.applyForeground(COLOR_BLACK);
     overlay_grad.applyBackground();
+    overlay_dark_grad.applyBackground();
 
     int wx = getmaxx(stdscr);
     int wy = getmaxy(stdscr);
 
     constexpr float SIM_REALTIME_FACTOR = 10.f;
     constexpr float SIM_DEFAULT_DT = 0.05f;
-    constexpr float MAX_SIM_DT = 0.5f;
+    constexpr float MAX_SIM_DT = 0.25f;
     constexpr float MIN_UI_DT = 0.01f;
     constexpr float MAX_UI_DT = 0.05f;
     constexpr float FLIP_RATIO = 0.5;
@@ -839,7 +867,7 @@ int main(int argc, char** argv)
                 clock_t::time_point beg = clock_t::now();
                 sim_mtx.lock();
                 f.simulate<USE_SEPARATE_PARTICLES>(
-                    sim_dt.load(),
+                    std::min(sim_dt.load(), MAX_SIM_DT),
                     x_acc,
                     y_acc,
                     FLIP_RATIO,
@@ -848,9 +876,7 @@ int main(int argc, char** argv)
                     OVER_RELAXATION_FACTOR,
                     USE_COMPENSATE_DRIFT );
                 sim_mtx.unlock();
-                sim_dt = std::min(
-                    MAX_SIM_DT,
-                    std::chrono::duration<float>(clock_t::now() - beg).count() * SIM_REALTIME_FACTOR );
+                sim_dt = std::chrono::duration<float>(clock_t::now() - beg).count() * SIM_REALTIME_FACTOR;
 
                 if(!sim_can_continue)
                 {
@@ -873,10 +899,12 @@ int main(int argc, char** argv)
         uint8_t paused : 1;
         uint8_t show_stats : 1;
         uint8_t resized : 1;
+        uint8_t show_usage : 1;
+        uint8_t is_reversed : 1;
     }
     state;
-    state.paused = state.resized = 0;
-    state.show_stats = 1;
+    state.paused = state.resized = state.is_reversed = 0;
+    state.show_stats = state.show_usage = 1;
 
     clock_t::time_point ui_ts = clock_t::now();
     float ui_dt = 0.f;
@@ -945,24 +973,41 @@ int main(int argc, char** argv)
                         }
                         break;
                     }
-                    case 'p' : 
+                    case 'p' :
                     case ' ' :
                     {
-                        state.paused = !state.paused;
-                        if(state.paused)
+                        if((state.paused = !state.paused))
                         {
                             sim_can_continue = false;
                         }
-                        else
-                        {
-                            sim_can_continue = true;
-                            sim_notifier.notify_all();
-                        }
+                        // else
+                        // {
+                        //     sim_can_continue = true;
+                        //     sim_notifier.notify_all();
+                        // }
                         break;
                     }
                     case 's' :
                     {
                         state.show_stats = !state.show_stats;
+                        break;
+                    }
+                    case '?' :
+                    case 'h' :
+                    {
+                        state.show_usage = !state.show_usage;
+                        break;
+                    }
+                    case 'l' :
+                    {
+                        if((state.is_reversed = !state.is_reversed))
+                        {
+                            attron(A_REVERSE);
+                        }
+                        else
+                        {
+                            attroff(A_REVERSE);
+                        }
                         break;
                     }
                     case KEY_RESIZE :
@@ -981,7 +1026,7 @@ int main(int argc, char** argv)
         ui_dt = std::chrono::duration<float>(ts - ui_ts).count();
         ui_ts = ts;
 
-        if(!state.paused)
+        // if(!state.paused)
         {
             if(!acc_updated)
             {
@@ -1019,7 +1064,7 @@ int main(int argc, char** argv)
 
                 // V3 ---------------
                 char buff[40];
-                snprintf(buff, 39, "Sim Timestep : %.1fms (%.3fs)", sim_dt.load() / (SIM_REALTIME_FACTOR * 1e-3f), sim_dt.load());
+                snprintf(buff, 39, "Sim Timestep : %.1fms (%.0fms)", sim_dt.load() / (SIM_REALTIME_FACTOR * 1e-3f), std::min(sim_dt.load(), MAX_SIM_DT) * 1e3f);
                 f.overlay(stdscr, 0, 0, buff, overlay_grad);
                 snprintf(buff, 39, "UI Timestep  : %.1fms", ui_dt * 1e3f);
                 f.overlay(stdscr, 1, 0, buff, overlay_grad);
@@ -1029,15 +1074,29 @@ int main(int argc, char** argv)
                 f.overlay(stdscr, 3, 0, buff, overlay_grad);
 
             }
-            refresh();
-            if(state.resized)
+            if(state.show_usage)
             {
-                f.resize(wx, wy * 2);
+                int beg_x = (wx - HELP_MESSAGE_COLS) / 2;
+                int beg_y = (wy - HELP_MESSAGE_ROWS) / 2;
+                for(int y = 0; y < HELP_MESSAGE_ROWS; y++)
+                {
+                    f.overlay(stdscr, beg_y + y, beg_x, HELP_MESSAGE[y], overlay_dark_grad);
+                }
             }
+            refresh();
             sim_mtx.unlock();
 
-            sim_can_continue = true;
-            sim_notifier.notify_all();
+            if(!state.paused)
+            {
+                if(state.resized)
+                {
+                    f.resize(wx, wy * 2);
+                    state.resized = false;
+                }
+
+                sim_can_continue = true;
+                sim_notifier.notify_all();
+            }
         }
 
         if(tv.tv_usec)

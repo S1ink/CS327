@@ -216,9 +216,9 @@ void FlipFluid::resize(float width, float height, float spacing)
             f.prevV[i_dest] = prevV[i_src];
             f.s[i_dest] = s[i_src];
             f.p[i_dest] = p[i_src];
-            f.cellType[i_dest] = cellType[i_src];
+            f.cellType[i_dest] = cellType[i_src];   // <-- ideally fill all with AIR_CELL by default
             // f.cellColor[i_dest] = cellColor[i_src];
-            f.particleDensity[i_dest] = particleDensity[i_src];
+            // f.particleDensity[i_dest] = particleDensity[i_src];
         }
     }
 
@@ -255,6 +255,9 @@ void FlipFluid::resize(float width, float height, float spacing)
     numCellParticles.swap(f.numCellParticles);
     firstCellParticle.swap(f.firstCellParticle);
     cellParticleIds.swap(f.cellParticleIds);
+    particleDensity.swap(f.particleDensity);
+
+    // particleRestDensity = 0.f;
 }
 
 void FlipFluid::render(WINDOW* w, NCGradient& grad)
@@ -277,6 +280,8 @@ void FlipFluid::render(WINDOW* w, NCGradient& grad)
             }
             else
             {
+                // float density = (particleDensity[i0] + particleDensity[i1]) / (particleRestDensity * 2);
+
                 float density =
                     (cellColor[i0 * 3] + cellColor[i0 * 3 + 1] + cellColor[i0 * 3 + 2] +
                         cellColor[i1 * 3] + cellColor[i1 * 3 + 1] + cellColor[i1 * 3 + 2]) / 6.f;
@@ -288,7 +293,7 @@ void FlipFluid::render(WINDOW* w, NCGradient& grad)
                 grad.printChar(
                     w, my - y - 1, x,
                     grad.floatToIdx(density * 3.f - 1.f),    // <-- density: use d * 3 - 1
-                    " .,:+#@"[MIN_CACHED(static_cast<size_t>((1.f - density) * 15.f - 4.f), 7U)] );
+                    " .,:+#@"[MIN_CACHED(static_cast<size_t>((1.f - density) * 15.f - 4.f), 6U)] );
             }
         }
     }
@@ -937,8 +942,9 @@ int main(int argc, char** argv)
         uint8_t resized : 1;
     }
     state;
-    state.paused = state.show_stats = state.resized = 0;
-    
+    state.paused = state.resized = 0;
+    state.show_stats = 1;
+
     // bool paused = false;
     // bool show_stats = true;
     while(running)

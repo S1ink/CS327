@@ -235,14 +235,17 @@ void FlipFluid::resize(
 
     const int mx = std::min(fNumX, f_swap.fNumX) - 1;
     const int my = std::min(fNumY, f_swap.fNumY) - 1;
+    const int y_diff = f_swap.fNumY - fNumY;
+    const int src_y_off = std::max(-y_diff, 0);
+    const int dest_y_off = std::max(y_diff, 0);
 
     // copy fluid cells in range
     for(int x = 1; x < mx; x++)
     {
         for(int y = 1; y < my; y++)
         {
-            int i_src = x * fNumY + y;
-            int i_dest = x * f_swap.fNumY + y;
+            int i_src = x * fNumY + y + src_y_off;
+            int i_dest = x * f_swap.fNumY + y + dest_y_off;
 
             f_swap.u[i_dest] = u[i_src];
             f_swap.v[i_dest] = v[i_src];
@@ -272,6 +275,12 @@ void FlipFluid::resize(
     s.swap(f_swap.s);
     cellType.swap(f_swap.cellType);
     particleDensity.swap(f_swap.particleDensity);
+
+    const float particle_y_off = static_cast<float>(y_diff) * h;
+    for(int i = 0; i < numParticles; i++)
+    {
+        particlePos[i * 2 + 1] += particle_y_off;
+    }
 
     this->initializeParticleCells(tank_width, tank_height, this->particleRadius);
 }
@@ -729,6 +738,8 @@ void FlipFluid::solveIncompressibility(
 
 int main(int argc, char** argv)
 {
+    using clock_t = std::chrono::system_clock;
+
     NCInitializer::use();
     attron(A_BOLD);
     
@@ -742,55 +753,52 @@ int main(int argc, char** argv)
     int wx = getmaxx(stdscr);
     int wy = getmaxy(stdscr);
 
-    constexpr float realtime_factor = 10.f;
-    constexpr float default_dt = 0.05f;
-    constexpr float max_sim_dt = 0.5f;
-    constexpr float flipRatio = 0.5;
+    constexpr float SIM_REALTIME_FACTOR = 10.f;
+    constexpr float SIM_DEFAULT_DT = 0.05f;
+    constexpr float MAX_SIM_DT = 0.5f;
+    constexpr float MIN_UI_DT = 0.01f;
+    constexpr float MAX_UI_DT = 0.05f;
+    constexpr float FLIP_RATIO = 0.5;
     constexpr float PARTICLE_RADIUS = 0.3f;
     constexpr float FILL_PERCENT = 0.3f;
-    constexpr int numPressureIters = 50;
-    constexpr int numParticleIters = 2;
-    constexpr float overRelaxation = 1.9;
-    constexpr bool compensateDrift = true;
-    constexpr bool separateParticles = true;
-    constexpr float density = 1000.f;
+    constexpr int NUM_PRESSURE_ITERS = 50;
+    constexpr int NUM_PARTICLE_ITERS = 2;
+    constexpr float OVER_RELAXATION_FACTOR = 1.9;
+    constexpr bool USE_COMPENSATE_DRIFT = true;
+    constexpr bool USE_SEPARATE_PARTICLES = true;
+    constexpr float DEFAULT_DENSITY = 1000.f;
 
-    FlipFluid f{ wx, wy * 2, 1.f, PARTICLE_RADIUS, FILL_PERCENT, density };
+    FlipFluid f{ wx, wy * 2, 1.f, PARTICLE_RADIUS, FILL_PERCENT, DEFAULT_DENSITY };
 
     std::atomic<bool> running = true;
     std::atomic<bool> sim_can_continue = true;
     std::condition_variable sim_notifier;
-
-    fd_set set;
-    struct timeval tv;
+    std::mutex sim_mtx, tmp_mtx;
 
     std::atomic<float> x_acc = 0.f;
     std::atomic<float> y_acc = 0.f;
-    std::atomic<float> sim_dt = default_dt * realtime_factor;
-    std::mutex sim_mtx, tmp_mtx;
+    std::atomic<float> sim_dt = SIM_DEFAULT_DT * SIM_REALTIME_FACTOR;
 
     std::thread sim_thread{
         [&]()
         {
             while(running)
             {
-                using clock_t = std::chrono::system_clock;
-
                 clock_t::time_point beg = clock_t::now();
                 sim_mtx.lock();
-                f.simulate<separateParticles>(
+                f.simulate<USE_SEPARATE_PARTICLES>(
                     sim_dt.load(),
                     x_acc,
                     y_acc,
-                    flipRatio,
-                    numPressureIters,
-                    numParticleIters,
-                    overRelaxation,
-                    compensateDrift );
+                    FLIP_RATIO,
+                    NUM_PRESSURE_ITERS,
+                    NUM_PARTICLE_ITERS,
+                    OVER_RELAXATION_FACTOR,
+                    USE_COMPENSATE_DRIFT );
                 sim_mtx.unlock();
                 sim_dt = std::min(
-                    max_sim_dt,
-                    std::chrono::duration<float>(clock_t::now() - beg).count() * realtime_factor );
+                    MAX_SIM_DT,
+                    std::chrono::duration<float>(clock_t::now() - beg).count() * SIM_REALTIME_FACTOR );
 
                 if(!sim_can_continue)
                 {
@@ -805,6 +813,9 @@ int main(int argc, char** argv)
             }
         } };
 
+    fd_set set;
+    struct timeval tv;
+
     struct
     {
         uint8_t paused : 1;
@@ -815,12 +826,14 @@ int main(int argc, char** argv)
     state.paused = state.resized = 0;
     state.show_stats = 1;
 
+    clock_t::time_point ui_ts = clock_t::now();
+    float ui_dt = 0.f;
     while(running)
     {
         FD_ZERO(&set);
         FD_SET(STDIN_FILENO, &set);
         tv.tv_sec = 0;
-        tv.tv_usec = 50000;
+        tv.tv_usec = static_cast<suseconds_t>(MAX_UI_DT * 1e6f);
         bool acc_updated = false;
 
         int x = select(1, &set, NULL, NULL, &tv);
@@ -880,6 +893,7 @@ int main(int argc, char** argv)
                         }
                         break;
                     }
+                    case 'p' : 
                     case ' ' :
                     {
                         state.paused = !state.paused;
@@ -910,6 +924,10 @@ int main(int argc, char** argv)
             nodelay(stdscr, false);
         }
 
+        clock_t::time_point ts = clock_t::now();
+        ui_dt = std::chrono::duration<float>(ts - ui_ts).count();
+        ui_ts = ts;
+
         if(!state.paused)
         {
             if(!acc_updated)
@@ -923,9 +941,26 @@ int main(int argc, char** argv)
             f.render(stdscr, grad);
             if(state.show_stats)
             {
-                mvprintw(0, 0, "Sim Timestep : %.3fs (%.1fms)", sim_dt.load(), sim_dt.load() / realtime_factor * 1000.f);
-                mvprintw(1, 0, "Acceleration : <%.3f, %.3f>", x_acc.load(), y_acc.load());
-                mvprintw(2, 0, "Win Size : (%d, %d)", wx, wy);
+                // mvprintw(0, 0, "Sim Timestep : %.1fms (%.3fs)", sim_dt.load() / (SIM_REALTIME_FACTOR * 1e-3f), sim_dt.load());
+                // mvprintw(1, 0, "UI Timestep  : %.1fms", ui_dt * 1e3f);
+                // mvprintw(2, 0, "Acceleration : <%.3f, %.3f>", x_acc.load(), y_acc.load());
+                // mvprintw(3, 0, "Window Size  : %d x %d", wx, wy);
+
+                mvprintw(0, 0, "Sim Timestep");
+                mvaddch(0, 13, ':');
+                mvprintw(0, 15, "%.1fms (%.3fs)", sim_dt.load() / (SIM_REALTIME_FACTOR * 1e-3f), sim_dt.load());
+
+                mvprintw(1, 0, "UI Timestep");
+                mvaddch(1, 13, ':');
+                mvprintw(1, 15, "%.1fms", ui_dt * 1e3f);
+
+                mvprintw(2, 0, "Acceleration");
+                mvaddch(2, 13, ':');
+                mvprintw(2, 15, "<%.3f, %.3f>", x_acc.load(), y_acc.load());
+
+                mvprintw(3, 0, "Window Size");
+                mvaddch(3, 13, ':');
+                mvprintw(3, 15, "%d x %d", wx, wy);
             }
             refresh();
             if(state.resized)
@@ -936,6 +971,11 @@ int main(int argc, char** argv)
 
             sim_can_continue = true;
             sim_notifier.notify_all();
+        }
+
+        if(tv.tv_usec)
+        {
+            usleep(std::min(tv.tv_usec, static_cast<suseconds_t>(MIN_UI_DT * 1e6f)));
         }
     }
 

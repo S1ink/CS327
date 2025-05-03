@@ -4,6 +4,7 @@
 #include <atomic>
 #include <chrono>
 #include <cstdio>
+#include <random>
 #include <thread>
 #include <vector>
 #include <cmath>
@@ -16,6 +17,7 @@
 #include <ncurses.h>
 
 #include "util/nc_wrap.hpp"
+#include "util/stats.hpp"
 
 
 #ifndef USE_OMP
@@ -798,6 +800,7 @@ constexpr char const HELP_MESSAGE[][58] =
     "| SPACE or \'p\'  : Play/pause the simulation             |",
     "| \'h\' or \'?\'    : Show/hide this help message           |",
     "| \'s\'           : Show/hide statistics                  |",
+    "| \'S\'           : Show/hide advanced statistics         |",
     "| \'l\'           : Toggle light/dark mode (for weirdos)  |",
     "| Ctrl+C or \'q\' : Quit                                  |",
     "|                                                       |",
@@ -897,15 +900,26 @@ int main(int argc, char** argv)
     struct
     {
         uint8_t paused : 1;
-        uint8_t show_stats : 1;
+        uint8_t show_stats : 2;
         uint8_t resized : 1;
         uint8_t show_usage : 1;
         uint8_t is_reversed : 1;
+        uint8_t is_random : 1;
     }
     state;
-    state.paused = state.resized = state.is_reversed = 0;
+    state.paused = state.resized = state.is_reversed = state.is_random = 0;
     state.show_stats = state.show_usage = 1;
 
+    struct
+    {
+        std::mt19937 twister{ std::random_device{}() };
+        std::uniform_int_distribution<int> i_gen{ 0, 3 };
+        std::uniform_real_distribution<float> f_gen{ -0.05f, 0.05f };
+    }
+    rando;
+
+
+    util::proc::ProcessMetrics process_metrics;
     clock_t::time_point ui_ts = clock_t::now();
     float ui_dt = 0.f;
     while(running)
@@ -973,6 +987,11 @@ int main(int argc, char** argv)
                         }
                         break;
                     }
+                    case 'm' :
+                    {
+                        state.is_random = !state.is_random;
+                        break;
+                    }
                     case 'p' :
                     case ' ' :
                     {
@@ -989,7 +1008,24 @@ int main(int argc, char** argv)
                     }
                     case 's' :
                     {
-                        state.show_stats = !state.show_stats;
+                        switch(state.show_stats)
+                        {
+                            case 1 : state.show_stats = 0; break;
+                            case 0 :
+                            case 2 :
+                            default : state.show_stats = 1; break;
+                        }
+                        break;
+                    }
+                    case 'S' :
+                    {
+                        switch(state.show_stats)
+                        {
+                            case 2 : state.show_stats = 0; break;
+                            case 0 :
+                            case 1 :
+                            default : state.show_stats = 2; break;
+                        }
                         break;
                     }
                     case '?' :
@@ -1022,57 +1058,64 @@ int main(int argc, char** argv)
             nodelay(stdscr, false);
         }
 
+        process_metrics.update();
+
         clock_t::time_point ts = clock_t::now();
         ui_dt = std::chrono::duration<float>(ts - ui_ts).count();
         ui_ts = ts;
 
         // if(!state.paused)
         {
-            if(!acc_updated)
+            if(acc_updated)
+            {
+                state.is_random = false;
+            }
+            else
+            if(!state.is_random)
             {
                 x_acc = x_acc * 0.75f;
                 y_acc = y_acc * 0.75f;
+            }
+            else
+            {
+                if(!rando.i_gen(rando.twister))
+                {
+                    x_acc = x_acc + rando.f_gen(rando.twister);
+                    y_acc = y_acc + rando.f_gen(rando.twister);
+                }
+                else
+                {
+                    x_acc = x_acc * 0.9f;
+                    y_acc = y_acc * 0.9f;
+                }
             }
 
             // render
             sim_mtx.lock();
             f.render(stdscr, fluid_grad);
-            if(state.show_stats)
+            if(state.show_stats > 0)
             {
-                // V1 ---------------
-                // mvprintw(0, 0, "Sim Timestep : %.1fms (%.3fs)", sim_dt.load() / (SIM_REALTIME_FACTOR * 1e-3f), sim_dt.load());
-                // mvprintw(1, 0, "UI Timestep  : %.1fms", ui_dt * 1e3f);
-                // mvprintw(2, 0, "Acceleration : <%.3f, %.3f>", x_acc.load(), y_acc.load());
-                // mvprintw(3, 0, "Window Size  : %d x %d", wx, wy);
-
-                // V2 ---------------
-                // mvprintw(0, 0, "Sim Timestep");
-                // mvaddch(0, 13, ':');
-                // mvprintw(0, 15, "%.1fms (%.3fs)", sim_dt.load() / (SIM_REALTIME_FACTOR * 1e-3f), sim_dt.load());
-
-                // mvprintw(1, 0, "UI Timestep");
-                // mvaddch(1, 13, ':');
-                // mvprintw(1, 15, "%.1fms", ui_dt * 1e3f);
-
-                // mvprintw(2, 0, "Acceleration");
-                // mvaddch(2, 13, ':');
-                // mvprintw(2, 15, "<%.3f, %.3f>", x_acc.load(), y_acc.load());
-
-                // mvprintw(3, 0, "Window Size");
-                // mvaddch(3, 13, ':');
-                // mvprintw(3, 15, "%d x %d", wx, wy);
-
-                // V3 ---------------
                 char buff[40];
-                snprintf(buff, 39, "Sim Timestep : %.1fms (%.0fms)", sim_dt.load() / (SIM_REALTIME_FACTOR * 1e-3f), std::min(sim_dt.load(), MAX_SIM_DT) * 1e3f);
+                snprintf(buff, 40, "Sim Timestep : %.1fms (%.0fms)", sim_dt.load() / (SIM_REALTIME_FACTOR * 1e-3f), std::min(sim_dt.load(), MAX_SIM_DT) * 1e3f);
                 f.overlay(stdscr, 0, 0, buff, overlay_grad);
-                snprintf(buff, 39, "UI Timestep  : %.1fms", ui_dt * 1e3f);
+                snprintf(buff, 40, "UI Timestep  : %.1fms", ui_dt * 1e3f);
                 f.overlay(stdscr, 1, 0, buff, overlay_grad);
-                snprintf(buff, 39, "Acceleration : <%.3f, %.3f>", x_acc.load(), y_acc.load());
+                snprintf(buff, 40, "Acceleration : <%.3f, %.3f>", x_acc.load(), y_acc.load());
                 f.overlay(stdscr, 2, 0, buff, overlay_grad);
-                snprintf(buff, 39, "Window Size  : %d x %d", wx, wy);
+                snprintf(buff, 40, "Window Size  : %d x %d", wx, wy);
                 f.overlay(stdscr, 3, 0, buff, overlay_grad);
 
+                if(state.show_stats > 1)
+                {
+                    double mem;
+                    size_t nthreads;
+                    util::proc::getProcessStats(mem, nthreads);
+
+                    snprintf(buff, 40, "CPU Usage    : %.1f%%", process_metrics.last_cpu_percent);
+                    f.overlay(stdscr, 4, 0, buff, overlay_grad);
+                    snprintf(buff, 40, "Mem Alloc    : %.0f MB", mem);
+                    f.overlay(stdscr, 5, 0, buff, overlay_grad);
+                }
             }
             if(state.show_usage)
             {

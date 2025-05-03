@@ -29,9 +29,9 @@ namespace proc
 
 std::string cpuBrandString()
 {
+#ifdef HAS_CPUID
     std::array<char, 0x40> CPUBrandString{};
 
-#ifdef HAS_CPUID
     std::array<unsigned int, 4> CPUInfo{};
     __cpuid(0x80000000, CPUInfo[0], CPUInfo[1], CPUInfo[2], CPUInfo[3]);
     unsigned int nExIds = CPUInfo[0];

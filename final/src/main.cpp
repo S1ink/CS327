@@ -798,6 +798,7 @@ constexpr char const HELP_MESSAGE[][58] =
     "+-CONTROLS----------------------------------------------+",
     "| Arrow Keys    : Hold to apply acceleration            |",
     "| SPACE or \'p\'  : Play/pause the simulation             |",
+    "| \'m\'           : Toggle \"screensaver mode\"             |",
     "| \'h\' or \'?\'    : Show/hide this help message           |",
     "| \'s\'           : Show/hide statistics                  |",
     "| \'S\'           : Show/hide advanced statistics         |",
@@ -810,6 +811,13 @@ constexpr char const HELP_MESSAGE[][58] =
     "|   (and holding) the arrow keys.                       |",
     "| * The window can be resized to make the fluid         |",
     "|   interact with the updated boundaries.               |",
+    "| * \"Screensaver mode\" continually applies random       |",
+    "|   accelerations without the need for user input (and  |",
+    "|   is extremely addicting).                            |",
+    "|                                                       |",
+    "+-CREDITS-----------------------------------------------+",
+    "| Created by Sam Richter (https://github.com/S1ink)     |",
+    "| Original FLIP Fluid example by Matthias Muller        |",
     "+-------------------------------------------------------+"
 };
 constexpr int HELP_MESSAGE_COLS = sizeof(*HELP_MESSAGE) / sizeof(**HELP_MESSAGE) - 1;

@@ -30,8 +30,9 @@
 
 // static std::ofstream dbg{ "./debug.txt" };
 
-/** Core functionality converted from
- * https://github.com/matthias-research/pages/blob/master/tenMinutePhysics/18-flip.html */
+/** Core functionality based on
+ * https://github.com/matthias-research/pages/blob/master/tenMinutePhysics/18-flip.html
+ * (https://matthias-research.github.io/pages/tenMinutePhysics/index.html) */
 class FlipFluid
 {
 public:
@@ -48,8 +49,7 @@ public:
         int inner_y_dim,
         float cell_res,
         float particle_radius,
-        float fill_percent,
-        float density );
+        float fill_percent );
     inline ~FlipFluid() = default;
 
     void resize(
@@ -98,10 +98,10 @@ protected:
 
 protected:
     // Fluid parameters
-    float density;
+    // float density;
     int fNumX, fNumY, fNumCells;
     float h, fInvSpacing;
-    std::vector<float> u, v, du, dv, prevU, prevV, p, s;
+    std::vector<float> u, v, du, dv, prevU, prevV, s; //, p;
     std::vector<int> cellType;
 
     // Particle parameters
@@ -128,10 +128,9 @@ FlipFluid::FlipFluid(
     int inner_y_dim,
     float cell_res,
     float particle_radius,
-    float fill_percent,
-    float density )
+    float fill_percent )
 :
-    density{ density },
+    // density{ density },
     particleRadius{ particle_radius }
 {
     const float tank_width = static_cast<float>(inner_x_dim + 2);
@@ -193,7 +192,7 @@ void FlipFluid::initializeFluidCells(
     this->dv.resize(this->fNumCells, 0);
     this->prevU.resize(this->fNumCells, 0);
     this->prevV.resize(this->fNumCells, 0);
-    this->p.resize(this->fNumCells, 0);
+    // this->p.resize(this->fNumCells, 0);
     this->s.resize(this->fNumCells, 1);
     this->cellType.resize(this->fNumCells, FLUID_CELL);
     this->particleDensity.resize(this->fNumCells, 0);
@@ -262,7 +261,7 @@ void FlipFluid::resize(
             f_swap.prevU[i_dest] = prevU[i_src];
             f_swap.prevV[i_dest] = prevV[i_src];
             f_swap.s[i_dest] = s[i_src];
-            f_swap.p[i_dest] = p[i_src];
+            // f_swap.p[i_dest] = p[i_src];
             f_swap.cellType[i_dest] = cellType[i_src];   // <-- ideally fill all with AIR_CELL by default
         }
     }
@@ -279,7 +278,7 @@ void FlipFluid::resize(
     dv.swap(f_swap.dv);
     prevU.swap(f_swap.prevU);
     prevV.swap(f_swap.prevV);
-    p.swap(f_swap.p);
+    // p.swap(f_swap.p);
     s.swap(f_swap.s);
     cellType.swap(f_swap.cellType);
     particleDensity.swap(f_swap.particleDensity);
@@ -732,12 +731,12 @@ void FlipFluid::solveIncompressibility(
     float overRelaxation,
     bool compensateDrift )
 {
-    std::fill(p.begin(), p.end(), 0.0f);
+    // std::fill(p.begin(), p.end(), 0.0f);
     prevU = u;
     prevV = v;
 
     int n = fNumY;
-    float cp = density * h / dt;
+    // float cp = density * h / dt;
 
     for(int iter = 0; iter < numIters; ++iter)
     {
@@ -773,7 +772,7 @@ void FlipFluid::solveIncompressibility(
                 }
 
                 float pressure = -div / sumS * overRelaxation;
-                p[center] += cp * pressure;
+                // p[center] += cp * pressure;
 
                 u[center] -= sx0 * pressure;
                 u[right] += sx1 * pressure;
@@ -816,8 +815,8 @@ constexpr char const HELP_MESSAGE[][58] =
     "|   is extremely addicting).                            |",
     "|                                                       |",
     "+-CREDITS-----------------------------------------------+",
-    "| Created by Sam Richter (https://github.com/S1ink)     |",
-    "| Original FLIP Fluid example by Matthias Muller        |",
+    "| * Created by Sam Richter (https://github.com/S1ink)   |",
+    "| * Based on FLIP fluid sim example by Matthias Muller  |",
     "+-------------------------------------------------------+"
 };
 constexpr int HELP_MESSAGE_COLS = sizeof(*HELP_MESSAGE) / sizeof(**HELP_MESSAGE) - 1;
@@ -849,7 +848,7 @@ int main(int argc, char** argv)
     constexpr float MAX_SIM_DT = 0.25f;
     constexpr float MIN_UI_DT = 0.01f;
     constexpr float MAX_UI_DT = 0.05f;
-    constexpr float FLIP_RATIO = 0.5;
+    constexpr float FLIP_RATIO = 0.9;
     constexpr float PARTICLE_RADIUS = 0.3f;
     constexpr float FILL_PERCENT = 0.3f;
     constexpr int NUM_PRESSURE_ITERS = 50;
@@ -857,9 +856,9 @@ int main(int argc, char** argv)
     constexpr float OVER_RELAXATION_FACTOR = 1.9;
     constexpr bool USE_COMPENSATE_DRIFT = true;
     constexpr bool USE_SEPARATE_PARTICLES = true;
-    constexpr float DEFAULT_DENSITY = 1000.f;
+    // constexpr float DEFAULT_DENSITY = 1000.f;
 
-    FlipFluid f{ wx, wy * 2, 1.f, PARTICLE_RADIUS, FILL_PERCENT, DEFAULT_DENSITY };
+    FlipFluid f{ wx, wy * 2, 1.f, PARTICLE_RADIUS, FILL_PERCENT };
 
     std::atomic<bool> running = true;
     std::atomic<bool> sim_can_continue = true;

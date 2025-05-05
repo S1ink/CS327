@@ -4,7 +4,15 @@
 
 #include <cstdarg>
 
+#ifndef USE_WNC
+#define USE_WNC 1
+#endif
+
+#if USE_WNC
+#include <ncursesw/ncurses.h>
+#else
 #include <ncurses.h>
+#endif
 
 #include "math.hpp"
 
@@ -98,6 +106,10 @@ public:
     {
         return static_cast<NCURSES_COLOR_T>(MAX(MIN(f, 1.), 0.) * (GNum - 1));
     }
+    inline static int floatToColorPair(float f)
+    {
+        return COLOR_PAIR(PairOff + floatToIdx(f));
+    }
 
 public:
     inline NCGradient_(
@@ -168,6 +180,14 @@ public:
         mvwprintw(w, y, x, fmt, args...);
         wattroff(w, COLOR_PAIR(PairOff + idx));
     }
+    #if USE_WNC
+    void addstrW(WINDOW* w, int y, int x, NCURSES_PAIRS_T idx, const wchar_t* str) const
+    {
+        wattron(w, COLOR_PAIR(PairOff + idx));
+        mvwaddwstr(w, y, x, str);
+        wattroff(w, COLOR_PAIR(PairOff + idx));
+    }
+    #endif
 
 protected:
     GradientT grad;

@@ -1,9 +1,13 @@
 rwildcard = $(foreach d,$(wildcard $(addsuffix *,$(1))),$(call rwildcard,$(d)/,$(2)) $(filter $(subst *,%,$(2)),$(d)))
 
 OPT ?= export
+WNC ?= false
 
 ifeq ($(filter $(OPT),export debug release),)
 $(error invalid 'OPT' option - choose from {export/debug/release})
+endif
+ifeq ($(filter $(WNC),true false),)
+$(error invalid 'WNC' option - choose from {true/false})
 endif
 
 CC := gcc
@@ -11,7 +15,7 @@ CXX := g++
 
 CFLAGS := -Wall -Werror -funroll-loops -Isrc
 CXXFLAGS := -std=c++17 -lstdc++ -Wall -Werror -Wno-narrowing -funroll-loops -Isrc -Iinclude/eigen #-fopenmp
-LDFLAGS := -lm -lncurses #-fopenmp
+LDFLAGS := -lm #-fopenmp
 
 SRC_DIR := src
 OBJ_DIR := build
@@ -27,6 +31,16 @@ LDFLAGS += -g
 else
 CFLAGS += -O3
 CXXFLAGS += -O3
+endif
+
+ifeq ($(WNC),true)
+LDFLAGS += -lncursesw
+CFLAGS += -DUSE_WNC=1
+CXXFLAGS += -DUSE_WNC=1
+else
+LDFLAGS += -lncurses
+CFLAGS += -DUSE_WNC=0
+CXXFLAGS += -DUSE_WNC=0
 endif
 
 BIN := fluid

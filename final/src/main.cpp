@@ -7,25 +7,36 @@
 #include <random>
 #include <thread>
 #include <vector>
+#include <array>
 #include <cmath>
 #include <mutex>
 
+#include <wchar.h>
+#include <locale.h>
 #include <unistd.h>
 #include <sys/select.h>
 
-#include <ncurses.h>
-
-#include "util/nc_wrap.hpp"
-#include "util/stats.hpp"
-
+#ifndef USE_WNC
+#define USE_WNC 0
+#endif
 
 #ifndef USE_OMP
 #define USE_OMP 0
 #endif
 
+#if USE_WNC
+#include <ncursesw/ncurses.h>
+#else
+#include <ncurses.h>
+#endif
+
 #if USE_OMP
 #include <omp.h>
 #endif
+
+#include "util/nc_wrap.hpp"
+#include "util/stats.hpp"
+
 
 // static std::ofstream dbg{ "./debug.txt" };
 
@@ -56,8 +67,8 @@ public:
         int inner_y_dim,
         float cell_res = 1.f );
 
-    template<NCURSES_COLOR_T GNum, NCURSES_COLOR_T Off>
-    void render(WINDOW* w, const NCGradient_<GNum, Off>& grad);
+    template<NCURSES_COLOR_T GNum, NCURSES_COLOR_T Off, typename CharT, size_t CharN>
+    void render(WINDOW* w, const NCGradient_<GNum, Off>& grad, const std::array<CharT, CharN>& charr);
     template<NCURSES_COLOR_T GNum, NCURSES_COLOR_T Off>
     void overlay(WINDOW* w, int y, int x, const char* str, const NCGradient_<GNum, Off>& grad);
     // template<NCURSES_COLOR_T GNum, NCURSES_COLOR_T Off>
@@ -293,9 +304,18 @@ void FlipFluid::resize(
     this->initializeParticleCells(tank_width, tank_height, this->particleRadius);
 }
 
-template<NCURSES_COLOR_T GNum, NCURSES_COLOR_T Off>
-void FlipFluid::render(WINDOW* w, const NCGradient_<GNum, Off>& grad)
+template<NCURSES_COLOR_T GNum, NCURSES_COLOR_T Off, typename CharT, size_t CharN>
+void FlipFluid::render(WINDOW* w, const NCGradient_<GNum, Off>& grad, const std::array<CharT, CharN>& charr)
 {
+    constexpr static bool IS_WCHAR = std::is_same<CharT, wchar_t>::value;
+    constexpr static bool IS_WCHARPTR = std::is_same<CharT, wchar_t*>::value;
+
+    #if USE_WNC
+    static_assert(IS_WCHAR || IS_WCHARPTR || std::is_same<CharT, char>::value);
+    #else
+    static_assert(std::is_same<CharT, char>::value);
+    #endif
+
     const int wx = getmaxx(w);
     const int wy = getmaxy(w);
     const int mx = std::min(wx, fNumX - 2);
@@ -304,33 +324,55 @@ void FlipFluid::render(WINDOW* w, const NCGradient_<GNum, Off>& grad)
     // const int src_y_off = std::max(-y_diff, 0);
     // const int dest_y_off = std::max(y_diff, 0);
 
-    for(int x = 0; x < mx; x++)
+    for(int y = 0; y < my; y++)
     {
-        int i0 = (x + 1) * fNumY + (((my - 1) * 2 + 1)); // + (src_y_off * 2);
-        int i1 = (x + 1) * fNumY + (((my - 1) * 2 + 1) + 1); // + (src_y_off * 2);
+        int x_ = 0;
 
-        for(int y = 0; y < my; y++)
+        for(int x = 0; x < mx; x++)
         {
+            int i0 = (x + 1) * fNumY + (((my - 1 - y) * 2 + 1)); // + (src_y_off * 2);
+            int i1 = (x + 1) * fNumY + (((my - 1 - y) * 2 + 1) + 1); // + (src_y_off * 2);
+
             if( (cellType[i0] == SOLID_CELL && cellType[i1] == SOLID_CELL) ||
                 (cellType[i0] == AIR_CELL && cellType[i1] == AIR_CELL) )
             {
                 attron(COLOR_PAIR(COLOR_BLACK));
-                mvwaddch(w, y, x, ' ');
+                mvwaddch(w, y, x_, ' ');
                 attron(COLOR_PAIR(COLOR_BLACK));
+                x_++;
             }
             else
             {
                 float density = (particleDensity[i0] + particleDensity[i1]) / (particleRestDensity * 2);
 
-                grad.printChar(
-                    w, y, x,
-                    grad.floatToIdx(density),
-                    " .,:+#@"[std::min<size_t>(density * 6, 6U)] );
-                    // " 0123456789"[std::min<size_t>(density * 10, 10U)] );
+                CharT c = charr[std::min<size_t>(density * (CharN - 2), CharN - 2)];
+
+                if constexpr(IS_WCHAR)
+                {
+                    const wchar_t q[] = { c, 0 };
+
+                    static cchar_t cc;
+                    setcchar(&cc, q, A_BOLD, COLOR_GREEN, NULL);
+                    mvwadd_wch(w, y, x_, &cc);
+                    x_ += wcwidth(c);
+                }
+                else
+                if constexpr(IS_WCHARPTR)
+                {
+                    static cchar_t cc;
+                    setcchar(&cc, c, A_BOLD, grad.floatToColorPair(density), nullptr);
+                    mvwadd_wch(w, y, x_, &cc);
+                    x_ += wcswidth(c, 1);
+                }
+                else
+                {
+                    grad.printChar(w, y, x_, grad.floatToIdx(density), c);
+                    x_++;
+                }
             }
 
-            i0 -= 2;
-            i1 -= 2;
+            // i0 -= 2;
+            // i1 -= 2;
         }
     }
     // wrefresh(w);
@@ -857,6 +899,7 @@ int main(int argc, char** argv)
 {
     using clock_t = std::chrono::system_clock;
 
+    setlocale(LC_ALL, "");
     NCInitializer::use();
     attron(A_BOLD);
 
@@ -1157,7 +1200,14 @@ int main(int argc, char** argv)
 
             // render
             sim_mtx.lock();
-            f.render(stdscr, fluid_grad);
+            #if USE_WNC
+            static constexpr std::array<wchar_t, 7> CARR{ L" 一二三四我" };
+            f.render(stdscr, overlay_dark_grad, CARR);
+            #else
+            static constexpr std::array<char, 8> CARR{ " .,:+#@" };
+            f.render(stdscr, fluid_grad, CARR);
+            #endif
+
             // if(state.show_debug)
             // {
             //     f.show_debug(stdscr, overlay_grad);

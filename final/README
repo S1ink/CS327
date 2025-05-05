@@ -1,4 +1,11 @@
 Begins a simple, interactive fluid simulation using the FLIP method.
+
+By default, no acceleration is applied. Holding the arrow keys applies
+a directional acceleration, or "screensaver mode" can be enabled to
+randomly move the fluid without user input (and is very satisfying to
+watch). Finally, resizing the window will cause the fluid to collide
+with the updated boundary size.
+
 (Note that this is meant to be more aesthetic than physically accurate)
 
 **BUILD**:
@@ -8,7 +15,11 @@ Begins a simple, interactive fluid simulation using the FLIP method.
     Run: `./fluid`
 
 *Controls*:
-    - Acceleration direction is controlled by the arrow keys
-        (no acceleration when no keys are pressed)
-    - Spacebar pauses/unpauses the simulation
-    - 'q' or Ctrl+C closes terminates the program
+ * Arrow Keys    : Hold to apply acceleration
+ * Space or 'p'  : Play/pause
+ * 'm'           : Toggle "screensaver mode"
+ * 'h' or '?'    : Show/hide info screen
+ * 's'           : Show/hide statistics
+ * 'S'           : Show/hide advanced statistics
+ * 'l'           : Toggle light/dark mode (half baked)
+ * Ctrl+C or 'q' : Quit the program

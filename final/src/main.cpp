@@ -10,7 +10,6 @@
 #include <cmath>
 #include <mutex>
 
-#include <signal.h>
 #include <unistd.h>
 #include <sys/select.h>
 
@@ -61,6 +60,8 @@ public:
     void render(WINDOW* w, const NCGradient_<GNum, Off>& grad);
     template<NCURSES_COLOR_T GNum, NCURSES_COLOR_T Off>
     void overlay(WINDOW* w, int y, int x, const char* str, const NCGradient_<GNum, Off>& grad);
+    // template<NCURSES_COLOR_T GNum, NCURSES_COLOR_T Off>
+    // void show_debug(WINDOW* w, const NCGradient_<GNum, Off>& grad);
 
     template<bool Separate_Particles = true>
     void simulate(
@@ -325,6 +326,7 @@ void FlipFluid::render(WINDOW* w, const NCGradient_<GNum, Off>& grad)
                     w, y, x,
                     grad.floatToIdx(density),
                     " .,:+#@"[std::min<size_t>(density * 6, 6U)] );
+                    // " 0123456789"[std::min<size_t>(density * 10, 10U)] );
             }
 
             i0 -= 2;
@@ -374,6 +376,35 @@ void FlipFluid::overlay(
     }
 }
 
+// template<NCURSES_COLOR_T GNum, NCURSES_COLOR_T Off>
+// void FlipFluid::show_debug(
+//     WINDOW* w,
+//     const NCGradient_<GNum, Off>& grad )
+// {
+//     char buff[40];
+//     snprintf(buff, 40, "Particle rest density : %f", this->particleRestDensity);
+//     this->overlay(w, getmaxy(w) - 2, 0, buff, grad);
+
+//     // float hLocal = 1.0f / fInvSpacing;
+//     // float r = particleRadius;
+
+//     // float minX = hLocal + r;
+//     // float maxX = (fNumX - 1) * hLocal - r;
+//     // float minY = hLocal + r;
+//     // float maxY = (fNumY - 1) * hLocal - r;
+
+//     float mpx = this->particlePos[0], mpy = this->particlePos[1], Mpx = this->particlePos[0], Mpy = this->particlePos[1];
+//     for(int i = 1; i < numParticles; i++)
+//     {
+//         if(particlePos[i * 2 + 0] < mpx) mpx = particlePos[i * 2 + 0];
+//         if(particlePos[i * 2 + 0] > Mpx) Mpx = particlePos[i * 2 + 0];
+//         if(particlePos[i * 2 + 1] < mpy) mpy = particlePos[i * 2 + 1];
+//         if(particlePos[i * 2 + 1] > Mpy) Mpy = particlePos[i * 2 + 1];
+//     }
+
+//     snprintf(buff, 40, "min/max : (%.1f, %.1f) --> (%.1f, %.1f)", mpx, mpy, Mpx, Mpy);
+//     this->overlay(w, getmaxy(w) - 1, 0, buff, grad);
+// }
 
 
 
@@ -874,10 +905,20 @@ int main(int argc, char** argv)
         {
             while(running)
             {
+                float step_dt;
+                if(sim_dt <= 0.f)
+                {
+                    step_dt = SIM_DEFAULT_DT;
+                }
+                else
+                {
+                    step_dt = std::min(sim_dt.load(), MAX_SIM_DT);
+                }
+
                 clock_t::time_point beg = clock_t::now();
                 sim_mtx.lock();
                 f.simulate<USE_SEPARATE_PARTICLES>(
-                    std::min(sim_dt.load(), MAX_SIM_DT),
+                    step_dt,
                     x_acc,
                     y_acc,
                     FLIP_RATIO,
@@ -886,7 +927,18 @@ int main(int argc, char** argv)
                     OVER_RELAXATION_FACTOR,
                     USE_COMPENSATE_DRIFT );
                 sim_mtx.unlock();
-                sim_dt = std::chrono::duration<float>(clock_t::now() - beg).count() * SIM_REALTIME_FACTOR;
+                clock_t::time_point end = clock_t::now();
+
+                std::chrono::duration<float> diff{ end - beg };
+                sim_dt = diff.count() * SIM_REALTIME_FACTOR;
+
+                // float sdt = sim_dt.load();
+                // if(sdt <= 0.f || sdt >= 1.f)
+                // {
+                //     dbg << beg.time_since_epoch().count() << ", "
+                //         << end.time_since_epoch().count() << ", "
+                //         << diff.count() << std::endl;
+                // }
 
                 if(!sim_can_continue)
                 {
@@ -912,9 +964,10 @@ int main(int argc, char** argv)
         uint8_t show_usage : 1;
         uint8_t is_reversed : 1;
         uint8_t is_random : 1;
+        uint8_t show_debug : 1;
     }
     state;
-    state.paused = state.resized = state.is_reversed = state.is_random = 0;
+    state.paused = state.resized = state.is_reversed = state.is_random = state.show_debug = 0;
     state.show_stats = state.show_usage = 1;
 
     struct
@@ -1035,6 +1088,11 @@ int main(int argc, char** argv)
                         }
                         break;
                     }
+                    // case 'd' :
+                    // {
+                    //     state.show_debug = !state.show_debug;
+                    //     break;
+                    // }
                     case '?' :
                     case 'h' :
                     {
@@ -1100,6 +1158,10 @@ int main(int argc, char** argv)
             // render
             sim_mtx.lock();
             f.render(stdscr, fluid_grad);
+            // if(state.show_debug)
+            // {
+            //     f.show_debug(stdscr, overlay_grad);
+            // }
             if(state.show_stats > 0)
             {
                 char buff[40];

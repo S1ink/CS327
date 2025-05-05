@@ -12,3 +12,15 @@
 4/29/25 11:30 PM -- Add user input handling and simulate in separate thread
 4/30/25 12:30 AM -- Tuning, add dynamic timestepping
 4/30/25 12:30 PM -- Add changelog, readme, cleanup project
+4/30/25 4:30  PM -- Test OMP multithreading, add statistics overlay
+4/30/25 11:30 PM -- Update ascii distribution, enable bold fonts
+5/1/25  1:45  PM -- Add crude resize handling, add dynamic timestepping
+5/1/25  10:00 PM -- Fix density copy on resize, ascii sampling range
+5/2/25  1:00  AM -- Restruction resize handling, update gradient
+5/2/25  3:00  AM -- Change resize direction, update stats overlay, limit maximum UI refresh
+5/2/25  12:30 PM -- Optimize loop order, add overlay gradients
+5/2/25  6:30  PM -- Add help/info screen
+5/3/25  2:00  AM -- Add process metrics overlay, "screensaver mode"
+5/3/25  2:30  AM -- Update info screen with credits
+5/3/25  12:00 AM -- Remove unneeded pressure calculation
+5/4/25  10:30 PM -- Handle negative delta time bug

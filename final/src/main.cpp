@@ -17,7 +17,7 @@
 #include <sys/select.h>
 
 #ifndef USE_WNC
-#define USE_WNC 0
+#define USE_WNC 1
 #endif
 
 #ifndef USE_OMP
@@ -67,12 +67,12 @@ public:
         int inner_y_dim,
         float cell_res = 1.f );
 
-    template<NCURSES_COLOR_T GNum, NCURSES_COLOR_T Off, typename CharT, size_t CharN>
-    void render(WINDOW* w, const NCGradient_<GNum, Off>& grad, const std::array<CharT, CharN>& charr);
+    template<NCURSES_COLOR_T GNum, NCURSES_COLOR_T Off, size_t CharN>
+    void render(WINDOW* w, const NCGradient_<GNum, Off>& grad, const std::array<char, CharN>& charr);
+    template<size_t CharN>
+    void render_wchar(WINDOW* w, const std::array<wchar_t, CharN>& charr);
     template<NCURSES_COLOR_T GNum, NCURSES_COLOR_T Off>
     void overlay(WINDOW* w, int y, int x, const char* str, const NCGradient_<GNum, Off>& grad);
-    // template<NCURSES_COLOR_T GNum, NCURSES_COLOR_T Off>
-    // void show_debug(WINDOW* w, const NCGradient_<GNum, Off>& grad);
 
     template<bool Separate_Particles = true>
     void simulate(
@@ -124,12 +124,6 @@ protected:
     float particleRestDensity = 0.0f;
     std::vector<float> particlePos, particleVel, particleDensity;
     std::vector<int> numCellParticles, firstCellParticle, cellParticleIds;
-
-private:
-    inline float clamp(float x, float minVal, float maxVal)
-    {
-        return std::max(minVal, std::min(x, maxVal));
-    }
 
 };
 
@@ -304,78 +298,88 @@ void FlipFluid::resize(
     this->initializeParticleCells(tank_width, tank_height, this->particleRadius);
 }
 
-template<NCURSES_COLOR_T GNum, NCURSES_COLOR_T Off, typename CharT, size_t CharN>
-void FlipFluid::render(WINDOW* w, const NCGradient_<GNum, Off>& grad, const std::array<CharT, CharN>& charr)
+template<NCURSES_COLOR_T GNum, NCURSES_COLOR_T Off, size_t CharN>
+void FlipFluid::render(WINDOW* w, const NCGradient_<GNum, Off>& grad, const std::array<char, CharN>& charr)
 {
-    constexpr static bool IS_WCHAR = std::is_same<CharT, wchar_t>::value;
-    constexpr static bool IS_WCHARPTR = std::is_same<CharT, wchar_t*>::value;
-
-    #if USE_WNC
-    static_assert(IS_WCHAR || IS_WCHARPTR || std::is_same<CharT, char>::value);
-    #else
-    static_assert(std::is_same<CharT, char>::value);
-    #endif
-
     const int wx = getmaxx(w);
     const int wy = getmaxy(w);
     const int mx = std::min(wx, fNumX - 2);
     const int my = std::min(wy, (fNumY - 2) / 2);
-    // const int y_diff =  wy - ((fNumY - 2) / 2);
-    // const int src_y_off = std::max(-y_diff, 0);
-    // const int dest_y_off = std::max(y_diff, 0);
 
-    for(int y = 0; y < my; y++)
+    for(int x = 0; x < mx; x++)
     {
-        int x_ = 0;
+        int i0 = (x + 1) * fNumY + (((my - 1) * 2 + 1));
+        int i1 = (x + 1) * fNumY + (((my - 1) * 2 + 1) + 1);
 
-        for(int x = 0; x < mx; x++)
+        for(int y = 0; y < my; y++)
         {
-            int i0 = (x + 1) * fNumY + (((my - 1 - y) * 2 + 1)); // + (src_y_off * 2);
-            int i1 = (x + 1) * fNumY + (((my - 1 - y) * 2 + 1) + 1); // + (src_y_off * 2);
-
             if( (cellType[i0] == SOLID_CELL && cellType[i1] == SOLID_CELL) ||
                 (cellType[i0] == AIR_CELL && cellType[i1] == AIR_CELL) )
             {
                 attron(COLOR_PAIR(COLOR_BLACK));
-                mvwaddch(w, y, x_, ' ');
+                mvwaddch(w, y, x, ' ');
                 attron(COLOR_PAIR(COLOR_BLACK));
-                x_++;
             }
             else
             {
                 float density = (particleDensity[i0] + particleDensity[i1]) / (particleRestDensity * 2);
+                char c = charr[std::min<size_t>(density * (CharN - 2), CharN - 2)];
 
-                CharT c = charr[std::min<size_t>(density * (CharN - 2), CharN - 2)];
-
-                if constexpr(IS_WCHAR)
-                {
-                    const wchar_t q[] = { c, 0 };
-
-                    static cchar_t cc;
-                    setcchar(&cc, q, A_BOLD, COLOR_GREEN, NULL);
-                    mvwadd_wch(w, y, x_, &cc);
-                    x_ += wcwidth(c);
-                }
-                else
-                if constexpr(IS_WCHARPTR)
-                {
-                    static cchar_t cc;
-                    setcchar(&cc, c, A_BOLD, grad.floatToColorPair(density), nullptr);
-                    mvwadd_wch(w, y, x_, &cc);
-                    x_ += wcswidth(c, 1);
-                }
-                else
-                {
-                    grad.printChar(w, y, x_, grad.floatToIdx(density), c);
-                    x_++;
-                }
+                grad.printChar(w, y, x, grad.floatToIdx(density), c);
             }
 
-            // i0 -= 2;
-            // i1 -= 2;
+            i0 -= 2;
+            i1 -= 2;
         }
     }
-    // wrefresh(w);
+}
+
+template<size_t CharN>
+void FlipFluid::render_wchar(WINDOW* w, const std::array<wchar_t, CharN>& charr)
+{
+    static constexpr NCURSES_COLOR_T BASIC_COLORS[3] = { COLOR_BLUE, COLOR_CYAN, COLOR_GREEN };
+    cchar_t cc;
+
+    const int wx = getmaxx(w);
+    const int wy = getmaxy(w);
+    const int mx = static_cast<int>(std::ceil(std::min(wx, fNumX - 2) / 2.f));
+    const int my = std::min(wy, (fNumY - 2) / 2);
+
+    for(int y = 0; y < my; y++)
+    {
+        for(int x = 0; x < mx; x++)
+        {
+            int i0 = (x * 2 + 1) * fNumY + (((my - 1 - y) * 2 + 1));
+            int i1 = (x * 2 + 1) * fNumY + (((my - 1 - y) * 2 + 1) + 1);
+            int i2 = (x * 2 + 2) * fNumY + (((my - 1 - y) * 2 + 1));
+            int i3 = (x * 2 + 2) * fNumY + (((my - 1 - y) * 2 + 1) + 1);
+
+            if( (cellType[i0] == SOLID_CELL && cellType[i1] == SOLID_CELL && cellType[i2] == SOLID_CELL && cellType[i3] == SOLID_CELL) ||
+                (cellType[i0] == AIR_CELL && cellType[i1] == AIR_CELL && cellType[i2] == AIR_CELL && cellType[i3] == AIR_CELL) )
+            {
+                attron(COLOR_PAIR(COLOR_BLACK));
+                mvwaddch(w, y, x * 2, ' ');
+                mvwaddch(w, y, x * 2 + 1, ' ');
+                attron(COLOR_PAIR(COLOR_BLACK));
+            }
+            else
+            {
+                float density = (particleDensity[i0] + particleDensity[i1] + particleDensity[i2] + particleDensity[i3]) / (particleRestDensity * 4);
+                wchar_t c = charr[std::min<size_t>(density * (CharN - 2), CharN - 2)];
+                if(c == L' ')
+                {
+                    attron(COLOR_PAIR(COLOR_BLACK));
+                    mvwaddch(w, y, x * 2, ' ');
+                    mvwaddch(w, y, x * 2 + 1, ' ');
+                    attron(COLOR_PAIR(COLOR_BLACK));
+                }
+                const wchar_t q[] = { c, 0 };
+
+                setcchar(&cc, q, A_BOLD, BASIC_COLORS[std::min<size_t>(density * 3, 2)], NULL);
+                mvwadd_wch(w, y, x * 2, &cc);
+            }
+        }
+    }
 }
 
 template<NCURSES_COLOR_T GNum, NCURSES_COLOR_T Off>
@@ -503,8 +507,8 @@ void FlipFluid::pushParticlesApart(int numIters)
     {
         float x = particlePos[2 * i];
         float y = particlePos[2 * i + 1];
-        int xi = static_cast<int>(clamp(std::floor(x * pInvSpacing), 0.0f, static_cast<float>(pNumX - 1)));
-        int yi = static_cast<int>(clamp(std::floor(y * pInvSpacing), 0.0f, static_cast<float>(pNumY - 1)));
+        int xi = static_cast<int>(std::clamp<float>(std::floor(x * pInvSpacing), 0.0f, static_cast<float>(pNumX - 1)));
+        int yi = static_cast<int>(std::clamp<float>(std::floor(y * pInvSpacing), 0.0f, static_cast<float>(pNumY - 1)));
         int cellNr = xi * pNumY + yi;
         numCellParticles[cellNr]++;
     }
@@ -521,8 +525,8 @@ void FlipFluid::pushParticlesApart(int numIters)
     {
         float x = particlePos[2 * i];
         float y = particlePos[2 * i + 1];
-        int xi = static_cast<int>(clamp(std::floor(x * pInvSpacing), 0.0f, static_cast<float>(pNumX - 1)));
-        int yi = static_cast<int>(clamp(std::floor(y * pInvSpacing), 0.0f, static_cast<float>(pNumY - 1)));
+        int xi = static_cast<int>(std::clamp<float>(std::floor(x * pInvSpacing), 0.0f, static_cast<float>(pNumX - 1)));
+        int yi = static_cast<int>(std::clamp<float>(std::floor(y * pInvSpacing), 0.0f, static_cast<float>(pNumY - 1)));
         int cellNr = xi * pNumY + yi;
         firstCellParticle[cellNr]--;
         cellParticleIds[firstCellParticle[cellNr]] = i;
@@ -631,8 +635,8 @@ void FlipFluid::updateParticleDensity()
 
     for(int i = 0; i < numParticles; ++i)
     {
-        float x = clamp(particlePos[2 * i], h, (fNumX - 1) * h);
-        float y = clamp(particlePos[2 * i + 1], h, (fNumY - 1) * h);
+        float x = std::clamp<float>(particlePos[2 * i], h, (fNumX - 1) * h);
+        float y = std::clamp<float>(particlePos[2 * i + 1], h, (fNumY - 1) * h);
 
         int x0 = static_cast<int>((x - h2) * h1);
         float tx = ((x - h2) - x0 * h) * h1;
@@ -693,8 +697,8 @@ void FlipFluid::transferVelocities(bool toGrid, float flipRatio)
 
         for(int i = 0; i < numParticles; ++i)
         {
-            int xi = static_cast<int>(clamp(std::floor(particlePos[2 * i] * h1), 0.0f, static_cast<float>(fNumX - 1)));
-            int yi = static_cast<int>(clamp(std::floor(particlePos[2 * i + 1] * h1), 0.0f, static_cast<float>(fNumY - 1)));
+            int xi = static_cast<int>(std::clamp<float>(std::floor(particlePos[2 * i] * h1), 0.0f, static_cast<float>(fNumX - 1)));
+            int yi = static_cast<int>(std::clamp<float>(std::floor(particlePos[2 * i + 1] * h1), 0.0f, static_cast<float>(fNumY - 1)));
             int cellNr = xi * n + yi;
             if(cellType[cellNr] == AIR_CELL)
             {
@@ -714,8 +718,8 @@ void FlipFluid::transferVelocities(bool toGrid, float flipRatio)
 
         for(int i = 0; i < numParticles; ++i)
         {
-            float x = clamp(particlePos[2 * i], h, (fNumX - 1) * h);
-            float y = clamp(particlePos[2 * i + 1], h, (fNumY - 1) * h);
+            float x = std::clamp<float>(particlePos[2 * i], h, (fNumX - 1) * h);
+            float y = std::clamp<float>(particlePos[2 * i + 1], h, (fNumY - 1) * h);
 
             int x0 = std::min(static_cast<int>((x - dx) * h1), fNumX - 2);
             float tx = ((x - dx) - x0 * h) * h1;
@@ -1008,9 +1012,15 @@ int main(int argc, char** argv)
         uint8_t is_reversed : 1;
         uint8_t is_random : 1;
         uint8_t show_debug : 1;
+        uint8_t cchar_mode : 1;
     }
     state;
-    state.paused = state.resized = state.is_reversed = state.is_random = state.show_debug = 0;
+    state.paused =
+        state.resized =
+        state.is_reversed =
+        state.is_random =
+        state.show_debug =
+        state.cchar_mode = 0;
     state.show_stats = state.show_usage = 1;
 
     struct
@@ -1154,6 +1164,12 @@ int main(int argc, char** argv)
                         }
                         break;
                     }
+                    case 'C' :
+                    case 'Z' :
+                    {
+                        state.cchar_mode = !state.cchar_mode;
+                        break;
+                    }
                     case KEY_RESIZE :
                     {
                         wx = getmaxx(stdscr);
@@ -1200,13 +1216,22 @@ int main(int argc, char** argv)
 
             // render
             sim_mtx.lock();
+            {
+            static constexpr std::array<char, 8> CARR_DEFAULT{ " .,:+#@" };
             #if USE_WNC
-            static constexpr std::array<wchar_t, 7> CARR{ L" 一二三四我" };
-            f.render(stdscr, overlay_dark_grad, CARR);
+                static constexpr std::array<wchar_t, 7> CARR_ZH{ L" 一二三四水" };
+                if(state.cchar_mode)
+                {
+                    f.render_wchar(stdscr, CARR_ZH);
+                }
+                else
+                {
+                    f.render(stdscr, fluid_grad, CARR_DEFAULT);
+                }
             #else
-            static constexpr std::array<char, 8> CARR{ " .,:+#@" };
-            f.render(stdscr, fluid_grad, CARR);
+                f.render(stdscr, fluid_grad, CARR_DEFAULT);
             #endif
+            }
 
             // if(state.show_debug)
             // {

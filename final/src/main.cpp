@@ -879,7 +879,7 @@ int main(int argc, char** argv)
     constexpr float MAX_SIM_DT = 0.25f;
     constexpr float MIN_UI_DT = 0.01f;
     constexpr float MAX_UI_DT = 0.05f;
-    constexpr float FLIP_RATIO = 0.9;
+    constexpr float FLIP_RATIO = 0.75;
     constexpr float PARTICLE_RADIUS = 0.3f;
     constexpr float FILL_PERCENT = 0.3f;
     constexpr int NUM_PRESSURE_ITERS = 50;
